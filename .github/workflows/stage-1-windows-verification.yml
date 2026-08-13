@@ -21,7 +21,7 @@ permissions:
 jobs:
   stage-1-windows-verification:
     name: Stage 1 Windows Verification
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 180
     env:
       STAGE1_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
@@ -79,10 +79,6 @@ jobs:
           node-version: '22'
           cache: npm
           cache-dependency-path: src/package-lock.json
-
-      - uses: ilammy/msvc-dev-cmd@v1
-        with:
-          vsversion: '2022'
 
       - name: npm ci
         working-directory: src
