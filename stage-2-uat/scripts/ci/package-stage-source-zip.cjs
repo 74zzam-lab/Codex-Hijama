@@ -13,8 +13,32 @@ const { spawnSync } = require('child_process');
 const root = path.join(__dirname, '..', '..');
 const stage = process.env.STAGE_NUMBER || '2';
 const label = process.env.STAGE_ZIP_LABEL || 'READY-PASS';
-const commit = (spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout || '').trim()
-  || 'local';
+
+function resolveCommitShort() {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
+  const ws = process.env.GITHUB_WORKSPACE;
+  if (ws) {
+    const fromWs = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ws, encoding: 'utf8' });
+    if (fromWs.status === 0 && fromWs.stdout) return fromWs.stdout.trim();
+  }
+  const fromRoot = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  if (fromRoot.status === 0 && fromRoot.stdout) return fromRoot.stdout.trim();
+  return 'local';
+}
+
+function resolveCommitFull() {
+  if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA;
+  const ws = process.env.GITHUB_WORKSPACE;
+  if (ws) {
+    const fromWs = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: ws, encoding: 'utf8' });
+    if (fromWs.status === 0 && fromWs.stdout) return fromWs.stdout.trim();
+  }
+  const fromRoot = spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' });
+  if (fromRoot.status === 0 && fromRoot.stdout) return fromRoot.stdout.trim();
+  return '';
+}
+
+const commit = resolveCommitShort();
 const zipName = `Tadawi-Stage-${stage}-${label}-${commit}.zip`;
 const zipPath = path.join(root, zipName);
 
@@ -44,7 +68,7 @@ function collectFiles(dir, prefix = '') {
     if (!shouldInclude(rel)) continue;
     const st = fs.statSync(abs);
     if (st.isDirectory()) out.push(...collectFiles(abs, rel));
-    else out.push({ rel, abs, size: st.size });
+    else out.push({ rel: rel.replace(/\\/g, '/'), abs, size: st.size });
   }
   return out;
 }
@@ -52,7 +76,7 @@ function collectFiles(dir, prefix = '') {
 const files = collectFiles(root);
 const manifest = {
   zipName,
-  commit: (spawnSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).stdout || '').trim(),
+  commit: resolveCommitFull(),
   commitShort: commit,
   createdAt: new Date().toISOString(),
   fileCount: files.length,
@@ -62,10 +86,16 @@ const manifest = {
 
 if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 
-const tarArgs = ['-a', '-cf', zipPath, ...files.map((f) => f.rel.replace(/\\/g, '/'))];
-const tar = spawnSync('tar', tarArgs, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+const listFile = path.join(os.tmpdir(), `stage-zip-list-${Date.now()}.txt`);
+fs.writeFileSync(listFile, `${files.map((f) => f.rel).join('\n')}\n`, 'utf8');
+
+const tar = spawnSync('tar', ['-a', '-cf', zipPath, '-T', listFile], {
+  cwd: root,
+  encoding: 'utf8',
+  maxBuffer: 64 * 1024 * 1024,
+});
 if (tar.status !== 0) {
-  console.error(tar.stderr || tar.stdout);
+  console.error('tar create failed', { status: tar.status, stderr: tar.stderr, stdout: tar.stdout, listFile });
   process.exit(1);
 }
 
@@ -87,9 +117,19 @@ manifest.validation = {
   requiredPresent: missing.length === 0,
   missing,
   tarExit: untar.status,
+  tarExtractStderr: untar.stderr || '',
 };
 fs.writeFileSync(path.join(evidenceDir, 'ZIP-MANIFEST.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
 const ok = missing.length === 0 && zipStat.size > 1_000_000;
-console.log(JSON.stringify({ ok, zipPath, sha256, size: zipStat.size, fileCount: files.length }, null, 2));
+const result = {
+  ok,
+  zipPath,
+  sha256,
+  size: zipStat.size,
+  fileCount: files.length,
+  missing,
+  sizeOk: zipStat.size > 1_000_000,
+};
+console.log(JSON.stringify(result, null, 2));
 process.exit(ok ? 0 : 1);
