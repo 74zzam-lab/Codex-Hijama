@@ -1,0 +1,74 @@
+{
+  "generatedAt": "2026-08-13T06:00:00Z",
+  "environment": {
+    "node": "v22.14.0",
+    "npm": "10.9.7",
+    "os": "Linux 6.12.94+ x86_64",
+    "windowsBuildAvailable": false
+  },
+  "original": {
+    "archiveSha256": "01e89d6fc161530ae03690865062827bbdecbb7ca58b3e0fe331909a9536b0cc",
+    "lint": {
+      "status": "FAIL",
+      "errors": 118,
+      "note": "Jest globals in backup tests without eslint env"
+    },
+    "fullSuite": {
+      "summary": "Summary: 96/96 passed",
+      "total": 96,
+      "passed": 96,
+      "failed": 0,
+      "exitCode": 0
+    },
+    "failedGroups": []
+  },
+  "current": {
+    "archiveSha256": "9c0339cc9cb6a039e859c61a32dd1b586517950103eceac70634a2c8a146ad9d",
+    "lint": {
+      "status": "PASS",
+      "exitCode": 0
+    },
+    "fullSuite": {
+      "summary": "Summary: 129/132 passed",
+      "total": 132,
+      "passed": 129,
+      "failed": 3,
+      "exitCode": 1
+    },
+    "failedGroups": [
+      {
+        "label": "p0-e:licensing-production",
+        "classification": "product-intentional",
+        "assertion": "packaged runtime excludes TADAWI_OFFLINE_LIC_V4",
+        "detail": "LIC_SECRETS embedded in renderer by design (Legacy V5)"
+      },
+      {
+        "label": "baseline:license-read",
+        "classification": "historical-artifact",
+        "assertion": "missing license/data fixtures removed from clean archive"
+      },
+      {
+        "label": "license:test",
+        "classification": "product-intentional",
+        "assertion": "commercial gate: customer package excludes LIC_SECRETS/createHmac/HMAC signing material",
+        "detail": "4/22 commercial checks fail; 18 pass"
+      }
+    ],
+    "focusedSecurityRestoreTests": {
+      "p0-a-security-boundary": "PASS (50 checks)",
+      "current-setup-restore-runtime": "PASS",
+      "current-restore-license-login": "PASS",
+      "p0-c-setup-restore-target": "PASS (7/7)",
+      "p0-c-restore-truth-boot-gate": "PASS (11/11)",
+      "p0-c-discovery-integrity": "PASS (6/6)",
+      "hybrid-backup-v2": "PASS",
+      "backup-restore-v2": "PASS"
+    }
+  },
+  "comparison": {
+    "originalTestCount": 96,
+    "currentTestCount": 132,
+    "newTestsInCurrent": 36,
+    "mockOnlyTestsNote": "Many baseline tests use vm sandbox mocks; windows-uat/*.cjs require Windows runtime"
+  }
+}
