@@ -1,0 +1,45 @@
+{
+  "stage": "STAGE-0",
+  "purpose": "Baseline freeze — evidence only, zero source modifications",
+  "capturedAt": "2026-08-13T07:45:00.000Z",
+  "branch": "cursor/bootstrap-restore-fixes-beb8",
+  "baseCommit": "d63677734ec5efa87dbc46b7cfe693e50b537147",
+  "sourceRoot": "review-work/current-extract",
+  "packageVersion": "2.0.1",
+  "sourceTree": {
+    "fileCount": 1359,
+    "treeSha256": "090ec83bac968bd19fa92aca74e0e804d441cacb72e738d662ed54f11f9fc782"
+  },
+  "approvedDecisionsFrozen": {
+    "newCustomerActivationBeforeGoogle": true,
+    "ownerBeforeFirstBranch": true,
+    "existingCustomerNoRecreateOrgOwner": true,
+    "deviceApproval": false,
+    "startupLoginRbacFrozenUntilReadyStage": true,
+    "ownerSeedRemovalDeferredUntilJourneyProven": true
+  },
+  "explicitlyOutOfScopeThisStage": [
+    "boot ordering",
+    "owner/branch step order",
+    "existing path shortening",
+    "startup/login/rbac",
+    "owner seed removal",
+    "device approval policy change"
+  ],
+  "testResults": {
+    "npmTest": {
+      "command": "npm test",
+      "result": "PASS",
+      "summary": "133/133 passed",
+      "logPath": "review-work/STAGE-0-npm-test.log"
+    },
+    "e2e": {
+      "command": "npm run test:e2e",
+      "result": "PASS",
+      "summary": "17/17 passed",
+      "logPath": "review-work/STAGE-0-e2e.log"
+    }
+  },
+  "windowsInstalledUat": "UNVERIFIED",
+  "verdict": "BASELINE_FROZEN"
+}

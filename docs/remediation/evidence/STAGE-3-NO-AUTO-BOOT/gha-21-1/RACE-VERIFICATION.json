@@ -1,0 +1,6 @@
+{
+  "earlyGate": "index.html early-ready-no-auto-boot after SQLite init",
+  "lateGate": "BootFlow.maybeAutoOpenBootFlow after cloud init",
+  "bootFlashMitigation": "early gate + authoritative READY before auto-open",
+  "nodeHarness": "PASS"
+}

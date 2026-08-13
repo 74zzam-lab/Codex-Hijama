@@ -1,0 +1,8 @@
+{
+  "generatedAt": "2026-08-13T09:12:51.859Z",
+  "readyEvaluator": "ReadyPureEvaluator.evaluateReadyPure",
+  "setupStateIntegration": "SetupStateService.evaluateReady + resolveState",
+  "bootFlowDelegation": "BootFlow.isBootComplete → SetupStateService.evaluateReady",
+  "startupUnchanged": true,
+  "bootOrderingUnchanged": true
+}

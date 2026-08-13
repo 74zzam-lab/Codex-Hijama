@@ -1,0 +1,71 @@
+{
+  "steps": [
+    "language",
+    "google",
+    "license",
+    "organization",
+    "branch",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "transitions": [
+    {
+      "from": "language",
+      "to": "google",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('language')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "google",
+      "to": "license",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('google')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "license",
+      "to": "organization",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('license')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "organization",
+      "to": "branch",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('organization')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "branch",
+      "to": "restore",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('branch')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "restore",
+      "to": "owner",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('restore')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "owner",
+      "to": "sync",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('owner')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    },
+    {
+      "from": "sync",
+      "to": "ready",
+      "decidedBy": "BootFlow.validateStep + wizard navigation",
+      "condition": "isStepResolved('sync')",
+      "stateDependsOn": "Services/SQLite SoT (Stage 4 coordinator)"
+    }
+  ]
+}
