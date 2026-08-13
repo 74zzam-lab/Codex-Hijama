@@ -1,0 +1,14 @@
+{
+  "steps": [
+    "language",
+    "google",
+    "license",
+    "organization",
+    "branch_select",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "result": "PASS"
+}

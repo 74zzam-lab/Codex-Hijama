@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "buildId": "gha-6-1",
+  "startedAt": "2026-08-13T08:32:37.146Z",
+  "finishedAt": "2026-08-13T08:32:39.035Z",
+  "restore": true,
+  "progress": true,
+  "data": true,
+  "failureInjection": true,
+  "runtimeErrors": true,
+  "cloudRealUat": "UNVERIFIED"
+}
