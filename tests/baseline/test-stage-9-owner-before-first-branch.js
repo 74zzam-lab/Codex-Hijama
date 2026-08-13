@@ -47,6 +47,7 @@ function makeDocument() {
 
 function loadModules(ctx) {
   const files = [
+    'cloud/business-setup-contract.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
     'cloud/bootstrap-coordinator.js',
@@ -245,7 +246,7 @@ await (async () => {
   });
   ctx._setOwnerState('OWNER_EXISTS');
   const w = ctx.BootFlow.loadWizard();
-  check(w.wizardFlowVersion === 11, 'legacy v8 migrates to v11');
+  check(w.wizardFlowVersion === 12, 'legacy v8 migrates to v12');
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', w.currentStep);
   check(ctx.BootFlow.NEW_STEPS[resume] === 'branch', `restart after owner resumes branch (got ${ctx.BootFlow.NEW_STEPS[resume]})`);
 })();
@@ -328,12 +329,16 @@ await (async () => {
     users: [{ id: 'O-S9', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     license: { centerId: 'CTR', centerName: 'C', activation: { consumed: true }, branches: [{ id: 'B1', active: true }] },
     deviceConfig: { deviceUuid: 'D1', deviceName: 'PC', lockedBranchId: 'B1', branchLocked: true },
-    wizard: { path: 'new', wizardFlowVersion: 8, currentStep: 8 },
+    settings: {
+      centerName: 'Legacy Clinic', phone: '0501234567',
+      backup: { providers: { google: { connected: true, oauth: true, email: 't@test.com' } } },
+    },
+    wizard: { path: 'new', lang: 'ar', wizardFlowVersion: 8, currentStep: 8, forkDecision: 'start_new', discoveryCompletedAt: new Date().toISOString() },
   });
   ctx._setOwnerState('OWNER_EXISTS');
   ctx.BootFlow.loadWizard();
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', ctx._snap.wizard.currentStep);
-  check(['restore', 'sync', 'ready'].includes(ctx.BootFlow.NEW_STEPS[resume]), 'legacy branch+owner → continue restore/sync');
+  check(['device', 'business_setup', 'restore', 'sync', 'ready'].includes(ctx.BootFlow.NEW_STEPS[resume]), 'legacy branch+owner → continue device/business_setup/restore/sync');
 })();
 
 // 24. legacy restore done / owner missing
@@ -373,8 +378,8 @@ await (async () => {
 (() => {
   const existing = baseEnv().BootFlow.EXISTING_STEPS;
   check(JSON.stringify(existing) === JSON.stringify([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready',
-  ]), 'direct EXISTING runtime includes explicit device step');
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
+  ]), 'direct EXISTING runtime includes explicit business_setup step');
 })();
 
 // 28. Stage8 Start New honored
@@ -397,7 +402,7 @@ await (async () => {
     deviceConfig: { deviceUuid: 'D1', deviceName: 'PC', lockedBranchId: 'B1', branchLocked: true },
     users: [{ id: 'O1', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     wizard: { path: 'new', restoreChoice: 'empty', syncDone: true, wizardFlowVersion: 9 },
-    settings: { centerName: 'C', backup: { providers: { google: { connected: true, oauth: true } } } },
+    settings: { centerName: 'C Clinic', phone: '0501234567', backup: { providers: { google: { connected: true, oauth: true } } } },
   });
   ctx._setOwnerState('OWNER_EXISTS');
   check(ctx.SetupStateService.evaluateReady({ ignoreRestart: true }).ready === true, 'READY unchanged');

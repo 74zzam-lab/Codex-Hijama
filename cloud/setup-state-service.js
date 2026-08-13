@@ -77,6 +77,7 @@
       center: hasCenter(),
       branch: hasBranch(),
       device: hasDevice(),
+      businessSetup: hasBusinessSetup(),
       dataSource: hasDataSource(),
       ownerCredential: hasOwnerCredential(),
       syncDone: hasSyncDone(),
@@ -86,7 +87,7 @@
     const RPE = getReadyPureEvaluator();
     if (!RPE?.evaluateReadyPure) {
       const legacyReady = checks.google && checks.license && checks.center && checks.branch
-        && checks.device && checks.dataSource && checks.ownerCredential && checks.syncDone;
+        && checks.device && checks.businessSetup && checks.dataSource && checks.ownerCredential && checks.syncDone;
       return {
         ready: legacyReady,
         isReady: legacyReady,
@@ -138,6 +139,11 @@
     if (global.BootFlow?.hasDeviceBranch) return !!global.BootFlow.hasDeviceBranch();
     const cfg = global.DeviceConfig?.load?.();
     return !!(cfg?.lockedBranchId && (cfg?.deviceName || cfg?.deviceUuid));
+  }
+
+  function hasBusinessSetup() {
+    if (global.BootFlow?.businessSetupStepResolved) return !!global.BootFlow.businessSetupStepResolved();
+    return false;
   }
 
   function hasDataSource() {

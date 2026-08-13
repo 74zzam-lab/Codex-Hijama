@@ -64,10 +64,11 @@ async function main() {
     const v2513 = /NEW_STEPS\s*=\s*\[\s*'language',\s*'license',\s*'google',\s*'discovery',\s*'path_decision',\s*'organization',\s*'branch',\s*'restore',\s*'owner',\s*'sync',\s*'ready'\s*\]/.test(boot);
     const v2514 = /NEW_STEPS\s*=\s*\[\s*'language',\s*'license',\s*'google',\s*'discovery',\s*'path_decision',\s*'organization',\s*'owner',\s*'branch',\s*'restore',\s*'sync',\s*'ready'\s*\]/.test(boot);
     const v2515 = /NEW_STEPS\s*=\s*\[\s*'language',\s*'license',\s*'google',\s*'discovery',\s*'path_decision',\s*'organization',\s*'owner',\s*'branch',\s*'device',\s*'restore',\s*'sync',\s*'ready'\s*\]/.test(boot);
-    if (!v258 && !v259 && !v2510 && !v2511 && !v2512 && !v2513 && !v2514 && !v2515) throw new Error('NEW_STEPS mismatch');
+    const v2516 = /NEW_STEPS\s*=\s*\[\s*'language',\s*'license',\s*'google',\s*'discovery',\s*'path_decision',\s*'organization',\s*'owner',\s*'branch',\s*'device',\s*'business_setup',\s*'restore',\s*'sync',\s*'ready'\s*\]/.test(boot);
+    if (!v258 && !v259 && !v2510 && !v2511 && !v2512 && !v2513 && !v2514 && !v2515 && !v2516) throw new Error('NEW_STEPS mismatch');
     return {
       steps: v259 ? 8 : 9,
-      version: v2515 ? 'v2-5.14-stage11' : (v2514 ? 'v2-5.13-stage9' : (v2513 ? 'v2-5.12-stage8' : (v2512 ? 'v2-5.11-stage7' : (v2511 ? 'v2-5.11-stage6' : (v2510 ? 'v2-5.10' : (v259 ? 'v2-5.9' : 'v2-5.8'))))))
+      version: v2516 ? 'v2-5.15-stage12' : (v2515 ? 'v2-5.14-stage11' : (v2514 ? 'v2-5.13-stage9' : (v2513 ? 'v2-5.12-stage8' : (v2512 ? 'v2-5.11-stage7' : (v2511 ? 'v2-5.11-stage6' : (v2510 ? 'v2-5.10' : (v259 ? 'v2-5.9' : 'v2-5.8')))))))
     };
   });
 

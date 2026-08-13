@@ -305,7 +305,7 @@ await (async () => {
     deviceConfig: { deviceUuid: 'D1', deviceName: 'PC', lockedBranchId: 'B1', branchLocked: true },
     users: [{ id: 'O1', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     wizard: { path: 'new', lang: 'ar', restoreChoice: 'empty', wizardFlowVersion: 6 },
-    settings: { centerName: 'S6', backup: { providers: { google: { connected: true, oauth: true } } } },
+    settings: { centerName: 'S6 Center', phone: '0501234567', backup: { providers: { google: { connected: true, oauth: true } } } },
   });
   ctx._licStatus = 'valid';
   check(ctx.SetupStateService.evaluateReady({ ignoreRestart: true }).ready === true, 'READY unchanged');
@@ -318,11 +318,11 @@ await (async () => {
   const discoveryIdx = steps.indexOf('discovery');
   const tail = steps.slice(discoveryIdx + 1);
   const expectedTail = steps.includes('owner') && steps.indexOf('owner') < steps.indexOf('branch')
-    ? ['path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready']
+    ? ['path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready']
     : (steps.includes('path_decision')
-      ? ['path_decision', 'organization', 'branch', 'device', 'restore', 'owner', 'sync', 'ready']
-      : ['organization', 'branch', 'device', 'restore', 'owner', 'sync', 'ready']);
-  check(JSON.stringify(tail) === JSON.stringify(expectedTail), 'NEW tail after discovery reflects Stage 11 branch→device');
+      ? ['path_decision', 'organization', 'branch', 'device', 'business_setup', 'restore', 'owner', 'sync', 'ready']
+      : ['organization', 'branch', 'device', 'business_setup', 'restore', 'owner', 'sync', 'ready']);
+  check(JSON.stringify(tail) === JSON.stringify(expectedTail), 'NEW tail after discovery reflects Stage 12 business_setup');
 })();
 
 // Gate model alignment

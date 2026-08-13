@@ -5,8 +5,9 @@
  * V2-5.12+ Stage 8 — Explicit NEW/EXISTING fork after Discovery when existing business found.
  * V2-5.13+ Stage 9 — NEW Start New: Owner before first Branch (organization → owner → branch → restore).
  * V2-5.14+ Stage 11 — Explicit Device step after Branch (branch/device orchestration split).
- * NEW: Language → Activation → Google → Discovery → Path decision (if needed) → Organization → Owner → Branch → Device → Restore → Sync → Ready
- * EXISTING: Language → Google → Discovery → License → Organization → Branch_select → Device → Restore → Owner → Sync → Ready
+ * V2-5.15+ Stage 12 — Explicit Business Setup gate after Device (NEW) / after Restore (EXISTING).
+ * NEW: Language → Activation → Google → Discovery → Path decision (if needed) → Organization → Owner → Branch → Device → Business Setup → Restore → Sync → Ready
+ * EXISTING: Language → Google → Discovery → License → Organization → Branch_select → Device → Restore → Business Setup → Owner → Sync → Ready
  *
  * Google Login never implies Owner. Owner is a seeded normal user account.
  * Dashboard/login completion requires Google + license + org + device branch + data decision + sync.
@@ -26,7 +27,7 @@
     establishedOfflineStartAllowed: true,
   });
 
-  const WIZARD_FLOW_VERSION = 11;
+  const WIZARD_FLOW_VERSION = 12;
   const LEGACY_NEW_STEPS_PRE_STAGE6 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready',
   ]);
@@ -42,15 +43,21 @@
   const LEGACY_NEW_STEPS_PRE_STAGE11 = Object.freeze([
     'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'restore', 'sync', 'ready',
   ]);
+  const LEGACY_NEW_STEPS_PRE_STAGE12 = Object.freeze([
+    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready',
+  ]);
   const LEGACY_EXISTING_STEPS_PRE_STAGE7 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch_select', 'restore', 'owner', 'sync', 'ready',
   ]);
   const LEGACY_EXISTING_STEPS_PRE_STAGE11 = Object.freeze([
     'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'restore', 'owner', 'sync', 'ready',
   ]);
+  const LEGACY_EXISTING_STEPS_PRE_STAGE12 = Object.freeze([
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready',
+  ]);
 
-  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready'];
+  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready'];
 
   const STEP_LABELS = {
     language: 'اللغة',
@@ -62,6 +69,7 @@
     branch: 'إنشاء أول فرع',
     branch_select: 'اختيار فرع موجود',
     device: 'تسجيل الجهاز',
+    business_setup: 'إعداد بيانات المركز',
     owner: 'حساب المالك',
     restore: 'مصدر البيانات',
     sync: 'المزامنة الأولية',
@@ -79,6 +87,7 @@
     branch: 'فرع',
     branch_select: 'فرع',
     device: 'جهاز',
+    business_setup: 'بيانات',
     owner: 'مالك',
     restore: 'بيانات',
     sync: 'مزامنة',
@@ -95,6 +104,7 @@
     branch: 'اسم الفرع الأول فقط — تسجيل الجهاز في الخطوة التالية.',
     branch_select: 'اختر فرعاً موجوداً — تسجيل الجهاز في الخطوة التالية.',
     device: 'أدخل اسم هذا الجهاز لربطه بالفرع المحدد.',
+    business_setup: 'أكمل بيانات المركز الأساسية (الاسم والهاتف) قبل متابعة الإعداد.',
     owner: 'أنشئ حساب المالك الحقيقي للمؤسسة — مطلوب قبل إنشاء أول فرع.',
     restore: 'فحص سريع للمصادر ثم تأكيد الاستعادة — سحابة / محلي / Backup V2 / فارغ بلا تنزيل أثناء الاكتشاف.',
     sync: 'المزامنة تُفعَّل بعد اكتمال الربط.',
@@ -105,6 +115,7 @@
   let branchCreateInFlight = false;
   let branchBindInFlight = false;
   let deviceRegisterInFlight = false;
+  let businessSetupInFlight = false;
   let licenseActivateInFlight = false;
   let ownerLoginInFlight = false;
   let setupOwnerSessionUserId = null;
@@ -132,7 +143,8 @@
     if (version < WIZARD_FLOW_VERSION) {
       const legacySteps = w.path === PATHS.EXISTING
         ? (version < 7 ? LEGACY_EXISTING_STEPS_PRE_STAGE7
-          : (version < 11 ? LEGACY_EXISTING_STEPS_PRE_STAGE11 : EXISTING_STEPS))
+          : (version < 11 ? LEGACY_EXISTING_STEPS_PRE_STAGE11
+            : (version < 12 ? LEGACY_EXISTING_STEPS_PRE_STAGE12 : EXISTING_STEPS)))
         : (version < 6
           ? LEGACY_NEW_STEPS_PRE_STAGE6
           : (version < 7
@@ -141,7 +153,8 @@
               ? LEGACY_NEW_STEPS_PRE_STAGE8
               : (version < 9
                 ? LEGACY_NEW_STEPS_PRE_STAGE9
-                : (version < 11 ? LEGACY_NEW_STEPS_PRE_STAGE11 : NEW_STEPS)))));
+                : (version < 11 ? LEGACY_NEW_STEPS_PRE_STAGE11
+                  : (version < 12 ? LEGACY_NEW_STEPS_PRE_STAGE12 : NEW_STEPS))))));
       const steps = stepsFor(w.path);
       const legacyIdx = Number(w.currentStep);
       if (Number.isFinite(legacyIdx) && legacyIdx >= 0 && legacyIdx < legacySteps.length) {
@@ -163,6 +176,11 @@
           const cfg = global.DeviceConfig?.load?.() || {};
           if (cfg.lockedBranchId) w.pendingBranchId = cfg.lockedBranchId;
         }
+        changed = true;
+      }
+      if (version < 12 && businessSetupStepResolved()) {
+        if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
+        if (!w.completedSteps.includes('business_setup')) w.completedSteps.push('business_setup');
         changed = true;
       }
       if (changed) saveWizard(w);
@@ -295,6 +313,31 @@
     const branchId = getSelectedBranchId() || state.branchId;
     return !!(state.deviceId && state.branchId && state.deviceName
       && (!branchId || state.branchId === branchId));
+  }
+
+  function readBusinessSetupState() {
+    const BSC = global.BusinessSetupContract;
+    const snap = BSC?.readSettingsSnapshot?.() || {
+      centerName: String(global.settings?.centerName || '').trim(),
+      phone: String(global.settings?.phone || '').trim(),
+      address: String(global.settings?.address || '').trim(),
+      centerCity: String(global.settings?.centerCity || '').trim(),
+      organizationId: String(global.LicenseCloud?.loadLocal?.()?.centerId || '').trim(),
+    };
+    return {
+      centerName: snap.centerName,
+      phone: snap.phone,
+      address: snap.address || '',
+      centerCity: snap.centerCity || '',
+      organizationId: snap.organizationId || '',
+    };
+  }
+
+  function businessSetupStepResolved() {
+    const BSC = global.BusinessSetupContract;
+    if (BSC?.isResolved) return BSC.isResolved(readBusinessSetupState());
+    const snap = readBusinessSetupState();
+    return !!(snap.centerName && snap.phone);
   }
 
   function branchStepResolved() {
@@ -547,7 +590,7 @@
       return evaluation.ready;
     }
     const base = hasGoogle() && hasValidLicense() && hasCenterData() && hasDeviceBranch()
-      && hasRestoreDecision() && ownerSetupRequirementMet() && hasSyncDone();
+      && businessSetupStepResolved() && hasRestoreDecision() && ownerSetupRequirementMet() && hasSyncDone();
     if (!base) {
       try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
       return false;
@@ -769,12 +812,19 @@
       }
       case 'branch_select': return hasBranch() && !!getSelectedBranchId();
       case 'device': return deviceStepResolved();
+      case 'business_setup': {
+        if (!deviceStepResolved()) return false;
+        return businessSetupStepResolved();
+      }
       case 'restore': {
         if (!deviceStepResolved()) return false;
+        const w = loadWizard();
+        if (w.path === PATHS.NEW && !businessSetupStepResolved()) return false;
         return hasRestoreDecision();
       }
       case 'sync': {
         if (!deviceStepResolved()) return false;
+        if (!businessSetupStepResolved()) return false;
         return hasSyncDone();
       }
       case 'ready': return isBootComplete();
@@ -1557,6 +1607,73 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     }
   }
 
+  async function commitBusinessSetupFromForm() {
+    if (businessSetupInFlight) {
+      return { ok: false, error: 'business_setup_in_flight' };
+    }
+    if (!deviceStepResolved()) {
+      setStatus('⚠️ يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز', true);
+      return { ok: false, error: 'device_required_before_business_setup' };
+    }
+    if (businessSetupStepResolved()) {
+      setStatus('✅ بيانات المركز جاهزة');
+      return { ok: true, already: true };
+    }
+    const input = {
+      centerName: String(document.getElementById('bf-business-center-name')?.value || '').trim(),
+      phone: String(document.getElementById('bf-business-phone')?.value || '').trim(),
+      address: String(document.getElementById('bf-business-address')?.value || '').trim(),
+      centerCity: String(document.getElementById('bf-business-city')?.value || '').trim(),
+      centerNameEn: String(document.getElementById('bf-business-center-name-en')?.value || '').trim(),
+    };
+    const validation = global.BusinessSetupContract?.validateFormInput?.(input)
+      || { ok: !!(input.centerName && input.phone), issues: [] };
+    if (!validation.ok) {
+      const first = validation.issues?.[0];
+      setStatusFromErr({ message: first?.message || 'business_setup_invalid' }, first?.code || 'business_setup_invalid');
+      return { ok: false, error: first?.code || 'business_setup_invalid', issues: validation.issues };
+    }
+    businessSetupInFlight = true;
+    setStatus('⏳ جارٍ حفظ بيانات المركز...');
+    try {
+      const settings = { ...(global.settings || {}) };
+      settings.centerName = input.centerName;
+      settings.phone = input.phone;
+      if (input.address) settings.address = input.address;
+      if (input.centerCity) settings.centerCity = input.centerCity;
+      if (input.centerNameEn) settings.centerNameEn = input.centerNameEn;
+      const committed = typeof global.persistData === 'function'
+        ? await global.persistData('settings', settings)
+        : await global.SqliteBridge?.setAuthoritative?.('settings', settings);
+      if (!committed || committed.ok === false) {
+        throw new Error(committed?.error || 'business_setup_commit_failed');
+      }
+      global.settings = settings;
+      const lic = global.LicenseCloud?.loadLocal?.();
+      if (lic?.centerId && settings.centerName && lic.centerName !== settings.centerName) {
+        lic.centerName = settings.centerName;
+        global.LicenseCloud?.saveLocal?.(lic);
+      }
+      const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+      if (hydrated && hydrated.ok !== true) {
+        throw new Error(hydrated.error || 'business_setup_hydrate_failed');
+      }
+      const readBack = readBusinessSetupState();
+      if (!readBack.centerName || readBack.centerName !== input.centerName
+        || !readBack.phone || readBack.phone !== input.phone) {
+        throw new Error('business_setup_readback_mismatch');
+      }
+      setStatus('✅ تم حفظ بيانات المركز بنجاح');
+      return { ok: true, readBack };
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false, error: e?.message || e?.code || 'business_setup_failed' };
+    } finally {
+      businessSetupInFlight = false;
+      renderNavButtons(loadWizard());
+    }
+  }
+
   /** @deprecated Stage 11 — use selectExistingBranchOnly + registerDeviceFromForm */
   async function bindExistingBranch() {
     const selected = await selectExistingBranchOnly();
@@ -1991,6 +2108,31 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         addBtn(actions, deviceRegisterInFlight ? '⏳ جارٍ التسجيل...' : '🖥️ تسجيل الجهاز', 'btn-primary', () => registerDeviceFromForm(), deviceRegisterInFlight);
         break;
       }
+      case 'business_setup': {
+        if (!deviceStepResolved()) {
+          content.innerHTML = '<p class="tdw-field-error">يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز.</p>';
+          setStatus('⚠️ الجهاز مطلوب أولاً', true);
+          break;
+        }
+        const snap = readBusinessSetupState();
+        if (businessSetupStepResolved()) {
+          content.innerHTML = `<p>✅ بيانات المركز مكتملة.</p>
+            <p class="bf-source-meta">${snap.centerName} · ${snap.phone}</p>`;
+          setStatus('✅ بيانات المركز جاهزة');
+          break;
+        }
+        const lic = global.LicenseCloud?.loadLocal?.() || {};
+        content.innerHTML = `
+          <p><strong>إعداد بيانات المركز</strong> — الحد الأدنى المطلوب للتشغيل.</p>
+          <div class="form-group"><label>اسم المركز *</label><input id="bf-business-center-name" class="form-control" value="${String(snap.centerName || lic.centerName || '').replace(/"/g, '&quot;')}"></div>
+          <div class="form-group"><label>الاسم بالإنجليزية</label><input id="bf-business-center-name-en" class="form-control" dir="ltr" value="${String(global.settings?.centerNameEn || '').replace(/"/g, '&quot;')}"></div>
+          <div class="form-group"><label>هاتف المركز *</label><input id="bf-business-phone" class="form-control" dir="ltr" value="${String(snap.phone || '').replace(/"/g, '&quot;')}"></div>
+          <div class="form-group"><label>العنوان</label><input id="bf-business-address" class="form-control" value="${String(snap.address || '').replace(/"/g, '&quot;')}"></div>
+          <div class="form-group"><label>المدينة</label><input id="bf-business-city" class="form-control" value="${String(snap.centerCity || '').replace(/"/g, '&quot;')}"></div>
+          <p class="bf-source-meta">لا تُقبل الأسماء الافتراضية مثل «مركز الحجامة».</p>`;
+        addBtn(actions, businessSetupInFlight ? '⏳ جارٍ الحفظ...' : '💾 حفظ بيانات المركز', 'btn-primary', () => commitBusinessSetupFromForm(), businessSetupInFlight);
+        break;
+      }
       case 'owner': {
         const st = global.OwnerManagement?.getOwnerState?.()?.state;
         if (st === 'OWNER_EXISTS' || hasOwnerPasswordAccount()) {
@@ -2421,6 +2563,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           ['الترخيص', hasValidLicense()],
           ['المؤسسة', hasCenterData()],
           ['الفرع والجهاز', hasDeviceBranch()],
+          ['بيانات المركز', businessSetupStepResolved()],
           ['مصدر البيانات', hasRestoreDecision()],
           ['حساب المالك', ownerSetupRequirementMet()],
           ['المزامنة', hasSyncDone()]
@@ -2719,10 +2862,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_NEW_STEPS_PRE_STAGE8,
     LEGACY_NEW_STEPS_PRE_STAGE9,
     LEGACY_NEW_STEPS_PRE_STAGE11,
+    LEGACY_NEW_STEPS_PRE_STAGE12,
     LEGACY_EXISTING_STEPS_PRE_STAGE7,
     LEGACY_EXISTING_STEPS_PRE_STAGE11,
+    LEGACY_EXISTING_STEPS_PRE_STAGE12,
     branchStepResolved,
     deviceStepResolved,
+    businessSetupStepResolved,
+    readBusinessSetupState,
+    commitBusinessSetupFromForm,
     getSelectedBranchId,
     readDeviceCommitState,
     registerDeviceFromForm,

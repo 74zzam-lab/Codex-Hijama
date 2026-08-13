@@ -34,7 +34,7 @@ function baseSnapshot(overrides = {}) {
       setupActivationCommittedAt: new Date().toISOString(),
     },
     organization: { centerId: 'CTR-S2', centerName: 'Stage 2 Center' },
-    settings: { centerName: 'Stage 2 Center' },
+    settings: { centerName: 'Stage 2 Center', phone: '0501234567' },
     deviceConfig: {
       deviceUuid: 'DEV-S2-001',
       deviceName: 'Stage 2 Device',
@@ -88,7 +88,7 @@ function dbSnapshot(dbPath) {
       centerId: readKv('__tdw_cloud_license__')?.centerId || '',
       centerName: readKv('__tdw_meta__')?.centerName || 'Restored Center',
     },
-    settings: { centerName: 'Restored Center' },
+    settings: { centerName: 'Restored Center', phone: '0501234567' },
     googleConnected: true,
     restoreInProgress: false,
     ownerPasswordChangeRequired: false,

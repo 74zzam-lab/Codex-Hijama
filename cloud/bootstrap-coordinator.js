@@ -29,8 +29,8 @@
     setupCompletedAt: 'DERIVED',
   });
 
-  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready'];
+  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready'];
 
   function stepsFor(path) {
     return path === 'existing' ? EXISTING_STEPS : NEW_STEPS;
@@ -98,6 +98,7 @@
       ownerResolved: !!(BF?.hasOwnerPasswordAccount?.() || checks.ownerCredential),
       branchResolved: !!(BF?.hasBranch?.() || checks.branch),
       deviceResolved: !!(BF?.hasDeviceBranch?.() || checks.device),
+      businessSetupResolved: !!(BF?.businessSetupStepResolved?.() || checks.businessSetup),
       dataSourceResolved: !!(BF?.hasRestoreDecision?.() || checks.dataSource),
       initialSyncResolved: !!(metaBootstrapCommitted()
         || readyEval.resolved?.includes?.('initialSync')
@@ -129,12 +130,19 @@
         return !!(BF?.branchStepResolved?.() || BF?.validateStep?.('branch_select'));
       case 'device':
         return !!(BF?.deviceStepResolved?.() || BF?.validateStep?.('device'));
+      case 'business_setup':
+        if (!BF?.deviceStepResolved?.()) return false;
+        return !!(BF?.businessSetupStepResolved?.() || BF?.validateStep?.('business_setup'));
       case 'owner':
         return !!(BF?.ownerStepResolved?.() || BF?.ownerSetupRequirementMet?.() || SS?.hasOwnerCredential?.());
       case 'restore':
-        return !!(BF?.deviceStepResolved?.() && (BF?.hasRestoreDecision?.() || SS?.hasDataSource?.()));
+        if (!BF?.deviceStepResolved?.()) return false;
+        if (coord?.userPathChoice === 'new' && !BF?.businessSetupStepResolved?.()) return false;
+        return !!(BF?.hasRestoreDecision?.() || SS?.hasDataSource?.());
       case 'sync':
-        return !!(BF?.deviceStepResolved?.() && (BF?.hasSyncDone?.() || metaBootstrapCommitted()));
+        if (!BF?.deviceStepResolved?.()) return false;
+        if (!BF?.businessSetupStepResolved?.()) return false;
+        return !!(BF?.hasSyncDone?.() || metaBootstrapCommitted());
       case 'ready':
         return !!(BF?.isBootComplete?.() || SS?.evaluateReady?.({ ignoreRestart: true })?.ready);
       default:

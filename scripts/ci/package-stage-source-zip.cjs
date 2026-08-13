@@ -11,8 +11,8 @@ const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
 const root = path.join(__dirname, '..', '..');
-const stage = process.env.STAGE_NUMBER || '11';
-const label = process.env.STAGE_ZIP_LABEL || 'DEVICE-STEP-PASS';
+const stage = process.env.STAGE_NUMBER || '12';
+const label = process.env.STAGE_ZIP_LABEL || 'BUSINESS-SETUP-PASS';
 
 function resolveCommitShort() {
   if (process.env.GITHUB_SHA) return process.env.GITHUB_SHA.slice(0, 7);
@@ -113,8 +113,9 @@ const zipStat = fs.statSync(zipPath);
 manifest.zipSizeBytes = zipStat.size;
 manifest.sha256 = sha256;
 
-const buildId = process.env.STAGE11_BUILD_ID || process.env.STAGE10_BUILD_ID || process.env.STAGE9_BUILD_ID || 'local';
+const buildId = process.env.STAGE12_BUILD_ID || process.env.STAGE11_BUILD_ID || process.env.STAGE10_BUILD_ID || process.env.STAGE9_BUILD_ID || 'local';
 const evidenceMap = {
+  12: 'STAGE-12-BUSINESS-SETUP',
   11: 'STAGE-11-EXPLICIT-DEVICE-STEP',
   10: 'STAGE-10-OWNER-SEED-RETIREMENT',
   9: 'STAGE-9-OWNER-BEFORE-BRANCH',
@@ -137,6 +138,10 @@ const requiredCore = [
   'cloud/bootstrap-gates.js',
   'cloud/owner-seed-retirement.js',
 ];
+if (stage === '12') {
+  requiredCore.push('tests/baseline/test-stage-12-business-setup-gate.js');
+  requiredCore.push('cloud/business-setup-contract.js');
+}
 if (stage === '11') {
   requiredCore.push('tests/baseline/test-stage-11-explicit-device-step.js');
 }

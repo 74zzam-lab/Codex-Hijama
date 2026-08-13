@@ -12,6 +12,7 @@
     'owner',
     'branch',
     'device',
+    'businessSetup',
     'dataSource',
     'initialSync',
     'google',
@@ -64,6 +65,18 @@
     const cfg = deviceConfig || {};
     return !!(String(cfg.lockedBranchId || '').trim()
       && (String(cfg.deviceName || '').trim() || String(cfg.deviceUuid || '').trim()));
+  }
+
+  function businessSetupResolved(snapshot) {
+    const settings = snapshot.settings || {};
+    const snap = {
+      centerName: String(settings.centerName || snapshot.license?.centerName || '').trim(),
+      phone: String(settings.phone || '').trim(),
+    };
+    if (typeof global !== 'undefined' && global.BusinessSetupContract?.isResolved) {
+      return global.BusinessSetupContract.isResolved(snap);
+    }
+    return !!(snap.centerName && snap.phone && snap.centerName !== 'مركز الحجامة');
   }
 
   function organizationResolved(snapshot) {
@@ -123,6 +136,7 @@
     if (missing.includes('organization')) return STATES.CENTER_REQUIRED;
     if (missing.includes('branch')) return STATES.BRANCH_REQUIRED;
     if (missing.includes('device')) return STATES.DEVICE_REQUIRED;
+    if (missing.includes('businessSetup')) return STATES.CENTER_REQUIRED;
     if (missing.includes('dataSource')) return STATES.DATA_SOURCE_REQUIRED;
     if (missing.includes('owner')) return STATES.OWNER_REQUIRED;
     if (missing.includes('initialSync')) return STATES.SYNC_INITIALIZING;
@@ -203,6 +217,16 @@
       };
     } else {
       missing.push('device');
+    }
+
+    if (businessSetupResolved(snapshot)) {
+      resolved.push('businessSetup');
+      source.businessSetup = {
+        centerName: snapshot.settings?.centerName || snapshot.license?.centerName,
+        phone: snapshot.settings?.phone || null,
+      };
+    } else {
+      missing.push('businessSetup');
     }
 
     if (dataSourceResolved(snapshot)) {

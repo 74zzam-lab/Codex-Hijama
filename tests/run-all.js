@@ -56,6 +56,7 @@ const baseline = [
   ['tests/baseline/test-stage-9-owner-before-first-branch.js', 'stage-9:owner-before-first-branch'],
   ['tests/baseline/test-stage-10-owner-seed-retirement.js', 'stage-10:owner-seed-retirement'],
   ['tests/baseline/test-stage-11-explicit-device-step.js', 'stage-11:explicit-device-step'],
+  ['tests/baseline/test-stage-12-business-setup-gate.js', 'stage-12:business-setup-gate'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],
   ['tests/baseline/test-p0-c-credential-publication.js', 'p0-c:credential-publication'],
   ['tests/baseline/test-p0-c-setup-owner-session.js', 'p0-c:setup-owner-session'],

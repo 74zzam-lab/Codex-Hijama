@@ -9,10 +9,10 @@
   const PATH_EXISTING = 'existing';
 
   const CURRENT_NEW_RUNTIME = Object.freeze([
-    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready',
+    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready',
   ]);
   const CURRENT_EXISTING_RUNTIME = Object.freeze([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready',
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
   ]);
 
   const TARGET_NEW_GATES = Object.freeze([
@@ -194,14 +194,17 @@
   }
 
   function evaluateBusinessSetupResolved() {
-    const org = evaluateOrganizationResolved();
-    const branch = evaluateBranchResolved();
-    const settings = global.settings || {};
-    const hasName = !!(String(settings.centerName || '').trim() || licenseLocal()?.centerName);
-    if (org.status === GATE_STATUS.RESOLVED && branch.status === GATE_STATUS.RESOLVED && hasName) {
-      return gateResult('BUSINESS_SETUP_RESOLVED', GATE_STATUS.RESOLVED, 'center name + branch committed', 'settings+license');
+    const BSC = global.BusinessSetupContract;
+    const snap = BSC?.readSettingsSnapshot?.() || {
+      centerName: String(global.settings?.centerName || licenseLocal()?.centerName || '').trim(),
+      phone: String(global.settings?.phone || '').trim(),
+    };
+    if (BSC?.isResolved?.(snap)) {
+      return gateResult('BUSINESS_SETUP_RESOLVED', GATE_STATUS.RESOLVED, 'required business profile present', 'BusinessSetupContract+settings');
     }
-    return gateResult('BUSINESS_SETUP_RESOLVED', GATE_STATUS.MISSING, 'center/branch business metadata incomplete', 'settings.centerName');
+    const issues = BSC?.fieldIssues?.(snap) || [];
+    return gateResult('BUSINESS_SETUP_RESOLVED', GATE_STATUS.MISSING,
+      issues[0]?.message || 'business setup incomplete', 'BusinessSetupContract', { issues });
   }
 
   function evaluateRestoreDecisionResolved() {
@@ -340,8 +343,9 @@
       { stepId: 'owner', displayName: 'حساب المالك', path: 'BOTH', currentPositionNew: 6, currentPositionExisting: 7, uiRenderer: 'renderStepUI:owner', entry: 'createOwnerFromWizard / authenticateExistingOwnerFromWizard', completionChecker: 'ownerStepResolved / ownerSetupRequirementMet', sourceOfTruth: 'OwnerManagement+users+RBAC session', writes: ['users owner profile'], cloudEffect: false, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['organization'], produces: ['owner credential', 'setup session'] },
       { stepId: 'branch', displayName: 'إنشاء أول فرع', path: 'NEW', currentPositionNew: 8, uiRenderer: 'renderStepUI:branch', entry: 'createFirstBranchFromForm', completionChecker: 'branchStepResolved()', sourceOfTruth: 'license.branches', writes: ['license branches', 'setupBranchCommittedAt'], cloudEffect: true, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['owner'], produces: ['branch'] },
       { stepId: 'device', displayName: 'تسجيل الجهاز', path: 'BOTH', currentPositionNew: 9, currentPositionExisting: 6, uiRenderer: 'renderStepUI:device', entry: 'registerDeviceFromForm', completionChecker: 'deviceStepResolved()', sourceOfTruth: 'DeviceConfig+device registry', writes: ['device config', 'device registry', 'RESTART_REQUIRED'], cloudEffect: false, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['branch'], produces: ['device registration'] },
+      { stepId: 'business_setup', displayName: 'إعداد بيانات المركز', path: 'BOTH', currentPositionNew: 10, currentPositionExisting: 8, uiRenderer: 'renderStepUI:business_setup', entry: 'commitBusinessSetupFromForm', completionChecker: 'businessSetupStepResolved()', sourceOfTruth: 'BusinessSetupContract+settings', writes: ['settings center profile'], cloudEffect: false, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['device'], produces: ['business profile'] },
       { stepId: 'branch_select', displayName: 'اختيار فرع موجود', path: 'EXISTING', currentPositionExisting: 5, uiRenderer: 'renderStepUI:branch_select', entry: 'selectExistingBranchOnly', completionChecker: 'branchStepResolved()', sourceOfTruth: 'license.branches+wizard.pendingBranchId', writes: ['pendingBranchId'], cloudEffect: false, sqliteEffect: false, canRetry: true, canResume: true, canSkip: false, dependsOn: ['organization'], produces: ['branch selection'] },
-      { stepId: 'restore', displayName: 'مصدر البيانات', path: 'BOTH', currentPositionNew: 10, currentPositionExisting: 7, uiRenderer: 'renderStepUI:restore', entry: 'runDiscovery / restore actions', completionChecker: 'hasRestoreDecision() after device', sourceOfTruth: 'wizard.restoreChoice+RestoreReconciliation', writes: ['restoreChoice', 'optional full DB replace'], cloudEffect: true, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['device'], produces: ['data source decision'] },
+      { stepId: 'restore', displayName: 'مصدر البيانات', path: 'BOTH', currentPositionNew: 11, currentPositionExisting: 7, uiRenderer: 'renderStepUI:restore', entry: 'runDiscovery / restore actions', completionChecker: 'hasRestoreDecision()', sourceOfTruth: 'wizard.restoreChoice+RestoreReconciliation', writes: ['restoreChoice', 'optional full DB replace'], cloudEffect: true, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['device', 'business_setup (NEW)'], produces: ['data source decision'] },
       { stepId: 'owner', displayName: 'حساب المالك', path: 'EXISTING', currentPositionExisting: 7, uiRenderer: 'renderStepUI:owner', entry: 'authenticateExistingOwnerFromWizard', completionChecker: 'ownerSetupRequirementMet&&setupOwnerSessionReady', sourceOfTruth: 'OwnerManagement+users', writes: ['users owner profile'], cloudEffect: false, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['restore decision', 'branch/device'], produces: ['owner credential', 'setup session'] },
       { stepId: 'sync', displayName: 'المزامنة الأولية', path: 'BOTH', currentPositionNew: 9, currentPositionExisting: 8, uiRenderer: 'renderStepUI:sync', entry: 'runInitialSyncPipeline', completionChecker: 'hasSyncDone()', sourceOfTruth: 'meta.bootstrapCompletedAt', writes: ['bootstrapCompletedAt', 'SyncEngine'], cloudEffect: true, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['owner session', 'restoreChoice', 'google'], produces: ['initial sync complete'] },
       { stepId: 'ready', displayName: 'الجاهزية', path: 'BOTH', currentPositionNew: 10, currentPositionExisting: 9, uiRenderer: 'renderStepUI:ready', entry: 'finalize + relaunch', completionChecker: 'isBootComplete/evaluateReady', sourceOfTruth: 'ReadyPureEvaluator', writes: ['setupCompletedAt', 'BOOT_DONE_KEY'], cloudEffect: false, sqliteEffect: true, canRetry: true, canResume: true, canSkip: false, dependsOn: ['all gates'], produces: ['READY durable'] },
@@ -364,10 +368,12 @@
         row.currentNew = 7; row.targetNew = 7; row.currentExisting = 5; row.targetExisting = 5; row.changeRequired = 'Stage 11: branch only';
       } else if (cap === 'device') {
         row.currentNew = 8; row.targetNew = 8; row.currentExisting = 6; row.targetExisting = 6; row.changeRequired = 'Stage 11 explicit device step';
+      } else if (cap === 'business setup') {
+        row.currentNew = 9; row.targetNew = 9; row.currentExisting = 8; row.targetExisting = 8; row.changeRequired = 'Stage 12 explicit business setup gate';
       } else if (cap === 'login') {
         row.currentNew = 'post-READY startup'; row.targetNew = 'post-READY'; row.currentExisting = 'post-READY'; row.targetExisting = 'post-READY'; row.changeRequired = 'none (Stage 3)';
       } else {
-        row.currentNew = CURRENT_NEW_RUNTIME.indexOf(cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'read-back' ? 'sync' : cap === 'business setup' ? 'organization' : cap === 'restore' ? 'restore' : cap === 'publication' ? 'sync' : cap === 'READY' ? 'ready' : cap);
+        row.currentNew = CURRENT_NEW_RUNTIME.indexOf(cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'read-back' ? 'sync' : cap === 'business setup' ? 'business_setup' : cap === 'restore' ? 'restore' : cap === 'publication' ? 'sync' : cap === 'READY' ? 'ready' : cap);
         row.targetNew = TARGET_NEW_GATES.indexOf(cap.toUpperCase().replace(/ /g, '_') + (cap === 'restore' ? '_DECISION_RESOLVED' : cap === 'initial sync' ? '_RESOLVED' : cap === 'read-back' ? '_VERIFIED' : cap === 'business setup' ? '_RESOLVED' : cap === 'READY' ? '' : '_RESOLVED'));
         row.currentExisting = CURRENT_EXISTING_RUNTIME.indexOf(cap === 'branch' ? 'branch_select' : cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'restore' ? 'restore' : cap === 'READY' ? 'ready' : cap);
         row.targetExisting = TARGET_EXISTING_GATES.findIndex((g) => g.includes(cap.toUpperCase().split(' ')[0]));

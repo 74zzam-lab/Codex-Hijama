@@ -89,7 +89,7 @@ function readySnapshot(overrides = {}) {
       bootstrapCompletedAt: new Date().toISOString(),
     },
     organization: { centerId: 'CTR-S3', centerName: 'Stage 3 Center' },
-    settings: { centerName: 'Stage 3 Center' },
+    settings: { centerName: 'Stage 3 Center', phone: '0501234567' },
     deviceConfig: {
       deviceUuid: 'DEV-S3-001',
       deviceName: 'Stage 3 Device',
