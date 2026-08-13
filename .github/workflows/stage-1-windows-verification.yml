@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8 Windows Verification
 
 on:
   push:
@@ -9,6 +9,7 @@ on:
       - cursor/stage-5-gate-map-beb8
       - cursor/stage-6-activation-first-beb8
       - cursor/stage-7-explicit-discovery-beb8
+      - cursor/stage-8-explicit-fork-beb8
       - main
   pull_request:
     branches:
@@ -19,6 +20,7 @@ on:
       - cursor/stage-5-gate-map-beb8
       - cursor/stage-6-activation-first-beb8
       - cursor/stage-7-explicit-discovery-beb8
+      - cursor/stage-8-explicit-fork-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -30,7 +32,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -41,6 +43,7 @@ jobs:
       STAGE5_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE6_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE7_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE8_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,6 +89,9 @@ jobs:
           }
           if (Test-Path 'stage-7-uat') {
             Copy-Item -Path 'stage-7-uat\*' -Destination $src -Recurse -Force
+          }
+          if (Test-Path 'stage-8-uat') {
+            Copy-Item -Path 'stage-8-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -224,6 +230,17 @@ jobs:
         working-directory: src
         run: node tests/baseline/test-stage-7-explicit-discovery-gate.js
 
+      - name: Stage 8 explicit-new-existing-fork UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE8_BUILD_ID: ${{ env.STAGE8_BUILD_ID }}
+        run: node scripts/windows-uat/stage-8-explicit-new-existing-fork-uat.cjs
+
+      - name: Stage 8 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-8-explicit-new-existing-fork.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -271,14 +288,14 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
-      - name: Package Stage 7 source ZIP
+      - name: Package Stage 8 source ZIP
         if: success()
         working-directory: src
         shell: pwsh
         env:
-          STAGE7_BUILD_ID: ${{ env.STAGE7_BUILD_ID }}
-          STAGE_NUMBER: '7'
-          STAGE_ZIP_LABEL: DISCOVERY-GATE-PASS
+          STAGE8_BUILD_ID: ${{ env.STAGE8_BUILD_ID }}
+          STAGE_NUMBER: '8'
+          STAGE_ZIP_LABEL: EXPLICIT-FORK-PASS
         run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package evidence artifact
@@ -308,7 +325,8 @@ jobs:
             src/docs/remediation/evidence/STAGE-5-BOOTSTRAP-GATE-MAP/**/*
             src/docs/remediation/evidence/STAGE-6-ACTIVATION-BEFORE-GOOGLE/**/*
             src/docs/remediation/evidence/STAGE-7-EXPLICIT-DISCOVERY/**/*
-            src/Tadawi-Stage-7-DISCOVERY-GATE-PASS-*.zip
+            src/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
+            src/Tadawi-Stage-8-EXPLICIT-FORK-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
