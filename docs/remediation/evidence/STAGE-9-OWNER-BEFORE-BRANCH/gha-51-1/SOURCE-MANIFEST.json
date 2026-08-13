@@ -1,0 +1,10 @@
+{
+  "stage8Baseline": {
+    "sourceCommit": "796d1f9",
+    "evidenceCommit": "5748c26",
+    "githubRun": "31704153627"
+  },
+  "commit": "a938ad3e8494ebeded87cabb8fd8d6a42a3b9c70",
+  "buildId": "gha-51-1",
+  "at": "2026-08-13T14:08:40.116Z"
+}

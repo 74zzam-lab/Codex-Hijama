@@ -1,0 +1,18 @@
+{
+  "authority": {
+    "path": "KEEP_TEMPORARILY",
+    "currentStep": "KEEP_TEMPORARILY",
+    "completedSteps": "NO_LONGER_AUTHORITATIVE",
+    "startedAt": "UI_ONLY",
+    "lang": "KEEP_TEMPORARILY",
+    "restoreChoice": "KEEP_TEMPORARILY",
+    "syncDone": "NO_LONGER_AUTHORITATIVE",
+    "oauthLockAt": "UI_ONLY",
+    "restoreVerifiedDatabase": "KEEP_TEMPORARILY",
+    "selectedCandidateId": "KEEP_TEMPORARILY",
+    "pendingBranchId": "KEEP_TEMPORARILY",
+    "lastError": "UI_ONLY",
+    "lastDiagnostic": "UI_ONLY",
+    "setupCompletedAt": "DERIVED"
+  }
+}

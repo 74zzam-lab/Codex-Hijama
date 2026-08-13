@@ -1,0 +1,19 @@
+{
+  "flow": [
+    "index.html startup()",
+    "SqliteBridge.initializeAtStartup",
+    "SetupStateService.evaluateReady (early gate)",
+    "BootFlow.onAppStartupAfterRelaunch",
+    "ensureUserLoginScreenVisible",
+    "SetupStateDom.applyDomVisibility",
+    "cloud init",
+    "BootFlow.maybeAutoOpenBootFlow"
+  ],
+  "decisionRule": "evaluateReady().ready === true → skip automatic BootFlow open",
+  "writers": {
+    "evaluateReady": "cloud/setup-state-service.js",
+    "needsBootFlow": "cloud/setup-state-service.js getState + cloud/setup-state-dom.js",
+    "shouldAutoOpenBoot": "cloud/boot-flow-ui.js",
+    "autoOpenCallSite": "index.html startup → BootFlow.maybeAutoOpenBootFlow"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "scenario": "restore profile with bootstrapCompletedAt, stale wizard",
+  "expected": "Login path, no auto BootFlow",
+  "nodeHarness": "PASS"
+}

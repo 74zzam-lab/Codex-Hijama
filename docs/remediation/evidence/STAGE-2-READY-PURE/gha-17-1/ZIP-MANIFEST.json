@@ -1,0 +1,30 @@
+{
+  "zipName": "Tadawi-Stage-2-READY-PASS-afa8e29.zip",
+  "commit": "afa8e290fff539f42d544063567096c3e475c3b7",
+  "commitShort": "afa8e29",
+  "createdAt": "2026-08-13T10:02:12.123Z",
+  "fileCount": 1397,
+  "excludedDirectories": [
+    "node_modules",
+    "dist",
+    ".git",
+    "ci-artifacts",
+    "review-work",
+    "01-ORIGINAL",
+    "02-CURRENT",
+    "03-REPORTS",
+    "stage-1-uat",
+    "stage-2-uat",
+    "app-source"
+  ],
+  "totalBytes": 20940335,
+  "zipSizeBytes": 12892881,
+  "sha256": "e60c2ec8f94b2efc302336c222ff977b405679b218da03c1f6297014331db0f9",
+  "validation": {
+    "extractedTo": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\stage-zip-validate-oIHmJo",
+    "requiredPresent": true,
+    "missing": [],
+    "tarExit": 0,
+    "tarExtractStderr": ""
+  }
+}

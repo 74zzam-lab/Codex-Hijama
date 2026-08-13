@@ -1,0 +1,15 @@
+{
+  "at": "2026-08-13T08:35:08.0169297+00:00",
+  "buildId": "gha-6-1",
+  "installer": "D:\\a\\Codex-Hijama\\Codex-Hijama\\src\\dist\\HijamaManagement-Setup-2.0.1.exe",
+  "installerSha256": "896288338774dde1635860a165943c4d78d94081f1169d397891298fd0fe8454",
+  "installerSizeBytes": 106976840,
+  "isolatedUserData": "C:\\Users\\runneradmin\\AppData\\Local\\uat-stage1-gha-6-1",
+  "productionUserDataAvoided": true,
+  "installedExe": "C:\\Users\\runneradmin\\AppData\\Local\\Programs\\Hijama Management System\\Hijama Management System.exe",
+  "installedExeSha256": "fe5be6c1ec1e926a8cbabaf449994a34a25ceea0fe1c99e2a92601ca369a315a",
+  "installedExeSizeBytes": 225949696,
+  "smokeRunning": true,
+  "smokeExitCode": -1,
+  "ok": true
+}

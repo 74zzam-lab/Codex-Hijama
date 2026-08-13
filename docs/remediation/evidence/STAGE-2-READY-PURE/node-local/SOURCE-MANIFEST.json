@@ -1,0 +1,14 @@
+{
+  "branch": "cursor/bootstrap-restore-fixes-beb8",
+  "commit": "56442af465e4df0a5f64e7593450a44b22f8f3aa",
+  "commitShort": "56442af",
+  "stage1Reference": {
+    "tag": "stage1-restore-pass",
+    "evidencePath": "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/gha-6-1",
+    "githubRun": "31682099953",
+    "setupExeSha256": "896288338774dde1635860a165943c4d78d94081f1169d397891298fd0fe8454"
+  },
+  "node": "v22.14.0",
+  "platform": "linux",
+  "buildId": "node-local"
+}
