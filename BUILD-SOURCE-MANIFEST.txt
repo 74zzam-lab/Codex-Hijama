@@ -1,0 +1,26 @@
+Hijama Management System — مصدر البناء فقط
+============================================
+
+الملف: Hijama-Management-System-SOURCE-BUILD-2.0.1.zip
+الإصدار: 2.0.1
+buildId: FINAL-RESTORE-FIXED-20260813
+SHA-256: 8592119b610cfb9f70384101270854a9b3536f551a92a4cbc26349c20af435f0
+الحجم: ~11 MB
+الملفات: 1453 (بدون node_modules / dist / docs/archive)
+
+محتويات الأرشيف:
+- package.json + package-lock.json
+- electron/, cloud/, database/, license/, tests/, scripts/, build/
+- كل ملفات التطبيق اللازمة للبناء
+
+غير مضمّن (تُثبَّت/تُبنى محلياً):
+- node_modules
+- dist / EXE
+
+بناء Windows (على جهاز Windows):
+  npm ci
+  set GOOGLE_OAUTH_CLIENT_ID=...
+  set GOOGLE_OAUTH_CLIENT_SECRET=...
+  npm run build
+
+ملاحظة V5: مولّد Legacy V5 محفوظ عمداً (قرار مالك المنتج).

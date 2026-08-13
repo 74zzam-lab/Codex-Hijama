@@ -1,0 +1,28 @@
+{
+  "stage2Focused": "PASS",
+  "stage1Focused": "PASS",
+  "stage1Details": [
+    {
+      "name": "test-v2-5-10-cloud-discovery-restore",
+      "pass": true
+    },
+    {
+      "name": "test-p0-c-restore-truth-and-boot-gate",
+      "pass": true
+    },
+    {
+      "name": "test-current-restore-license-login",
+      "pass": true
+    },
+    {
+      "name": "test-current-setup-restore-runtime",
+      "pass": true
+    },
+    {
+      "name": "test-v2-5-8-auth-activation-ui",
+      "pass": true
+    }
+  ],
+  "stdout": "PASS stage-2-ready-pure (false +/- , missing gates, zero-write, restore consistency)",
+  "stderr": ""
+}
