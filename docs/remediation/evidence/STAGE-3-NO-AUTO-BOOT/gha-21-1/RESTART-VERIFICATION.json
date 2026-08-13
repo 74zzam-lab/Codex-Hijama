@@ -1,0 +1,5 @@
+{
+  "iterations": 5,
+  "expected": "READY=true, no auto boot each restart",
+  "nodeHarness": "PASS"
+}

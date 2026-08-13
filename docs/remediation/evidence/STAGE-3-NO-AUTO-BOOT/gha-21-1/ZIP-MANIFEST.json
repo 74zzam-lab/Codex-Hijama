@@ -1,0 +1,31 @@
+{
+  "zipName": "Tadawi-Stage-3-NO-AUTO-BOOT-PASS-012d7ce.zip",
+  "commit": "012d7ce3fe45fdd7541d1f46ba61b96abef12d2c",
+  "commitShort": "012d7ce",
+  "createdAt": "2026-08-13T11:04:05.802Z",
+  "fileCount": 1413,
+  "excludedDirectories": [
+    "node_modules",
+    "dist",
+    ".git",
+    "ci-artifacts",
+    "review-work",
+    "01-ORIGINAL",
+    "02-CURRENT",
+    "03-REPORTS",
+    "stage-1-uat",
+    "stage-2-uat",
+    "stage-3-uat",
+    "app-source"
+  ],
+  "totalBytes": 20970979,
+  "zipSizeBytes": 12908075,
+  "sha256": "4c7556bb25cc8e695bb0670f63cb0d62b394c81cd2828aaff965009833364ae1",
+  "validation": {
+    "extractedTo": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\stage-zip-validate-sYVmYa",
+    "requiredPresent": true,
+    "missing": [],
+    "tarExit": 0,
+    "tarExtractStderr": ""
+  }
+}
