@@ -1,0 +1,23 @@
+{
+  "runId": 31741369628,
+  "runNumber": 65,
+  "runAttempt": 1,
+  "buildId": "gha-65-1",
+  "conclusion": "success",
+  "runner": "windows-2022",
+  "headSha": "6f02811366426dca09358a246b97a9e49cc9f1d6",
+  "url": "https://github.com/74zzam-lab/Codex-Hijama/actions/runs/31741369628",
+  "lint": "PASS",
+  "npmTest": "PASS (144/144)",
+  "e2e": "PASS (17/17)",
+  "stage12Focused": "PASS (45 scenarios)",
+  "setupExeSha256": "68bbfc6c2323f21093eea8796d3054cd8456368c3458782a96634f3a6986d8a4",
+  "stage12Zip": "Tadawi-Stage-12-BUSINESS-SETUP-PASS-2aa9857.zip",
+  "stage12ZipSha256": "eda24cc733720b8c90869c89c4e6ec2c4d5f93375104016e8f1fb5d80d14e759",
+  "stage12ZipSizeBytes": 13976133,
+  "stage12ZipFileCount": 1953,
+  "artifacts": [
+    "setup-exe-65-2aa9857f38f9cef274195ab74cb0025745a84c6d",
+    "stage-evidence-2aa9857f38f9cef274195ab74cb0025745a84c6d-65"
+  ]
+}

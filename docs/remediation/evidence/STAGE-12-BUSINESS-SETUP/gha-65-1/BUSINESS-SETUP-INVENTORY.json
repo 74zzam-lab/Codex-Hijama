@@ -1,0 +1,22 @@
+{
+  "organizationLevel": [
+    "centerName",
+    "centerNameEn",
+    "phone",
+    "address",
+    "centerCity",
+    "taxNum",
+    "crNum",
+    "waNumber",
+    "siteUrl"
+  ],
+  "branchLevel": [],
+  "deviceLevel": [],
+  "existingForms": [
+    "index.html settings panels",
+    "cupping-first-run.js post-READY",
+    "boot-flow business_setup step"
+  ],
+  "savePath": "persistData(settings) via commitBusinessSetupFromForm",
+  "preStage12": "organization step only confirmed centerId+centerName; rich profile in settings UI post-READY"
+}

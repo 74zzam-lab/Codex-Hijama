@@ -1,0 +1,12 @@
+{
+  "gateId": "BUSINESS_SETUP_RESOLVED",
+  "evaluator": "evaluateBusinessSetupResolved in bootstrap-gates.js",
+  "readOnly": true,
+  "authority": "BusinessSetupContract.isResolved(settings snapshot)",
+  "notBasedOn": [
+    "completedSteps",
+    "currentStep",
+    "businessSetupDone wizard flag alone"
+  ],
+  "zeroWrite": true
+}
