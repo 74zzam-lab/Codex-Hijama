@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5 Windows Verification
+name: Stage 1+2+3+4+5+6 Windows Verification
 
 on:
   push:
@@ -7,6 +7,7 @@ on:
       - cursor/stage-3-no-auto-boot-beb8
       - cursor/stage-4-coordinator-state-beb8
       - cursor/stage-5-gate-map-beb8
+      - cursor/stage-6-activation-first-beb8
       - main
   pull_request:
     branches:
@@ -15,6 +16,7 @@ on:
       - cursor/stage-3-no-auto-boot-beb8
       - cursor/stage-4-coordinator-state-beb8
       - cursor/stage-5-gate-map-beb8
+      - cursor/stage-6-activation-first-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -26,7 +28,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5 Windows Verification
+    name: Stage 1+2+3+4+5+6 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -35,6 +37,7 @@ jobs:
       STAGE3_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE4_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE5_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE6_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -74,6 +77,9 @@ jobs:
           }
           if (Test-Path 'stage-5-uat') {
             Copy-Item -Path 'stage-5-uat\*' -Destination $src -Recurse -Force
+          }
+          if (Test-Path 'stage-6-uat') {
+            Copy-Item -Path 'stage-6-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -190,6 +196,17 @@ jobs:
         working-directory: src
         run: node tests/baseline/test-stage-5-bootstrap-gate-map.js
 
+      - name: Stage 6 activation-before-google UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE6_BUILD_ID: ${{ env.STAGE6_BUILD_ID }}
+        run: node scripts/windows-uat/stage-6-activation-before-google-uat.cjs
+
+      - name: Stage 6 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-6-activation-before-google.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -237,14 +254,14 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
-      - name: Package Stage 5 source ZIP
+      - name: Package Stage 6 source ZIP
         if: success()
         working-directory: src
         shell: pwsh
         env:
-          STAGE5_BUILD_ID: ${{ env.STAGE5_BUILD_ID }}
-          STAGE_NUMBER: '5'
-          STAGE_ZIP_LABEL: GATE-MAP-PASS
+          STAGE6_BUILD_ID: ${{ env.STAGE6_BUILD_ID }}
+          STAGE_NUMBER: '6'
+          STAGE_ZIP_LABEL: ACTIVATION-FIRST-PASS
         run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package evidence artifact
@@ -272,7 +289,8 @@ jobs:
             src/docs/remediation/evidence/STAGE-3-NO-AUTO-BOOT/**/*
             src/docs/remediation/evidence/STAGE-4-COORDINATOR-STATE/**/*
             src/docs/remediation/evidence/STAGE-5-BOOTSTRAP-GATE-MAP/**/*
-            src/Tadawi-Stage-5-GATE-MAP-PASS-*.zip
+            src/docs/remediation/evidence/STAGE-6-ACTIVATION-BEFORE-GOOGLE/**/*
+            src/Tadawi-Stage-6-ACTIVATION-FIRST-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
