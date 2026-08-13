@@ -1,0 +1,13 @@
+{
+  "fields": [
+    "ok",
+    "organizationCandidates",
+    "licenseCandidates",
+    "backupCandidates",
+    "branchCandidates",
+    "syncCandidates",
+    "selectedOrUniqueCandidate",
+    "status",
+    "diagnostics"
+  ]
+}
