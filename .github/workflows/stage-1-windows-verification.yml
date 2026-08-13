@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7+8+9 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8+9+10 Windows Verification
 
 on:
   push:
@@ -11,6 +11,7 @@ on:
       - cursor/stage-7-explicit-discovery-beb8
       - cursor/stage-8-explicit-fork-beb8
       - cursor/stage-9-owner-before-branch-beb8
+      - cursor/stage-10-owner-seed-retirement-beb8
       - main
   pull_request:
     branches:
@@ -23,6 +24,7 @@ on:
       - cursor/stage-7-explicit-discovery-beb8
       - cursor/stage-8-explicit-fork-beb8
       - cursor/stage-9-owner-before-branch-beb8
+      - cursor/stage-10-owner-seed-retirement-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -34,7 +36,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7+8+9 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8+9+10 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -47,6 +49,7 @@ jobs:
       STAGE7_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE8_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE9_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE10_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -98,6 +101,9 @@ jobs:
           }
           if (Test-Path 'stage-9-uat') {
             Copy-Item -Path 'stage-9-uat\*' -Destination $src -Recurse -Force
+          }
+          if (Test-Path 'stage-10-uat') {
+            Copy-Item -Path 'stage-10-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -258,6 +264,17 @@ jobs:
         working-directory: src
         run: node tests/baseline/test-stage-9-owner-before-first-branch.js
 
+      - name: Stage 10 owner-seed-retirement UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE10_BUILD_ID: ${{ env.STAGE10_BUILD_ID }}
+        run: node scripts/windows-uat/stage-10-owner-seed-retirement-uat.cjs
+
+      - name: Stage 10 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-10-owner-seed-retirement.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -305,14 +322,14 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
-      - name: Package Stage 9 source ZIP
+      - name: Package Stage 10 source ZIP
         if: success()
         working-directory: src
         shell: pwsh
         env:
-          STAGE9_BUILD_ID: ${{ env.STAGE9_BUILD_ID }}
-          STAGE_NUMBER: '9'
-          STAGE_ZIP_LABEL: OWNER-BEFORE-BRANCH-PASS
+          STAGE10_BUILD_ID: ${{ env.STAGE10_BUILD_ID }}
+          STAGE_NUMBER: '10'
+          STAGE_ZIP_LABEL: OWNER-SEED-RETIRED-PASS
         run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package evidence artifact
@@ -344,7 +361,8 @@ jobs:
             src/docs/remediation/evidence/STAGE-7-EXPLICIT-DISCOVERY/**/*
             src/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
             src/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
-            src/Tadawi-Stage-9-OWNER-BEFORE-BRANCH-PASS-*.zip
+            src/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            src/Tadawi-Stage-10-OWNER-SEED-RETIRED-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
