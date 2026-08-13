@@ -1,0 +1,14 @@
+{
+  "runId": "31696836029",
+  "buildId": "gha-27-1",
+  "workflow": "stage-1-windows-verification.yml",
+  "runner": "windows-2022",
+  "conclusion": "success",
+  "sourceCommit": "a761b7c461340ba89bce00105e66137027e18d1e",
+  "stage4Baseline": {
+    "commit": "4974ebda7760e7fd487723bf08ef1a8be9571b89",
+    "evidence": "9f32c2f",
+    "run": "31695065909"
+  },
+  "url": "https://github.com/74zzam-lab/Codex-Hijama/actions/runs/31696836029"
+}

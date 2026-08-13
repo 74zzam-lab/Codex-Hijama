@@ -1,0 +1,68 @@
+{
+  "steps": [
+    "language",
+    "google",
+    "license",
+    "organization",
+    "branch_select",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "excessVsTarget": [
+    "license step when recovered",
+    "organization when recovered",
+    "owner when restored from backup"
+  ],
+  "transitions": [
+    {
+      "from": "language",
+      "to": "google",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('language')"
+    },
+    {
+      "from": "google",
+      "to": "license",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('google')"
+    },
+    {
+      "from": "license",
+      "to": "organization",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('license')"
+    },
+    {
+      "from": "organization",
+      "to": "branch_select",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('organization')"
+    },
+    {
+      "from": "branch_select",
+      "to": "restore",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('branch_select')"
+    },
+    {
+      "from": "restore",
+      "to": "owner",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('restore')"
+    },
+    {
+      "from": "owner",
+      "to": "sync",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('owner')"
+    },
+    {
+      "from": "sync",
+      "to": "ready",
+      "decidedBy": "BootFlow.validateStep",
+      "condition": "isStepResolved('sync')"
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "module": "cupping-first-run.js",
+  "autoOpenPolicy": "shouldShowSetupWizard returns false when evaluateReady().ready",
+  "manualEntry": "settings.firstRun.forceWizard === true"
+}

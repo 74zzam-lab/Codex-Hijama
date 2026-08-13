@@ -1,0 +1,5 @@
+{
+  "google": "runGoogleConnect → connectGoogleDriveOnly → refreshGoogleConnectionState (OAuth only)",
+  "discovery": "runDiscoveryGate → read-only classify/verify/cache",
+  "separated": true
+}
