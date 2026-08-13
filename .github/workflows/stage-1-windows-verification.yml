@@ -1,4 +1,4 @@
-name: Stage 1 Windows Verification
+name: Stage 1+2 Windows Verification
 
 on:
   push:
@@ -20,11 +20,12 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1 Windows Verification
+    name: Stage 1+2 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
       STAGE1_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE2_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,6 +53,9 @@ jobs:
           if (Test-Path 'stage-1-uat/stage-1-package-evidence.cjs') {
             New-Item -ItemType Directory -Force -Path (Join-Path $src 'scripts/ci') | Out-Null
             Copy-Item -Force 'stage-1-uat/stage-1-package-evidence.cjs' (Join-Path $src 'scripts/ci/stage-1-package-evidence.cjs')
+          }
+          if (Test-Path 'stage-2-uat') {
+            Copy-Item -Path 'stage-2-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -124,6 +128,17 @@ jobs:
           TDAWI_UAT_USER_DATA: ${{ runner.temp }}\uat-stage1-${{ env.STAGE1_BUILD_ID }}
         run: node scripts/windows-uat/stage-1-backup-restore-uat.cjs
 
+      - name: Stage 2 READY pure UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE2_BUILD_ID: ${{ env.STAGE2_BUILD_ID }}
+        run: node scripts/windows-uat/stage-2-ready-pure-uat.cjs
+
+      - name: Stage 2 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-2-ready-pure.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -171,6 +186,16 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
+      - name: Package Stage 2 source ZIP
+        if: success()
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE2_BUILD_ID: ${{ env.STAGE2_BUILD_ID }}
+          STAGE_NUMBER: '2'
+          STAGE_ZIP_LABEL: READY-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
+
       - name: Package evidence artifact
         if: always()
         working-directory: src
@@ -190,7 +215,10 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: stage1-evidence-${{ github.sha }}-${{ github.run_number }}
-          path: src/ci-artifacts/stage1-evidence-*/
+          path: |
+            src/ci-artifacts/stage1-evidence-*/
+            src/docs/remediation/evidence/STAGE-2-READY-PURE/**/*
+            src/Tadawi-Stage-2-READY-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
