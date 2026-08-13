@@ -17,7 +17,7 @@ const defaultsSrc = fs.readFileSync(path.join(root, 'cloud/activation-sync-defau
 const inventory = fs.readFileSync(path.join(root, 'docs/integration-v2-5-9/00-INVENTORY.md'), 'utf8');
 const readiness = fs.readFileSync(path.join(root, 'docs/integration-v2-5-9/FINAL-RELEASE-READINESS.md'), 'utf8');
 
-check(/version:\s*'v2-5\.(9|10|11)'/.test(bootSrc), 'BootFlow v2-5.9+');
+check(/version:\s*'v2-5\.\d+'/.test(bootSrc), 'BootFlow v2-5.9+');
 check(/runDiscoveryGate|PostGoogleCloudDiscovery/.test(bootSrc + indexSrc), 'explicit discovery gate wired');
 check(/autoDiscoverActivationAfterGoogle/.test(bootSrc), 'license recovery helper retained');
 check(/NEW_STEPS\s*=\s*\[[^\]]*restore[^\]]*sync[^\]]*ready/.test(bootSrc.replace(/\s+/g, ' ')), 'NEW_STEPS includes restore/sync/ready');

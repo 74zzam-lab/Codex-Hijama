@@ -1,0 +1,26 @@
+{
+  "at": "2026-08-13T15:13:06.909Z",
+  "ok": true,
+  "cases": [
+    {
+      "id": "oauth_in_flight",
+      "handled": true
+    },
+    {
+      "id": "owner_password_empty",
+      "handled": true
+    },
+    {
+      "id": "branch_entitlement_issuer_signature",
+      "handled": true
+    },
+    {
+      "id": "dashboard_before_ready",
+      "handled": true
+    },
+    {
+      "id": "skip_owner_during_boot",
+      "handled": true
+    }
+  ]
+}

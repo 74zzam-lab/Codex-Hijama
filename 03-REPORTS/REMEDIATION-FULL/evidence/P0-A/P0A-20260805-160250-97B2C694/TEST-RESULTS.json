@@ -1,0 +1,42 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "suites": [
+    {
+      "name": "npm test",
+      "result": "PASS",
+      "passed": 108,
+      "total": 108
+    },
+    {
+      "name": "P0-A security boundary",
+      "result": "PASS",
+      "passed": 49,
+      "total": 49
+    },
+    {
+      "name": "source runtime",
+      "result": "PASS",
+      "passed": 39,
+      "total": 39,
+      "report": "D:\\Hijama-Clinic-Production\\.codex-p0a\\source-runtime-final-v6.json"
+    },
+    {
+      "name": "installed runtime",
+      "result": "PASS",
+      "passed": 39,
+      "total": 39,
+      "report": "D:\\Hijama-Clinic-Production\\.codex-p0a\\installed-runtime-final-v6.json"
+    },
+    {
+      "name": "npm audit --omit=dev",
+      "result": "PASS",
+      "productionVulnerabilities": 0
+    },
+    {
+      "name": "node --check changed security sources",
+      "result": "PASS",
+      "files": 15
+    }
+  ]
+}

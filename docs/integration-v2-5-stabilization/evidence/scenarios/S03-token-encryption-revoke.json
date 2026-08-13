@@ -1,0 +1,11 @@
+{
+  "id": "S03-token-encryption-revoke",
+  "title": "SafeStorage-only token encryption + disconnect revoke",
+  "result": "PASS",
+  "ms": 0,
+  "evidence": {
+    "safeStorageOnly": true,
+    "failClosed": true,
+    "revoke": true
+  }
+}

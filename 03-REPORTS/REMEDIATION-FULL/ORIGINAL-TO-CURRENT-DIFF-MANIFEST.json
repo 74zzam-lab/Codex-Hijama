@@ -1,0 +1,56 @@
+{
+  "comparisonDate": "2026-08-13",
+  "original": {
+    "archive": "D:/Cupping-System-Management-cursor-v2-5-9-final-activation-ownerhub-release-c2ea (2).zip",
+    "archiveSizeBytes": 13475780,
+    "sha256": "01e89d6fc161530ae03690865062827bbdecbb7ca58b3e0fe331909a9536b0cc",
+    "package": "hijama-management-system",
+    "version": "2.0.1",
+    "testFiles": 78,
+    "scriptFiles": 104,
+    "documentationFiles": 593,
+    "migrationFiles": 2
+  },
+  "current": {
+    "buildId": "FINAL-RESTORE-20260813",
+    "archive": "artifacts/Hijama-Clinic-FINAL-RESTORE-20260813-CURSOR-HANDOFF.zip",
+    "sha256File": "artifacts/Hijama-Clinic-FINAL-RESTORE-20260813-CURSOR-HANDOFF.zip.sha256",
+    "package": "hijama-management-system",
+    "version": "2.0.1",
+    "testFiles": 114,
+    "scriptFiles": 123,
+    "documentationFilesBeforeThisReport": 842,
+    "migrationFiles": 6,
+    "lint": "PASS",
+    "focusedRestoreGroups": "13 PASS",
+    "fullTestSuite": "126/132"
+  },
+  "productionSourceDifference": {
+    "added": 50,
+    "modified": 127,
+    "deleted": 3,
+    "totalDifferent": 180,
+    "exclusions": [
+      "docs",
+      "tests",
+      "scripts",
+      "node_modules",
+      "dist",
+      "artifacts",
+      "local evidence and profiles"
+    ]
+  },
+  "release": {
+    "productionCandidate": "NO",
+    "commercialRelease": "NO-GO",
+    "currentSourceInstalledExe": "UNVERIFIED",
+    "openCriticalSecurity": ["AUD-LIC-002"],
+    "primaryFunctionalOpenEvidence": [
+      "exact current-source Windows EXE install and restart",
+      "real Device A/B operation synchronization",
+      "real Drive/Sheets mutation and read-back",
+      "historical V3 restore using the operator backup password",
+      "Authenticode signing"
+    ]
+  }
+}

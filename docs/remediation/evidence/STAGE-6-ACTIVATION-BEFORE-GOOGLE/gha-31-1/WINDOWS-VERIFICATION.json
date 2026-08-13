@@ -1,7 +1,9 @@
 {
   "nodeHarness": "PASS",
   "windowsRunner": "windows-2022",
-  "installedExeSmoke": "GHA post-build",
+  "windowsBuild": "PASS",
+  "setupExeSha256": "6d3b2a893bbabbeb94abaa04ecb8e4a0e30ee60a3a0efe9df9d58dee48ecf4a2",
+  "installedExeSmoke": "PASS",
   "fullInteractiveGui": "UNVERIFIED",
   "realGoogleDrive": "UNVERIFIED"
 }

@@ -1,0 +1,15 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "ipcCoverage": "50/50 PASS",
+  "unknownChannels": "DENIED",
+  "forgedDeveloperBind": "DENIED",
+  "intentionalDeveloperLogin": "PASS",
+  "sheetsProxyAllowlist": "PASS",
+  "driveActivationUploadVerification": "PASS_SOURCE",
+  "openFindings": {
+    "AUD-LIC-002": "FAIL_SHARED_HMAC_IN_CUSTOMER_PACKAGE",
+    "AUD-LIC-004": "FAIL_CUSTOMER_PACKAGE_CONTAINS_SIGNING_CAPABILITY",
+    "authenticode": "NOT_SIGNED"
+  },
+  "releaseSecurityGate": "FAIL"
+}

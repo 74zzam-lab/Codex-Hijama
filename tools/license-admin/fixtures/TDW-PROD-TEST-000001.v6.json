@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 6,
+  "licenseId": "TDW-PROD-TEST-000001",
+  "customerId": "PROD-TEST",
+  "customerName": "Production Fixture",
+  "packageId": "PRO",
+  "issuedAt": "2026-01-01T00:00:00.000Z",
+  "expiresAt": "2035-01-01T00:00:00.000Z",
+  "deviceBinding": {
+    "mode": "any"
+  },
+  "features": [
+    "clients",
+    "appointments",
+    "payroll",
+    "reports",
+    "sync",
+    "backup",
+    "inventory",
+    "expenses",
+    "attendance"
+  ],
+  "limits": {
+    "branches": 2,
+    "users": 10
+  },
+  "nonce": "ca1e8735bee821fdfcc2f6aeacca557f",
+  "keyId": "prod-ed25519-2026-a7f929f51598",
+  "centerId": "CTR-PROD-TEST",
+  "centerName": "Production Fixture",
+  "branches": [
+    {
+      "id": "BR-MAIN",
+      "name": "Main Branch",
+      "code": "MAIN",
+      "active": true
+    }
+  ],
+  "signature": "r_j2TCSW0ermC0C5OEE8gdatjbaEHKSeGgDIl2rU9b40RHAH5jWMhCQ2kPJYvxY_fd8EBkc5yMmlfw3eNmhNAQ"
+}

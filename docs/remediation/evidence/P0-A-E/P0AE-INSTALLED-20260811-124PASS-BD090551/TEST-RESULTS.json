@@ -1,0 +1,9 @@
+{
+  "npmTest":{"result":"PASS","passed":124,"total":124,"durationSeconds":337.5},
+  "lint":{"result":"PASS"},
+  "p0aSource":{"result":"PASS","passed":53,"total":53},
+  "p0aInstalled":{"result":"PASS","passed":41,"total":41},
+  "p0bInstalled":{"result":"PASS","passed":7,"total":7},
+  "p0cFocusedSource":{"result":"PASS","groups":8,"assertions":53},
+  "p0cLiveDriveDiagnostic":{"result":"PARTIAL_PASS","googleConnected":true,"driveInventoryItems":18,"validLicenses":1,"setupActivationVerifier":true,"sandboxCommit":"DENIED_NONEMPTY_TARGET_EXPECTED"}
+}

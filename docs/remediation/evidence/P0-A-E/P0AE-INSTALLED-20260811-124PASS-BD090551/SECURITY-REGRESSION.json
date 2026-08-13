@@ -1,0 +1,11 @@
+{
+  "storedXssExecution":0,
+  "forgedDeveloperBind":"DENIED",
+  "intentionalDeveloperLogin":"PASS",
+  "unknownIpc":"DENIED",
+  "protectedKvLowRoleWrite":"DENIED",
+  "printPayloadExecution":0,
+  "unexpectedRuntimePageErrors":0,
+  "expectedCspNegativeTestConsoleDenials":2,
+  "oauthInstalledConsentState":"UNVERIFIED"
+}

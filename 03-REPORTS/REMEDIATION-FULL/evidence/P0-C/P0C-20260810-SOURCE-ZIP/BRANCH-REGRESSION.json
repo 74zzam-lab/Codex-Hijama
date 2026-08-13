@@ -1,0 +1,7 @@
+{
+  "phase": "P0-C",
+  "p0bBranchChecks": { "passed": 11, "failed": 0 },
+  "localChoiceAvoidsBootstrapHydrate": true,
+  "installedP0CBranchRegression": "UNVERIFIED"
+}
+

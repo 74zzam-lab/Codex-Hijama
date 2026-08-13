@@ -1,0 +1,8 @@
+{
+  "oldWizardKv": "currentStep indices will shift on reorder — migrate via gate-derived resume (Stage 4 coordinator)",
+  "readyProfile": "READY devices skip bootstrap — unaffected",
+  "existingBranch": "branch_select path preserved in EXISTING_STEPS",
+  "existingOwner": "owner credential survives — no re-create on reorder",
+  "oldSetupState": "completedSteps/syncDone non-authoritative since Stage 4",
+  "migrationStrategy": "evaluate SoT gates → first unresolved; do not delete wizard KV"
+}

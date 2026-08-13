@@ -1,0 +1,11 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "platform": "Windows 10.0.19045 x64",
+  "installMode": "NSIS silent isolated",
+  "installRoot": "D:\\Hijama-Clinic-Production\\.codex-validation\\installed\\FINALCLEAN-37F3FDE0",
+  "exitCode": 0,
+  "durationSeconds": 38.4,
+  "installedExeSha256": "EC4EA73B7B8B9FA4DE5EE97CD722F4CEF2D4AA6C272D18B2D08ED07E33C5B764",
+  "installedAsarSha256": "05B102C000D0F3A33F99CF46378073E0902565E3C4DED04D2CC74C429DE7064F",
+  "result": "PASS"
+}

@@ -1,0 +1,13 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "source": {
+    "branchAuthority": "11/11 PASS",
+    "operationSync": "9/9 PASS",
+    "ownerHubControls": "PASS",
+    "firstBranchOnlyDuringSetup": "PASS",
+    "additionalOwnerHubBranch": "PASS",
+    "crossBranchMutation": "DENIED"
+  },
+  "installedTwoBranchInteractive": "UNVERIFIED",
+  "result": "PARTIAL"
+}

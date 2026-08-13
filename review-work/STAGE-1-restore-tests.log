@@ -1,2 +1,0 @@
-OK: v2-5.8 activation unit
-PASS setup restore runtime: Main safeStorage fallback + cloneable result + wrong-password no-swap

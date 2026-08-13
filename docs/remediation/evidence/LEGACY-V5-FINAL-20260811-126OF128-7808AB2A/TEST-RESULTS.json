@@ -1,0 +1,20 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "lint": { "result": "PASS", "exitCode": 0 },
+  "fullSuite": {
+    "result": "FAIL",
+    "groupsPassed": 126,
+    "groupsTotal": 128,
+    "expectedSecurityGateFailures": ["p0-e:licensing-production", "license:test"]
+  },
+  "focused": {
+    "p0aSecurity": "50/50 PASS",
+    "p0bBranchAuthority": "11/11 PASS",
+    "p0cSetupActivation": "15/15 PASS",
+    "p0dOperationSync": "9/9 PASS",
+    "v5Matrix": "441/441 PASS",
+    "v258Scenarios": "10/10 PASS",
+    "cloudV2": "PASS",
+    "sheetsProxy": "PASS"
+  }
+}

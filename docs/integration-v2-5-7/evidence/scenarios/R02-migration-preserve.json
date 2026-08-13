@@ -1,0 +1,15 @@
+{
+  "id": "R02-migration-preserve",
+  "title": "V2-4→V2-5 preserve records/attachments/outbox/owner/license",
+  "result": "PASS",
+  "ms": 257,
+  "evidence": {
+    "proofs": [
+      "schemaStep001to002",
+      "preserveUpgrade",
+      "corruptRefuse",
+      "preMigrationBackup",
+      "restoreOldBackup"
+    ]
+  }
+}
