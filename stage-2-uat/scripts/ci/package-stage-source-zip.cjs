@@ -60,32 +60,13 @@ const manifest = {
   totalBytes: files.reduce((s, f) => s + f.size, 0),
 };
 
-// Use system zip
-const listFile = path.join(os.tmpdir(), `zip-list-${Date.now()}.txt`);
-fs.writeFileSync(listFile, files.map((f) => f.rel).join('\n'));
-const zipCmd = process.platform === 'win32'
-  ? `powershell -Command "Compress-Archive -Path @(Get-Content '${listFile}') -DestinationPath '${zipPath}' -Force"`
-  : `cd "${root}" && zip -q -r "${zipPath}" -@ < "${listFile}"`;
+if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 
-if (process.platform !== 'win32') {
-  const r = spawnSync('bash', ['-lc', `cd "${root}" && zip -q -r "${zipPath}" -@`], {
-    input: files.map((f) => f.rel).join('\n'),
-    encoding: 'utf8',
-  });
-  if (r.status !== 0) {
-    console.error(r.stderr || r.stdout);
-    process.exit(1);
-  }
-} else {
-  const r = spawnSync('powershell', ['-Command', `
-    $files = Get-Content '${listFile}'
-    $temp = Join-Path $env:TEMP 'stage-zip-staging'
-    if (Test-Path $temp) { Remove-Item -Recurse -Force $temp }
-    New-Item -ItemType Directory -Force -Path $temp | Out-Null
-    foreach ($f in $files) { Copy-Item (Join-Path '${root}' $f) (Join-Path $temp $f) -Force }
-    Compress-Archive -Path (Join-Path $temp '*') -DestinationPath '${zipPath}' -Force
-  `], { encoding: 'utf8' });
-  if (r.status !== 0) process.exit(1);
+const tarArgs = ['-a', '-cf', zipPath, ...files.map((f) => f.rel.replace(/\\/g, '/'))];
+const tar = spawnSync('tar', tarArgs, { cwd: root, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
+if (tar.status !== 0) {
+  console.error(tar.stderr || tar.stdout);
+  process.exit(1);
 }
 
 const sha256 = crypto.createHash('sha256').update(fs.readFileSync(zipPath)).digest('hex');
@@ -96,23 +77,19 @@ manifest.sha256 = sha256;
 const buildId = process.env.STAGE2_BUILD_ID || 'local';
 const evidenceDir = path.join(root, 'docs/remediation/evidence', `STAGE-${stage}-READY-PURE`, buildId);
 fs.mkdirSync(evidenceDir, { recursive: true });
-fs.writeFileSync(path.join(evidenceDir, 'ZIP-MANIFEST.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
-// Validate extract
 const validateDir = fs.mkdtempSync(path.join(os.tmpdir(), 'stage-zip-validate-'));
-if (process.platform !== 'win32') {
-  spawnSync('unzip', ['-q', zipPath, '-d', validateDir], { stdio: 'inherit' });
-} else {
-  spawnSync('powershell', ['-Command', `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${validateDir}' -Force`]);
-}
+const untar = spawnSync('tar', ['-xf', zipPath, '-C', validateDir], { cwd: root, encoding: 'utf8' });
 const required = ['package.json', 'cloud/ready-pure-evaluator.js', 'cloud/setup-state-service.js', 'tests/baseline/test-stage-2-ready-pure.js'];
 const missing = required.filter((f) => !fs.existsSync(path.join(validateDir, f)));
 manifest.validation = {
   extractedTo: validateDir,
   requiredPresent: missing.length === 0,
   missing,
+  tarExit: untar.status,
 };
 fs.writeFileSync(path.join(evidenceDir, 'ZIP-MANIFEST.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 
-console.log(JSON.stringify({ ok: missing.length === 0, zipPath, sha256, size: zipStat.size, fileCount: files.length }, null, 2));
-process.exit(missing.length === 0 ? 0 : 1);
+const ok = missing.length === 0 && zipStat.size > 1_000_000;
+console.log(JSON.stringify({ ok, zipPath, sha256, size: zipStat.size, fileCount: files.length }, null, 2));
+process.exit(ok ? 0 : 1);
