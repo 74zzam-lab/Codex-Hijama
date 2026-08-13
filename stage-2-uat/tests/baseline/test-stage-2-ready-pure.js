@@ -4,7 +4,6 @@
 /**
  * Stage 2 — READY pure state verification (read-only evaluator).
  */
-const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -179,8 +178,8 @@ function countDbState(dbPath) {
   const storage = new Map();
   const localStorage = {
     getItem: (k) => (storage.has(k) ? storage.get(k) : null),
-    setItem: (k, v) => { throw new Error(`WRITE_BLOCKED:${k}`); },
-    removeItem: (k) => { throw new Error(`WRITE_BLOCKED:${k}`); },
+      setItem: (_k, _v) => { throw new Error(`WRITE_BLOCKED:${_k}`); },
+      removeItem: (_k) => { throw new Error(`WRITE_BLOCKED:${_k}`); },
   };
   const sandbox = {
     console,
