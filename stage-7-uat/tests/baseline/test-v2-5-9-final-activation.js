@@ -17,8 +17,9 @@ const defaultsSrc = fs.readFileSync(path.join(root, 'cloud/activation-sync-defau
 const inventory = fs.readFileSync(path.join(root, 'docs/integration-v2-5-9/00-INVENTORY.md'), 'utf8');
 const readiness = fs.readFileSync(path.join(root, 'docs/integration-v2-5-9/FINAL-RELEASE-READINESS.md'), 'utf8');
 
-check(/version:\s*'v2-5\.(9|10)'/.test(bootSrc), 'BootFlow v2-5.9+');
-check(/autoDiscoverActivationAfterGoogle/.test(bootSrc), 'auto discovery after Google');
+check(/version:\s*'v2-5\.(9|10|11)'/.test(bootSrc), 'BootFlow v2-5.9+');
+check(/runDiscoveryGate|PostGoogleCloudDiscovery/.test(bootSrc + indexSrc), 'explicit discovery gate wired');
+check(/autoDiscoverActivationAfterGoogle/.test(bootSrc), 'license recovery helper retained');
 check(/NEW_STEPS\s*=\s*\[[^\]]*restore[^\]]*sync[^\]]*ready/.test(bootSrc.replace(/\s+/g, ' ')), 'NEW_STEPS includes restore/sync/ready');
 check(!/NEW_STEPS\s*=\s*\[[^\]]*owner[^\]]*restore/.test(bootSrc.replace(/\s+/g, ' ')), 'NEW_STEPS must not include owner before restore');
 check(/v2_5_9_no_auto_owner_bootstrap/.test(bootSrc), 'Owner Bootstrap gated for non-emergency');
