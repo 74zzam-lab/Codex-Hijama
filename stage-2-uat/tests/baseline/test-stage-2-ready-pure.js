@@ -98,18 +98,6 @@ function dbSnapshot(dbPath) {
   return snap;
 }
 
-function countDbState(dbPath) {
-  const db = new Database(dbPath, { readonly: true, fileMustExist: true });
-  const counts = {
-    users: db.prepare('SELECT COUNT(*) AS c FROM users').get().c,
-    kv: db.prepare('SELECT COUNT(*) AS c FROM kv_store').get().c,
-    clients: db.prepare('SELECT COUNT(*) AS c FROM clients').get().c,
-  };
-  const kvKeys = db.prepare('SELECT key FROM kv_store ORDER BY key').all().map((r) => r.key);
-  db.close();
-  return { counts, kvKeys };
-}
-
 // ── Test 17: False positive — wizard complete, SoT missing ──
 (() => {
   const r = RPE.evaluateReadyPure(baseSnapshot({
