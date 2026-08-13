@@ -1,14 +1,16 @@
-name: Stage 1+2 Windows Verification
+name: Stage 1+2+3 Windows Verification
 
 on:
   push:
     branches:
       - cursor/bootstrap-restore-fixes-beb8
+      - cursor/stage-3-no-auto-boot-beb8
       - main
   pull_request:
     branches:
       - main
       - cursor/bootstrap-restore-fixes-beb8
+      - cursor/stage-3-no-auto-boot-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -20,12 +22,13 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2 Windows Verification
+    name: Stage 1+2+3 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
       STAGE1_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE2_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE3_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -56,6 +59,9 @@ jobs:
           }
           if (Test-Path 'stage-2-uat') {
             Copy-Item -Path 'stage-2-uat\*' -Destination $src -Recurse -Force
+          }
+          if (Test-Path 'stage-3-uat') {
+            Copy-Item -Path 'stage-3-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -139,6 +145,17 @@ jobs:
         working-directory: src
         run: node tests/baseline/test-stage-2-ready-pure.js
 
+      - name: Stage 3 no-auto-boot UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE3_BUILD_ID: ${{ env.STAGE3_BUILD_ID }}
+        run: node scripts/windows-uat/stage-3-no-auto-boot-uat.cjs
+
+      - name: Stage 3 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-3-no-auto-boot.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -186,14 +203,14 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
-      - name: Package Stage 2 source ZIP
+      - name: Package Stage 3 source ZIP
         if: success()
         working-directory: src
         shell: pwsh
         env:
-          STAGE2_BUILD_ID: ${{ env.STAGE2_BUILD_ID }}
-          STAGE_NUMBER: '2'
-          STAGE_ZIP_LABEL: READY-PASS
+          STAGE3_BUILD_ID: ${{ env.STAGE3_BUILD_ID }}
+          STAGE_NUMBER: '3'
+          STAGE_ZIP_LABEL: NO-AUTO-BOOT-PASS
         run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package evidence artifact
@@ -210,15 +227,16 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-      - name: Upload Stage 1 evidence
+      - name: Upload Stage evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: stage1-evidence-${{ github.sha }}-${{ github.run_number }}
+          name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
           path: |
             src/ci-artifacts/stage1-evidence-*/
             src/docs/remediation/evidence/STAGE-2-READY-PURE/**/*
-            src/Tadawi-Stage-2-READY-PASS-*.zip
+            src/docs/remediation/evidence/STAGE-3-NO-AUTO-BOOT/**/*
+            src/Tadawi-Stage-3-NO-AUTO-BOOT-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
