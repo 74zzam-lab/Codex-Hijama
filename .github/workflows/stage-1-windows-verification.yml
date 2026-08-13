@@ -34,11 +34,13 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $src = Join-Path $env:GITHUB_WORKSPACE 'src'
+          $zip = Join-Path $env:GITHUB_WORKSPACE 'Hijama-Management-System-SOURCE-BUILD-2.0.1.zip'
+          if (-not (Test-Path $zip)) { throw "Missing source ZIP: $zip" }
+          if (Test-Path $src) { Remove-Item -LiteralPath $src -Recurse -Force }
           New-Item -ItemType Directory -Force -Path $src | Out-Null
-          Expand-Archive -Path 'Hijama-Management-System-SOURCE-BUILD-2.0.1.zip' -DestinationPath $src -Force
+          Expand-Archive -LiteralPath $zip -DestinationPath $src -Force
           if (Test-Path 'app-source') {
-            robocopy app-source $src /E /NFL /NDL /NJH /NJS /NC /NS /NP | Out-Null
-            if ($LASTEXITCODE -ge 8) { throw "robocopy app-source overlay failed: $LASTEXITCODE" }
+            Copy-Item -Path 'app-source\*' -Destination $src -Recurse -Force
           }
           if (Test-Path 'stage-1-uat/stage-1-backup-restore-uat.cjs') {
             New-Item -ItemType Directory -Force -Path (Join-Path $src 'scripts/windows-uat') | Out-Null
@@ -51,6 +53,7 @@ jobs:
             New-Item -ItemType Directory -Force -Path (Join-Path $src 'scripts/ci') | Out-Null
             Copy-Item -Force 'stage-1-uat/stage-1-package-evidence.cjs' (Join-Path $src 'scripts/ci/stage-1-package-evidence.cjs')
           }
+          if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
           "STAGE1_SRC_ROOT=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
 

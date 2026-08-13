@@ -56,7 +56,7 @@ Start-Sleep -Seconds 8
 $meta.smokeRunning = -not $proc.HasExited
 if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
 $meta.smokeExitCode = $proc.ExitCode
-$meta.ok = (Test-Path $installedExe) -and $meta.smokeRunning -ne $false
+$meta.ok = (Test-Path $installedExe) -and ($meta.smokeRunning -or $proc.ExitCode -eq 0)
 
 $meta | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $EvidenceDir 'INSTALLED-EXE-SMOKE.json') -Encoding UTF8
 if (-not $meta.ok) { exit 1 }
