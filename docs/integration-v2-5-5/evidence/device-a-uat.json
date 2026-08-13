@@ -1,0 +1,39 @@
+{
+  "device": "A",
+  "role": "scale-perf-uat",
+  "startedAt": "2026-08-13T15:12:51.691Z",
+  "finishedAt": "2026-08-13T15:13:02.749Z",
+  "host": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.12.94+"
+  },
+  "unitExit": 0,
+  "scenariosExit": 0,
+  "scale": {
+    "profile": "FULL",
+    "targets": {
+      "clients": 100000,
+      "visits": 500000,
+      "invoices": 50000,
+      "appointments": 50000,
+      "attachments": 10000
+    },
+    "counts": {
+      "clients": 100000,
+      "visits": 500000,
+      "invoices": 50000,
+      "appointments": 50000,
+      "attachments": 10000
+    },
+    "ok": true,
+    "ms": 10086
+  },
+  "build": {
+    "platform": "linux",
+    "arch": "x64",
+    "winUnpacked": null,
+    "installer": null
+  },
+  "result": "PASS"
+}

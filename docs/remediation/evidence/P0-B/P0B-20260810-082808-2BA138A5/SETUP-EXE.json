@@ -1,0 +1,10 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "path": "D:\\Hijama-Clinic-Production\\dist\\HijamaManagement-Setup-2.0.1.exe",
+  "size": 106944606,
+  "sha256": "2BA138A5E21E5246C6844F95D59614E419BDABD23B7353AF4533CB5709EA7926",
+  "buildCommand": "npm run build",
+  "buildResult": "PASS",
+  "signed": false,
+  "signatureNote": "No signing certificate was configured; electron-builder explicitly skipped signing."
+}

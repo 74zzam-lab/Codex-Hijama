@@ -1,0 +1,12 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "os": "Windows 10.0.19045 x64",
+  "timezone": "Asia/Riyadh",
+  "installRoot": "D:\\Hijama-Clinic-Production\\.codex-p0a\\installed-p0a\\Hijama Management System",
+  "installedExecutableSha256": "5A78E44C48E83DA2213A36846A911C9482975C1A448BE4CDD291BD35E3EED29D",
+  "installedAsarSha256": "9EA111A80CE49DEF7AED768D521EF3504A05540F40A7A961941C2CFD0CCFBB0A",
+  "builtAsarSha256": "9EA111A80CE49DEF7AED768D521EF3504A05540F40A7A961941C2CFD0CCFBB0A",
+  "asarExactMatch": true,
+  "installResult": "PASS",
+  "dataHandling": "Update/keep-data path selected; installer reported no matching NSIS data folder. Existing Cupping Center runtime data was not deleted."
+}

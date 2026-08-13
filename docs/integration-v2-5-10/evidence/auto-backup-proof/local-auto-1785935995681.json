@@ -1,0 +1,12 @@
+{
+  "schema": "tdw-backup-proof-v1",
+  "at": "2026-08-05T13:19:55.681Z",
+  "users": [
+    {
+      "id": "u-owner",
+      "username": "owner",
+      "credentialRevision": 2
+    }
+  ],
+  "marker": "b48ae99b0693b648"
+}

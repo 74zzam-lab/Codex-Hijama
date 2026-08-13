@@ -1,0 +1,5 @@
+{
+  "p0a":{"result":"PASS","assertions":["main session not restored","forged dev bind denied","authentication throttle persisted","stored corpus present","intentional dev login works","no page errors"]},
+  "p0b":{"result":"PASS","assertions":["SQLite integrity ok","branch A deletion not resurrected","branch B remains","locked write absent"]},
+  "googleSetupRestart":{"result":"UNVERIFIED"}
+}

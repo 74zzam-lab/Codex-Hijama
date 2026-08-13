@@ -1,0 +1,4 @@
+{
+  "path": "runDiscoveryGate → PostGoogleCloudDiscovery.runPostGoogleCloudDiscovery → CloudBootstrap.discoverAndFetchLicenseFromDrive(persist:false) + CloudDataDiscovery.discoverAllSources",
+  "readOnly": true
+}

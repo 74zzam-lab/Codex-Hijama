@@ -1,0 +1,4 @@
+{
+  "useExisting": "path → existing once",
+  "startNew": "path remains new"
+}

@@ -1,0 +1,33 @@
+{
+  "goal": "NEW: Activation before Google (runtime reorder)",
+  "files": [
+    "cloud/boot-flow-ui.js",
+    "cloud/bootstrap-coordinator.js",
+    "cloud/bootstrap-gates.js",
+    "index.html (script order only if needed)",
+    "tests/baseline/test-stage-6-activation-before-google.js"
+  ],
+  "functions": [
+    "NEW_STEPS array reorder: license before google",
+    "validateStep forward navigation guards",
+    "autoDiscoverActivationAfterGoogle trigger point (post-google only today)",
+    "SETUP_CONNECTIVITY_POLICY review"
+  ],
+  "transitionChanges": [
+    "language → license (activation) → google → ...",
+    "Defer Drive license discovery until after Google still required for pull"
+  ],
+  "compatibilityRisks": [
+    "wizard KV currentStep indices shift",
+    "resume index migration for in-progress setups",
+    "google discovery assumes license step already passed in some callbacks"
+  ],
+  "tests": [
+    "NEW runtime order assertion",
+    "EXISTING path unchanged",
+    "Stage 1-5 regressions",
+    "google-state-recovery"
+  ],
+  "rollback": "Revert NEW_STEPS + resume migration shim; coordinator gates unchanged",
+  "feasibility": "surgical with resume migration — EXISTING path untouched in Stage 6"
+}

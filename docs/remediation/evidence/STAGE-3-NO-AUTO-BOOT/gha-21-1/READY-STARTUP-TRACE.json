@@ -1,0 +1,17 @@
+{
+  "expected": [
+    "DB ready",
+    "evaluateReady",
+    "ready=true",
+    "bootstrap auto-open skipped",
+    "internal login initialized"
+  ],
+  "instrumentation": "BootFlow.getStage3BootTrace()",
+  "metrics": {
+    "evaluateReadyCalls": ">= 1 on READY profile",
+    "autoBootOpenCalls": "0 on READY profile",
+    "loginInitCalls": "1 per maybeAutoOpenBootFlow",
+    "bootVisibilityEvents": "0 on READY auto-startup"
+  },
+  "nodeHarness": "PASS"
+}
