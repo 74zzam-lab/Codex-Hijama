@@ -57,14 +57,15 @@
 | **الإصلاح** | `applyStagedMerge` async + await في `restoreFromBackup` |
 | **الاختبار** | `e2e:production-readiness` synced_write_restore_path PASS |
 
-### FIX-005 — E2E harness
+### FIX-006 — Bootstrap cloud restore download stall (~18%)
 
 | الحقل | التفاصيل |
 |-------|----------|
-| **المشكلة** | سيناريوهات async غير مُنتظرة؛ conflict resolve Promise |
-| **الملفات** | `scripts/e2e-production-readiness.mjs`, `scripts/e2e-full-application.mjs` |
-| **الإصلاح** | `runScenarios()` async؛ stub authoritative write في E2E |
-| **الاختبار** | `npm run test:e2e` 17/17 PASS |
+| **المشكلة** | عند استعادة Backup V2 من السحابة أثناء الإعداد، التقدم يتوقف عند ~18% مع تحذير «لا يوجد تحديث منذ 30 ثانية»؛ النسبة ترجع من 21% إلى 18%؛ أخطاء `TDW-ACT-unknown` |
+| **السبب** | تنزيل Drive في Main بدون أحداث تقدم → watchdog يُطلق ويُخفض `stageRatio`؛ Renderer لا يستمع لـ IPC أثناء `v2SetupCloudRestore` |
+| **الملفات** | `electron/cloud-providers/google-drive-api.js`, `google-drive.js`, `backup-v2-ipc.js`, `preload.js`, `cloud/cloud-data-discovery.js`, `cloud/activation-errors.js`, `cloud/boot-flow-ui.js` |
+| **الإصلاح** | تنزيل متدفق مع `backup:downloadProgress`؛ ربط التقدم في `restoreCloudBackupFile`؛ watchdog يحافظ على آخر نسبة دون تراجع؛ تعيين أخطاء الاستعادة/الإعداد في `ActivationErrors` |
+| **الاختبار** | `test-v2-5-10-cloud-discovery-restore`, `test-p0-c-restore-truth-and-boot-gate` (AUD-RST-007) PASS |
 
 ---
 
