@@ -1,0 +1,4 @@
+{
+  "authority": "OwnerManagement.getOwnerState + users SQLite",
+  "seedExcluded": true
+}

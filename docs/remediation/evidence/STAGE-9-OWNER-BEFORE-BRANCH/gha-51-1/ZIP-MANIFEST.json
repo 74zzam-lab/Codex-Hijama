@@ -1,0 +1,14 @@
+{
+  "zipName": "Tadawi-Stage-9-OWNER-BEFORE-BRANCH-PASS-a938ad3.zip",
+  "sizeBytes": 13043263,
+  "fileCount": 1591,
+  "sha256": "c441170a0e8931518610c9e841fd9b1a4648a9974ff5d11de8bb2c8a714df4ac",
+  "cleanExtractValidation": {
+    "npmCi": "PASS",
+    "stage9Focused": "PASS",
+    "stage8Focused": "PASS",
+    "fullNpmTest": "PASS"
+  },
+  "sourceCommitShort": "b9369e7",
+  "at": "2026-08-13T14:12:00.000Z"
+}
