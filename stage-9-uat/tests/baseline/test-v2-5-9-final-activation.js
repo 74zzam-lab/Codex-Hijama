@@ -20,8 +20,12 @@ const readiness = fs.readFileSync(path.join(root, 'docs/integration-v2-5-9/FINAL
 check(/version:\s*'v2-5\.\d+'/.test(bootSrc), 'BootFlow v2-5.9+');
 check(/runDiscoveryGate|PostGoogleCloudDiscovery/.test(bootSrc + indexSrc), 'explicit discovery gate wired');
 check(/autoDiscoverActivationAfterGoogle/.test(bootSrc), 'license recovery helper retained');
-check(/NEW_STEPS\s*=\s*\[[^\]]*restore[^\]]*sync[^\]]*ready/.test(bootSrc.replace(/\s+/g, ' ')), 'NEW_STEPS includes restore/sync/ready');
-check(!/NEW_STEPS\s*=\s*\[[^\]]*owner[^\]]*restore/.test(bootSrc.replace(/\s+/g, ' ')), 'NEW_STEPS must not include owner before restore');
+const bootNorm = bootSrc.replace(/\s+/g, ' ');
+check(/NEW_STEPS\s*=\s*\[[^\]]*restore[^\]]*sync[^\]]*ready/.test(bootNorm), 'NEW_STEPS includes restore/sync/ready');
+check(
+  /organization[^\]]*owner[^\]]*branch[^\]]*restore/.test(bootNorm),
+  'NEW_STEPS Stage 9: organization→owner→branch→restore'
+);
 check(/v2_5_9_no_auto_owner_bootstrap/.test(bootSrc), 'Owner Bootstrap gated for non-emergency');
 check(/shouldAutoOpenBoot[\s\S]{0,500}needsBootScreen\(\)/.test(bootSrc), 'shouldAutoOpenBoot uses needsBootScreen');
 check(!/shouldAutoOpenBoot[\s\S]{0,400}NO_OWNER/.test(bootSrc), 'shouldAutoOpenBoot ignores NO_OWNER');
