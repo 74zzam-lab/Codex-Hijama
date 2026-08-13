@@ -157,7 +157,7 @@ function readyEnv(overrides = {}) {
     wizard: {
       path: 'new', currentStep: 8,
       completedSteps: ['language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready'],
-      syncDone: true, restoreChoice: 'empty', wizardFlowVersion: 6, wizardFlowVersion: 6,
+      syncDone: true, restoreChoice: 'empty', wizardFlowVersion: 6,
     },
   });
   check(ctx.SetupStateService.evaluateReady({ ignoreRestart: true }).ready === false,
