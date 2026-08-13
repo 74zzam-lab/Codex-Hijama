@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4 Windows Verification
+name: Stage 1+2+3+4+5 Windows Verification
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
       - cursor/bootstrap-restore-fixes-beb8
       - cursor/stage-3-no-auto-boot-beb8
       - cursor/stage-4-coordinator-state-beb8
+      - cursor/stage-5-gate-map-beb8
       - main
   pull_request:
     branches:
@@ -13,6 +14,7 @@ on:
       - cursor/bootstrap-restore-fixes-beb8
       - cursor/stage-3-no-auto-boot-beb8
       - cursor/stage-4-coordinator-state-beb8
+      - cursor/stage-5-gate-map-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -24,7 +26,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4 Windows Verification
+    name: Stage 1+2+3+4+5 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -32,6 +34,7 @@ jobs:
       STAGE2_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE3_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE4_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE5_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,6 +71,9 @@ jobs:
           }
           if (Test-Path 'stage-4-uat') {
             Copy-Item -Path 'stage-4-uat\*' -Destination $src -Recurse -Force
+          }
+          if (Test-Path 'stage-5-uat') {
+            Copy-Item -Path 'stage-5-uat\*' -Destination $src -Recurse -Force
           }
           if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Extracted source missing package.json' }
           "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
@@ -173,6 +179,17 @@ jobs:
         working-directory: src
         run: node tests/baseline/test-stage-4-bootstrap-coordinator-state.js
 
+      - name: Stage 5 bootstrap gate map UAT + evidence
+        working-directory: src
+        shell: pwsh
+        env:
+          STAGE5_BUILD_ID: ${{ env.STAGE5_BUILD_ID }}
+        run: node scripts/windows-uat/stage-5-bootstrap-gate-map-uat.cjs
+
+      - name: Stage 5 focused test
+        working-directory: src
+        run: node tests/baseline/test-stage-5-bootstrap-gate-map.js
+
       - name: Generate packaging inputs
         working-directory: src
         shell: pwsh
@@ -220,14 +237,14 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
-      - name: Package Stage 4 source ZIP
+      - name: Package Stage 5 source ZIP
         if: success()
         working-directory: src
         shell: pwsh
         env:
-          STAGE4_BUILD_ID: ${{ env.STAGE4_BUILD_ID }}
-          STAGE_NUMBER: '4'
-          STAGE_ZIP_LABEL: COORDINATOR-STATE-PASS
+          STAGE5_BUILD_ID: ${{ env.STAGE5_BUILD_ID }}
+          STAGE_NUMBER: '5'
+          STAGE_ZIP_LABEL: GATE-MAP-PASS
         run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package evidence artifact
@@ -254,7 +271,8 @@ jobs:
             src/docs/remediation/evidence/STAGE-2-READY-PURE/**/*
             src/docs/remediation/evidence/STAGE-3-NO-AUTO-BOOT/**/*
             src/docs/remediation/evidence/STAGE-4-COORDINATOR-STATE/**/*
-            src/Tadawi-Stage-4-COORDINATOR-STATE-PASS-*.zip
+            src/docs/remediation/evidence/STAGE-5-BOOTSTRAP-GATE-MAP/**/*
+            src/Tadawi-Stage-5-GATE-MAP-PASS-*.zip
           retention-days: 14
           if-no-files-found: warn
 
