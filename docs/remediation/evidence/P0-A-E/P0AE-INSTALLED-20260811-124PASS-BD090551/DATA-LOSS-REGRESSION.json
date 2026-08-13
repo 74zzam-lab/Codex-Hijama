@@ -1,0 +1,5 @@
+{
+  "preinstallArchivePolicy":{"result":"SOURCE_PASS","assertion":"Fresh-start recovery archive no longer strips Local Storage, IndexedDB, Session Storage or CloudVault"},
+  "archiveCandidate":{"result":"PASS","sqliteQuickCheck":"ok","note":"The newest preinstall archive was structurally valid but contained setup-only data, so it was not restored over the active profile"},
+  "freshStartInteractiveInstaller":{"result":"UNVERIFIED","reason":"Not executed against a real customer profile; required before commercial release"}
+}

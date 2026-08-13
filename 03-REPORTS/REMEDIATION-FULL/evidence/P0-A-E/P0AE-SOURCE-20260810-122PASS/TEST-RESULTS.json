@@ -1,0 +1,11 @@
+{
+  "buildId": "P0AE-SOURCE-20260810-122PASS",
+  "commands": [
+    { "command": "npm test", "exitCode": 0, "passed": 122, "total": 122, "result": "PASS", "durationSeconds": 359.7 },
+    { "command": "npm run lint", "exitCode": 0, "result": "PASS", "durationSeconds": 3.0 },
+    { "command": "node scripts/commercial-licensing-test.mjs", "exitCode": 0, "passed": 22, "failed": 0, "result": "PASS" },
+    { "command": "node tests/baseline/test-p0-e-licensing-production.js", "exitCode": 0, "result": "PASS", "note": "Rerun after removing the repository-owned development private key." },
+    { "command": "node tests/baseline/test-phase3-licensing-v6.js", "exitCode": 0, "result": "PASS", "note": "Uses an ephemeral in-memory Ed25519 keypair." }
+  ],
+  "installedExeTests": "UNVERIFIED"
+}

@@ -1,0 +1,12 @@
+{
+  "id": "S04-license-pull-public",
+  "title": "License read public; mutation constrained and authenticated",
+  "result": "PASS",
+  "ms": 2,
+  "evidence": {
+    "licenseReadPublic": true,
+    "mutationGated": true,
+    "activationUploadConstrained": true,
+    "noCreateSideEffect": true
+  }
+}

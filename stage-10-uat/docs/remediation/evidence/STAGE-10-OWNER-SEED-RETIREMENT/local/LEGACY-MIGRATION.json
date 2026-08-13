@@ -1,0 +1,5 @@
+{
+  "idempotent": true,
+  "restartSafe": true,
+  "seedOnlyRequiresSetup": true
+}

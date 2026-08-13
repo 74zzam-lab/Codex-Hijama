@@ -1,0 +1,140 @@
+{
+  "at": "2026-08-13T15:13:06.100Z",
+  "ok": true,
+  "total": 12,
+  "passed": 12,
+  "failed": [],
+  "results": [
+    {
+      "id": "S01-prelogin-google-ipc",
+      "title": "Pre-login Google OAuth/Drive IPC is public; restore gated",
+      "result": "PASS",
+      "ms": 38,
+      "evidence": {
+        "publicChannels": [
+          "backup:startOAuth",
+          "backup:connectGoogle",
+          "backup:listCloudBackups",
+          "backup:downloadCloudBackup",
+          "backup:disconnectCloud",
+          "backup:getCloudStatus",
+          "license:readActivationBundle",
+          "cloudOAuth:getSettings",
+          "cache:readLicense"
+        ],
+        "pkce": true
+      }
+    },
+    {
+      "id": "S02-oauth-pkce-loopback",
+      "title": "OAuth PKCE + flexible loopback + soft connect errors",
+      "result": "PASS",
+      "ms": 1,
+      "evidence": {
+        "pkce": true,
+        "flexiblePort": true,
+        "softErrors": true
+      }
+    },
+    {
+      "id": "S03-token-encryption-revoke",
+      "title": "SafeStorage-only token encryption + disconnect revoke",
+      "result": "PASS",
+      "ms": 0,
+      "evidence": {
+        "safeStorageOnly": true,
+        "failClosed": true,
+        "revoke": true
+      }
+    },
+    {
+      "id": "S04-license-pull-public",
+      "title": "License read public; mutation constrained and authenticated",
+      "result": "PASS",
+      "ms": 2,
+      "evidence": {
+        "licenseReadPublic": true,
+        "mutationGated": true,
+        "activationUploadConstrained": true,
+        "noCreateSideEffect": true
+      }
+    },
+    {
+      "id": "S05-sheets-vault-soft",
+      "title": "Sheets via vault only; soft network, hard activation_already_used",
+      "result": "PASS",
+      "ms": 0,
+      "evidence": {
+        "transport": "google_apps_script_webapp",
+        "softOk": true,
+        "hardOk": true
+      }
+    },
+    {
+      "id": "S06-owner-independent-role",
+      "title": "Owner is independent top role; Admin cannot mint Owner",
+      "result": "PASS",
+      "ms": 8,
+      "evidence": {
+        "ownerLogin": true,
+        "mintGuard": true,
+        "hubMutateOwnerOnly": true
+      }
+    },
+    {
+      "id": "S07-owner-login-expired-license",
+      "title": "Owner/Admin can log in when license expired/none",
+      "result": "PASS",
+      "ms": 12,
+      "evidence": {
+        "ownerBypassExpired": true
+      }
+    },
+    {
+      "id": "S08-drive-read-path-safe",
+      "title": "Download/list/delete do not force folder create; delete uses findFileByPath",
+      "result": "PASS",
+      "ms": 0,
+      "evidence": {
+        "safeRead": true
+      }
+    },
+    {
+      "id": "S09-restore-cycle-wiring",
+      "title": "Install→Google→License→Org→Branch→Restore→Dashboard wiring present",
+      "result": "PASS",
+      "ms": 7,
+      "evidence": {
+        "cycleWiring": true
+      }
+    },
+    {
+      "id": "S10-rbac-soft-ipc",
+      "title": "IPC RBAC denials return soft {ok:false} not throw",
+      "result": "PASS",
+      "ms": 1,
+      "evidence": {
+        "softRbac": true,
+        "error": "RBAC_DENIED"
+      }
+    },
+    {
+      "id": "S11-prior-gates-still-present",
+      "title": "Prior V2-5 gate scripts and master verifier exist",
+      "result": "PASS",
+      "ms": 0,
+      "evidence": {
+        "priorGates": 4
+      }
+    },
+    {
+      "id": "S12-no-sheets-api-claim",
+      "title": "No in-process Google Sheets API client in Electron providers",
+      "result": "PASS",
+      "ms": 1,
+      "evidence": {
+        "sheetsApiAbsent": true
+      }
+    }
+  ]
+}

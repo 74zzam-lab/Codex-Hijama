@@ -1,0 +1,24 @@
+{
+  "phase": "P0-C",
+  "realDriveDiagnostic": {
+    "googleConnected": true,
+    "needsReauth": false,
+    "inventoryItems": 29,
+    "uniqueLicenseCandidates": 1,
+    "licenseDownloaded": true,
+    "licenseSignatureVerified": true,
+    "exactSetupVerifier": "PASS",
+    "copiedDatabaseActivationTransaction": "PASS",
+    "productionDatabaseModifiedByDiagnostic": false,
+    "rootCause": "rbac:getSession returned a truthy no_session result envelope; the renderer bridge mistook it for an authenticated session and skipped database:setupCommitActivation.",
+    "finding": "The displayed license_timeout/unknown was a downstream session-contract and persistence-routing failure, not a Google network failure."
+  },
+  "sourceRuntime": {
+    "setupRestoreTargetMatrix": "PASS",
+    "checkpointTruthfulStages": "PASS",
+    "bootFailureMatrix": "PASS",
+    "credentialConflictMatrix": "PASS",
+    "credentialPublicationRetry": "PASS"
+  },
+  "installedP0C": "UNVERIFIED"
+}

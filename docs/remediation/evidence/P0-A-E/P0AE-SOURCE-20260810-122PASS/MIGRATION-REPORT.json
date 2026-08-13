@@ -1,0 +1,13 @@
+{
+  "sourceResult": "PASS",
+  "migrations": [
+    { "id": "004_sync_operations", "idempotent": true, "restartTest": "PASS" },
+    { "id": "005_financial_integrity", "idempotent": true, "rollbackTest": "PASS" },
+    { "id": "006_financial_reversals", "idempotent": true, "restartTest": "PASS" }
+  ],
+  "legacyLicense": {
+    "policy": "exact canonical SHA-256 allowlist then admin V6 migration",
+    "allowlistedHash": "5fe23e4b0266d6e152742de13dd1d10ed4c883e25add3140b9e08da2a68adf5a"
+  },
+  "installedMigrationResult": "UNVERIFIED"
+}

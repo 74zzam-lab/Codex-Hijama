@@ -1,0 +1,11 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "boundary": "exact installed app.asar",
+  "sqlitePrimary": true,
+  "schemaVersion": 9,
+  "scopedReplacePreservesOtherBranch": "PASS",
+  "crossBranchSyncBypass": "DENIED",
+  "rawKvOperationalWrite": "DENIED",
+  "restartAuthority": "PASS",
+  "result": "PASS"
+}

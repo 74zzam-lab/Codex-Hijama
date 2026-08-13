@@ -1,0 +1,13 @@
+{
+  "completeSoTSkipsStep": true,
+  "placeholderRejected": [
+    "مركز الحجامة",
+    "الفرع الرئيسي",
+    "Hijama Center",
+    "Main Branch",
+    "Clinic",
+    "Center"
+  ],
+  "staleWizardIgnored": "SoT wins over completedSteps",
+  "emptyWizardCompleteSoT": "gate resolved"
+}

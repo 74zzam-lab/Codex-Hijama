@@ -1,0 +1,16 @@
+{
+  "branch": "cursor/bootstrap-restore-fixes-beb8",
+  "commit": "47b301e2f53d004b701e2ee76a573f853518ae4b",
+  "commitShort": "47b301e",
+  "gitStatusPorcelain": "?? 01-ORIGINAL/\n?? 02-CURRENT/CURRENT-FINAL-RESTORE-SOURCE.zip\n?? 03-REPORTS/\n?? CONTENTS.sha256\n?? MANIFEST.json\n?? README-FIRST-AR.md\n?? review-work/current-extract/\n?? review-work/original-extract/\n?? review-work/test-runs/",
+  "nodeVersion": "v22.14.0",
+  "npmVersion": "10.9.7",
+  "platform": "linux",
+  "arch": "x64",
+  "osRelease": "6.12.94+",
+  "windowsVersion": null,
+  "buildId": "local-linux-smoke",
+  "userDataDir": "/tmp/uat-stage1-local-linux-smoke",
+  "isolatedProfile": true,
+  "productionUserDataAvoided": true
+}

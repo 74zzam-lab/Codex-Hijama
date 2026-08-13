@@ -1,0 +1,29 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "installedExe": {
+    "path": "D:\\Hijama-Clinic-Production\\.codex-p0a\\installed-p0a\\Hijama Management System.exe",
+    "size": 225949696,
+    "sha256": "2F44F5D5CD671AFB816A943AD088AFFD35E44BB543F5A80B1496639CD8CA7650",
+    "modifiedAt": "2026-08-05T13:02:40.000Z"
+  },
+  "installerExitCode": 0,
+  "installMode": "silent-current-user-explicit-UAT-directory",
+  "host": {
+    "platform": "win32",
+    "arch": "x64",
+    "osType": "Windows_NT",
+    "osRelease": "10.0.19045",
+    "osVersion": "Windows 10 Pro",
+    "node": "v22.23.1"
+  },
+  "isolatedProfile": "D:\\Hijama-Clinic-Production\\.codex-p0a\\installed-profile-final-v6",
+  "canonicalRealProfileExistsAfterTest": false,
+  "accidentalTestArtifacts": {
+    "deleted": false,
+    "recoverableQuarantines": [
+      "D:\\Hijama-Clinic-Production\\.codex-p0a\\accidental-profile-quarantine-20260805-154754",
+      "D:\\Hijama-Clinic-Production\\.codex-p0a\\build-created-profile-quarantine-20260805-160054"
+    ]
+  }
+}

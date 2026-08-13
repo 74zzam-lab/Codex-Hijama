@@ -1,0 +1,9 @@
+{
+  "at": "2026-08-13T15:12:40.558Z",
+  "scenarios": [
+    "O02-two-device-race",
+    "O03-emergency-recovery-audit",
+    "L01-limits-grace-upgrade-downgrade"
+  ],
+  "result": "PASS"
+}

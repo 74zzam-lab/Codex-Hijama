@@ -1,0 +1,39 @@
+{
+  "originalBusinessSetupFlow": "No dedicated bootstrap business_setup step; organization confirmed license center; clinic profile optional in settings/first-run after READY",
+  "preStage12Flow": {
+    "NEW": "language→license→google→discovery→path_decision→organization→owner→branch→device→restore→sync→ready",
+    "EXISTING": "language→google→discovery→license→organization→branch_select→device→restore→owner→sync→ready"
+  },
+  "targetStage12Flow": {
+    "NEW": [
+      "language",
+      "license",
+      "google",
+      "discovery",
+      "path_decision",
+      "organization",
+      "owner",
+      "branch",
+      "device",
+      "business_setup",
+      "restore",
+      "sync",
+      "ready"
+    ],
+    "EXISTING": [
+      "language",
+      "google",
+      "discovery",
+      "license",
+      "organization",
+      "branch_select",
+      "device",
+      "restore",
+      "business_setup",
+      "owner",
+      "sync",
+      "ready"
+    ]
+  },
+  "wizardFlowVersion": 12
+}

@@ -1,0 +1,10 @@
+{
+  "phase": "P0-C",
+  "sourceRestartSemantics": {
+    "bootstrapStateFailurePersistsFalse": "PASS",
+    "credentialRetryIdempotent": "PASS",
+    "seedDoesNotRecurThreeMergeCycles": "PASS"
+  },
+  "installedRestartRetest": "UNVERIFIED"
+}
+

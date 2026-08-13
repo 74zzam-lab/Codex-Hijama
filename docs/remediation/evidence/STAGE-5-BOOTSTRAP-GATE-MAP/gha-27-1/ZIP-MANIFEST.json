@@ -1,0 +1,12 @@
+{
+  "zipName": "Tadawi-Stage-5-GATE-MAP-PASS-a761b7c.zip",
+  "commit": "a761b7c461340ba89bce00105e66137027e18d1e",
+  "commitShort": "a761b7c",
+  "fileCount": 1453,
+  "zipSizeBytes": 22138880,
+  "sha256": "49bc1bca6bd5577196858054707e511bce97c3fba3c1946bd4474e17d5283dc2",
+  "validation": {
+    "requiredPresent": true,
+    "cleanExtractOnGHA": true
+  }
+}
