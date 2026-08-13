@@ -1,0 +1,16 @@
+{
+  "branch": "HEAD",
+  "commit": "994bb9cd33529dffa3c0c7a19de453a06c760c00",
+  "commitShort": "994bb9c",
+  "gitStatusPorcelain": "?? src/",
+  "nodeVersion": "v22.23.2",
+  "npmVersion": "",
+  "platform": "win32",
+  "arch": "x64",
+  "osRelease": "10.0.20348",
+  "windowsVersion": "10.0.20348",
+  "buildId": "gha-6-1",
+  "userDataDir": "D:\\a\\_temp\\uat-stage1-gha-6-1",
+  "isolatedProfile": true,
+  "productionUserDataAvoided": true
+}

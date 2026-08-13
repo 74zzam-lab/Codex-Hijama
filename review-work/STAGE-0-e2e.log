@@ -1,0 +1,25 @@
+
+> hijama-management-system@2.0.1 test:e2e
+> node scripts/e2e-full-application.mjs
+
+══ Full Application E2E ══
+
+PASS  e2e:secret-scan
+PASS  e2e:production-readiness
+PASS  e2e:security-boundary
+PASS  e2e:setup-restore-target
+PASS  e2e:restore-boot-gate
+PASS  e2e:discovery-integrity
+PASS  e2e:setup-restore-runtime
+PASS  e2e:restore-license-login
+PASS  e2e:legacy-cloud-restore
+PASS  e2e:operation-sync
+PASS  e2e:license-immutability
+PASS  e2e:financial-atomicity
+PASS  e2e:backup-v2
+PASS  e2e:backup-restore-v2
+PASS  e2e:legacy-v5-runtime
+PASS  e2e:legacy-v5-generator
+PASS  e2e:oauth-structure
+
+Summary: 17/17 passed
