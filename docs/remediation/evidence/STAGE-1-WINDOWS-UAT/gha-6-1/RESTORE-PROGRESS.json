@@ -1,0 +1,70 @@
+{
+  "at": "2026-08-13T08:32:38.885Z",
+  "durationMs": 672,
+  "ok": true,
+  "timeline": [
+    {
+      "timestamp": "2026-08-13T08:32:38.214Z",
+      "stage": "reading_manifest",
+      "stageRatio": 1,
+      "overallPercent": 5,
+      "message": "reading_manifest"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.362Z",
+      "stage": "checking_identity",
+      "stageRatio": 1,
+      "overallPercent": 15,
+      "message": "checking_identity"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.363Z",
+      "stage": "staging_restore",
+      "stageRatio": 1,
+      "overallPercent": 40,
+      "message": "staging_restore"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.371Z",
+      "stage": "creating_emergency_backup",
+      "stageRatio": 1,
+      "overallPercent": 50,
+      "message": "creating_emergency_backup"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.878Z",
+      "stage": "closing_database",
+      "stageRatio": 1,
+      "overallPercent": 55,
+      "message": "closing_database"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.878Z",
+      "stage": "swapping_data",
+      "stageRatio": 1,
+      "overallPercent": 75,
+      "message": "swapping_data"
+    },
+    {
+      "timestamp": "2026-08-13T08:32:38.885Z",
+      "stage": "restore_complete",
+      "stageRatio": 1,
+      "overallPercent": 100,
+      "message": "restore_complete"
+    }
+  ],
+  "maxPercent": 100,
+  "stalledAt18": false,
+  "progressRegression": [],
+  "stagesInOrder": [
+    "reading_manifest",
+    "checking_identity",
+    "staging_restore",
+    "creating_emergency_backup",
+    "closing_database",
+    "swapping_data",
+    "restore_complete"
+  ],
+  "fakeStages": [],
+  "viaIpc": "backup:v2:restore"
+}
