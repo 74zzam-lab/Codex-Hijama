@@ -39,10 +39,33 @@ jobs:
           node-version: '20'
           cache: npm
 
+      - name: Download exact Stage 20 Setup EXE (GHA run 31801984620)
+        uses: actions/download-artifact@v4
+        with:
+          name: setup-exe-98-2fe1a0e33f8e9c04b0e2fccffe40cd052137a76d
+          run-id: 31801984620
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist
+
+      - name: Verify exact Stage 20 Setup EXE SHA-256
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = Get-ChildItem dist\HijamaManagement-Setup-*.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $setup) { throw 'Setup EXE missing after artifact download' }
+          $sha = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
+          $expected = $env:EXPECTED_SETUP_SHA256
+          if ($sha -ne $expected) {
+            throw "Setup EXE SHA mismatch: expected=$expected actual=$sha"
+          }
+          Write-Host "PASS exact EXE SHA: $sha ($($setup.Name))"
+
       - name: npm ci
-        run: npm ci
+        continue-on-error: true
+        id: npm_ci
 
       - name: Generate packaging inputs
+        if: steps.npm_ci.outcome == 'success'
         run: |
           node scripts/generate-oauth-config.mjs
           node scripts/generate-license-registries.mjs
@@ -50,25 +73,6 @@ jobs:
         env:
           GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
           GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-
-      - name: Build Windows Setup EXE
-        env:
-          ELECTRON_BUILDER_DISABLE_CODE_SIGN_WARNING: 'true'
-          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npm run build:win
-
-      - name: Verify exact Stage 20 Setup EXE SHA-256
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $setup = Get-ChildItem dist\HijamaManagement-Setup-*.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-          if (-not $setup) { throw 'Setup EXE missing' }
-          $sha = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
-          $expected = $env:EXPECTED_SETUP_SHA256
-          if ($sha -ne $expected) {
-            throw "Setup EXE SHA mismatch: expected=$expected actual=$sha"
-          }
-          Write-Host "PASS exact EXE SHA: $sha"
 
       - name: Installed EXE smoke (isolated userData)
         shell: pwsh
@@ -79,9 +83,11 @@ jobs:
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:EXTERNAL_UAT_BUILD_ID")
 
       - name: Security regression (unit)
+        if: steps.npm_ci.outcome == 'success'
         run: node tests/baseline/test-p0-a-security-boundary.js
 
       - name: Stage 20 invariant regression
+        if: steps.npm_ci.outcome == 'success'
         run: node tests/baseline/test-stage-20-final-bootstrap-gate.js
 
       - name: External UAT evidence runner
@@ -108,7 +114,13 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $final = Get-Content "docs/remediation/evidence/EXTERNAL-UAT-WINDOWS/$env:EXTERNAL_UAT_BUILD_ID/FINAL-EXTERNAL-UAT.json" -Raw | ConvertFrom-Json
+          $finalPath = "docs/remediation/evidence/EXTERNAL-UAT-WINDOWS/$env:EXTERNAL_UAT_BUILD_ID/FINAL-EXTERNAL-UAT.json"
+          if (-not (Test-Path $finalPath)) {
+            Write-Host "EXTERNAL UAT verdict: BLOCKED"
+            Write-Host "BOOTSTRAP EXTERNAL GATE: FAIL"
+            exit 2
+          }
+          $final = Get-Content $finalPath -Raw | ConvertFrom-Json
           Write-Host "EXTERNAL UAT verdict: $($final.verdict)"
           Write-Host "BOOTSTRAP EXTERNAL GATE: $($final.bootstrapExternalGate)"
           if ($final.verdict -eq 'PASS') { exit 0 }
