@@ -26949,7 +26949,7 @@ async function licCheck(options) {
     _licStatus = 'none';
     _licDaysLeft = null;
     _licExpiringSoon = false;
-    if (showPending && statusEl) { statusEl.textContent = '⛔ البرنامج غير مفعل — الدخول للموظفين فقط (قراءة)'; statusEl.style.color = '#ffa05a'; }
+    if (showPending && statusEl) { statusEl.textContent = 'يلزم تفعيل البرنامج — الدخول للموظفين فقط (قراءة)'; statusEl.style.color = '#ffa05a'; }
     licLog('no_license', 'لا يوجد ترخيص');
     _licApplyLoginRestrictions();
     licUpdateLoginDevNotice();

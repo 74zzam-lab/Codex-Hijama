@@ -1,0 +1,17 @@
+{
+  "schema": "INSTALLED-LICENSE-RACE",
+  "at": "2026-08-14T21:38:40.177Z",
+  "buildCommit": "91880f34e88ced67776dab046f7cef40b8825a88",
+  "ok": true,
+  "race": {
+    "text": "✓ الترخيص صالح حتى: 8/14/2027",
+    "pending": false,
+    "licStatus": "valid"
+  },
+  "trace": {
+    "pageErrors": [],
+    "unhandledRejections": [],
+    "consoleErrors": []
+  },
+  "profile": "concurrent-licCheck"
+}

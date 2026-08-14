@@ -1,0 +1,494 @@
+{
+  "schema": "BOOTSTRAP-RED-MESSAGE-INVENTORY",
+  "at": "2026-08-14T21:38:15.178Z",
+  "buildCommit": "91880f34e88ced67776dab046f7cef40b8825a88",
+  "count": 81,
+  "items": [
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ اربط Google أولاً",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "❌ فشل الاكتشاف — يمكن إعادة المحاولة. Google ما زال متصلاً.",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ أكمل التفعيل أولاً قبل ربط Google",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "uiSink.textContent",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ يجب إنشاء/اعتماد حساب المالك قبل إنشاء أول فرع",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ أدخل اسماً مخصصاً للفرع — لا تستخدم اسم المركز أو القيمة الافتراضية",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⏳ جارٍ إنشاء الفرع...);\n    try {\n      const doc = global.LicenseCloud?.loadLocal?.();\n      if (!doc?.centerId) {\n    ",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ اختر الفرع",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ الفرع غير موجود في الترخيص",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ يجب اختيار/إنشاء فرع قبل تسجيل الجهاز",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ أدخل اسم هذا الجهاز",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ يجب إكمال بيانات المركز قبل النشر",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ انتظر انتهاء  + busy +  قبل إنشاء Owner",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "isNew ? ✅ Google متصل — تابع لخطوة الاكتشاف : ✅ Google متصل — تابع لخطوة الاكتشاف);\n        else if (isNew && !hasValidL",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ اختر المؤسسة/الترخيص الصحيح أولاً",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ لم تُعثر على مؤسسة موجودة — يمكنك العودة واختيار بدء إعداد جديد",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ أكثر من مؤسسة — اختر المرشح من خطوة المسار أولاً",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ أدخل اسم المؤسسة",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "✅ تم تأكيد المؤسسة);\n          renderNavButtons(loadWizard());\n        });\n        if (hasCenterData()) setStatus(✅ بيان",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "✅ تم اختيار الفرع);\n        break;\n      }\n      case device: {\n        if (!hasBranch() || !getSelectedBranchId()) {\n  ",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ الجهاز مطلوب أولاً",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ بيانات المركز مطلوبة أولاً",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ existing_owner_auth_required",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "يجب التحقق من كلمة مرور المالك قبل المزامنة",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "يجب التحقق من كلمة مرور المالك قبل بدء المزامنة",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ عملية جارية — انتظر",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "❌ لم تتم الاستعادة:  + (restored?.error || restore_failed)",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ اختر نسخة من القائمة أولاً",
+      "isRed": true,
+      "classification": "SHOULD_BE_REQUIRED"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⏳ اختر ملف Backup V2 ثم أكّد الاستعادة...);\n            try {\n              const restored = await restoreLocalBackupDur",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ عملية جارية — انتظر",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ لم تكتمل جميع المتطلبات",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "❌ تعذر تثبيت البيانات في SQLite:  + (finalized?.error || setup_finalize_failed)",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ تعذر حفظ الإعدادات قبل إعادة التشغيل",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ تعذر تثبيت حالة اكتمال الإعداد قبل إعادة التشغيل",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⏳ جارٍ حفظ الحالة وإعادة التشغيل…);\n            try { global.SyncEngine?.stop?.(); } catch { /* empty */ }\n            c",
+      "isRed": true,
+      "classification": "SHOULD_BE_IN_PROGRESS"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "ℹ️ أعد تشغيل التطبيق يدوياً من قائمة النظام لتطبيق الإعداد",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "setStatusFromErr",
+      "isRed": false,
+      "classification": "NEUTRAL_OK"
+    },
+    {
+      "source": "cloud/boot-flow-ui.js",
+      "message": "⚠️ لم تكتمل جميع متطلبات الإعداد",
+      "isRed": true,
+      "classification": "VALID_ERROR"
+    }
+  ]
+}

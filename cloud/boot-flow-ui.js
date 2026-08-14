@@ -394,7 +394,9 @@
       if (discoveryCodes.includes(normalized.code)) step = 'discovery';
     }
     if (options.retryHandler) lastGateRetryHandler = options.retryHandler;
-    const isOperationalError = !normalized.cancelled;
+    const isOperationalError = !normalized.cancelled
+      && !normalized.userActionRequired
+      && (normalized.fatal || normalized.retryable);
     setStatus(formatFailureForStatus(normalized), isOperationalError);
     if (step && !normalized.ok) {
       logNormalizedFailure(step, normalized);
@@ -2111,7 +2113,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   async function runGoogleConnect() {
     if (oauthInFlight) {
-      setStatus('⏳ ربط Google جارٍ بالفعل — انتظر', true);
+      setStatus('⏳ ربط Google جارٍ بالفعل — انتظر');
       return { ok: false, error: 'oauth_in_flight' };
     }
     const wizardPath = loadWizard().path;
@@ -2197,7 +2199,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   async function activateLicenseKey() {
     if (licenseActivateInFlight) {
-      setStatus('⏳ التفعيل جارٍ — لا تضغط مجدداً', true);
+      setStatus('⏳ التفعيل جارٍ — لا تضغط مجدداً');
       return { ok: false, error: 'activate_in_flight' };
     }
     const input = document.getElementById('bf-license-key');
@@ -2205,7 +2207,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (!/^TDW6\./.test(key)) key = key.toUpperCase();
     if (input) input.value = key;
     if (!key) {
-      setStatus('⚠️ أدخل مفتاح الترخيص', true);
+      setStatus('⚠️ أدخل مفتاح الترخيص');
       return { ok: false, error: 'key_required' };
     }
     licenseActivateInFlight = true;
@@ -2595,7 +2597,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   async function createOwnerFromWizard() {
     if (ownerCreateInFlight()) {
-      setStatus('⏳ إنشاء المالك جارٍ — انتظر', true);
+      setStatus('⏳ إنشاء المالك جارٍ — انتظر');
       return { ok: false, error: 'creation_in_progress' };
     }
     if (hasOwnerPasswordAccount()) {
@@ -3092,7 +3094,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         if (preferOwnerCreation) {
           if (st === 'OWNER_CREATION_IN_PROGRESS') {
             content.innerHTML = '<p>⏳ إنشاء المالك جارٍ — لا تبدأ عملية ثانية.</p>';
-            setStatus('⏳ OWNER_CREATION_IN_PROGRESS', true);
+            setStatus('⏳ جارٍ إنشاء حساب المالك...');
           } else {
             const label = (st === 'OWNER_CORRUPTED' || st === 'OWNER_RECOVERY_REQUIRED')
               ? 'استرداد / إصلاح حساب المالك — كلمة المرور إلزامية.'
@@ -3122,7 +3124,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           }
         } else if (st === 'OWNER_CREATION_IN_PROGRESS') {
           content.innerHTML = '<p>⏳ إنشاء المالك جارٍ — لا تبدأ عملية ثانية.</p>';
-          setStatus('⏳ OWNER_CREATION_IN_PROGRESS', true);
+          setStatus('⏳ جارٍ إنشاء حساب المالك...');
         } else {
           const label = (st === 'OWNER_CORRUPTED' || st === 'OWNER_RECOVERY_REQUIRED')
             ? 'استرداد / إصلاح حساب المالك — كلمة المرور إلزامية.'
@@ -3351,7 +3353,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
                 return;
               }
               if (restoreInFlight || Discovery.isRestoreLocked?.()) {
-                setStatus('⚠️ استعادة جارية — انتظر', true);
+                setStatus('⏳ استعادة جارية — انتظر');
                 return;
               }
               restoreInFlight = true;

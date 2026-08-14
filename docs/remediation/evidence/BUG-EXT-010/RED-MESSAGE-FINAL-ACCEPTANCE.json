@@ -1,0 +1,7 @@
+{
+  "schema": "RED-MESSAGE-FINAL-ACCEPTANCE",
+  "at": "2026-08-14T21:39:05.900Z",
+  "buildCommit": "91880f34e88ced67776dab046f7cef40b8825a88",
+  "policyFix": "setStatusFromErr red only for fatal/retryable",
+  "directInProgressFixed": true
+}
