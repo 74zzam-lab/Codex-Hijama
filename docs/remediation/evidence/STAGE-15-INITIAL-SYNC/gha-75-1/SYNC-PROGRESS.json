@@ -1,0 +1,9 @@
+{
+  "stages": [
+    "plan",
+    "pull",
+    "push",
+    "reconcile",
+    "complete"
+  ]
+}
