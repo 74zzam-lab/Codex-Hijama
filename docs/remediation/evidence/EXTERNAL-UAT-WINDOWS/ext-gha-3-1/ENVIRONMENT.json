@@ -1,0 +1,16 @@
+{
+  "os": "win32",
+  "arch": "x64",
+  "nodeVersion": "v20.20.2",
+  "runner": "windows-2022",
+  "runnerName": "GitHub Actions 1000000110",
+  "githubRun": "31807686209",
+  "buildId": "ext-gha-3-1",
+  "googleCredsConfigured": false,
+  "interactiveCapable": false,
+  "deviceBConfigured": false,
+  "stage19Profile": false,
+  "baselineSource": "c389e92",
+  "evidenceCommit": "805611fb6038f09361c447fbd9e8041a88b88b06",
+  "windowsVersion": "Windows Server 2022 (10.0.20348)"
+}

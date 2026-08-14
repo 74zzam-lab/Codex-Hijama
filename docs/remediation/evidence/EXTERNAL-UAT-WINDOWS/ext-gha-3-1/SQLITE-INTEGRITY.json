@@ -1,0 +1,4 @@
+{
+  "pragmaIntegrityCheck": "smoke-only-not-journey-db",
+  "note": "Full journey SQLite checks require completed NEW/EXISTING/restore paths"
+}
