@@ -1,0 +1,47 @@
+{
+  "oauth_cancelled": {
+    "outcome": "CANCELLED",
+    "cancelled": true,
+    "code": "TDW-BOOT-GOOGLE-CANCEL"
+  },
+  "oauth_access_denied": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-GOOGLE-REAUTH"
+  },
+  "oauth_timeout": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-GOOGLE-TIMEOUT"
+  },
+  "oauth_offline": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-GOOGLE-NETWORK"
+  },
+  "oauth_port_in_use": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-GOOGLE-PORT"
+  },
+  "oauth_invalid_grant": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-GOOGLE-REAUTH"
+  },
+  "oauth_redirect_mismatch": {
+    "outcome": "FATAL",
+    "fatal": true,
+    "code": "TDW-BOOT-GOOGLE-OAUTH-CONFIG"
+  },
+  "oauth_api_disabled": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-GOOGLE-API"
+  },
+  "oauth_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-GOOGLE-FAIL"
+  }
+}

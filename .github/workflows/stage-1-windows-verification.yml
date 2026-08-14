@@ -525,6 +525,7 @@ jobs:
           name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
           path: |
             ${{ env.SRC }}/ci-artifacts/stage1-evidence-*/
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-18-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-17-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-16-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-15-*.zip
@@ -541,6 +542,7 @@ jobs:
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-18-FAILURE-POLICY/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-17-BOOTSTRAP-CHECKLIST/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-16-EXISTING-SHORT-PATH/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-15-INITIAL-SYNC/**/*

@@ -1,0 +1,262 @@
+{
+  "oauth_cancelled": {
+    "code": "TDW-BOOT-GOOGLE-CANCEL",
+    "outcome": "CANCELLED"
+  },
+  "oauth_access_denied": {
+    "code": "TDW-BOOT-GOOGLE-REAUTH",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "oauth_timeout": {
+    "code": "TDW-BOOT-GOOGLE-TIMEOUT",
+    "outcome": "RETRYABLE"
+  },
+  "oauth_offline": {
+    "code": "TDW-BOOT-GOOGLE-NETWORK",
+    "outcome": "RETRYABLE"
+  },
+  "oauth_port_in_use": {
+    "code": "TDW-BOOT-GOOGLE-PORT",
+    "outcome": "RETRYABLE"
+  },
+  "oauth_invalid_grant": {
+    "code": "TDW-BOOT-GOOGLE-REAUTH",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "oauth_redirect_mismatch": {
+    "code": "TDW-BOOT-GOOGLE-OAUTH-CONFIG",
+    "outcome": "FATAL"
+  },
+  "oauth_api_disabled": {
+    "code": "TDW-BOOT-GOOGLE-API",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "oauth_failed": {
+    "code": "TDW-BOOT-GOOGLE-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "google_not_connected": {
+    "code": "TDW-BOOT-GOOGLE-NOT-CONNECTED",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "google_disconnect_failed": {
+    "code": "TDW-BOOT-GOOGLE-DISCONNECT",
+    "outcome": "RETRYABLE"
+  },
+  "discovery_failed": {
+    "code": "TDW-BOOT-DISC-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "discovery_in_flight": {
+    "code": "TDW-BOOT-DISC-INFLIGHT",
+    "outcome": "RETRYABLE"
+  },
+  "discovery_module_unavailable": {
+    "code": "TDW-BOOT-DISC-MODULE",
+    "outcome": "FATAL"
+  },
+  "discovery_required": {
+    "code": "TDW-BOOT-DISC-REQUIRED",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "existing_business_not_found": {
+    "code": "TDW-BOOT-DISC-NONE",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "existing_candidate_ambiguous": {
+    "code": "TDW-BOOT-DISC-AMBIGUOUS",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "candidate_selection_required": {
+    "code": "TDW-BOOT-PATH-SELECT",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "license_invalid": {
+    "code": "TDW-BOOT-ACT-INVALID",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "license_expired": {
+    "code": "TDW-BOOT-ACT-EXPIRED",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "setup_activation_failed": {
+    "code": "TDW-BOOT-ACT-COMMIT",
+    "outcome": "RETRYABLE"
+  },
+  "activation_defaults_failed": {
+    "code": "TDW-BOOT-ACT-DEFAULTS",
+    "outcome": "RETRYABLE"
+  },
+  "no_activation_on_drive": {
+    "code": "TDW-BOOT-ACT-MISSING",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "existing_license_recovery_failed": {
+    "code": "TDW-BOOT-ACT-RECOVERY",
+    "outcome": "RETRYABLE"
+  },
+  "org_fetch_failed": {
+    "code": "TDW-BOOT-ORG-FETCH",
+    "outcome": "RETRYABLE"
+  },
+  "organization_commit_failed": {
+    "code": "TDW-BOOT-ORG-COMMIT",
+    "outcome": "RETRYABLE"
+  },
+  "owner_password_required": {
+    "code": "TDW-BOOT-OWNER-PASSWORD",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "owner_password_mismatch": {
+    "code": "TDW-BOOT-OWNER-MISMATCH",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "owner_password_weak": {
+    "code": "TDW-BOOT-OWNER-WEAK",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "owner_duplicate": {
+    "code": "TDW-BOOT-OWNER-DUP",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "owner_credential_required": {
+    "code": "TDW-BOOT-OWNER-CRED",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "owner_session_required": {
+    "code": "TDW-BOOT-OWNER-SESSION",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "setup_owner_authentication_failed": {
+    "code": "TDW-BOOT-OWNER-AUTH",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "branch_name_required": {
+    "code": "TDW-BOOT-BRANCH-NAME",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "branch_code_duplicate": {
+    "code": "TDW-BOOT-BRANCH-DUP",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "branch_duplicate_create": {
+    "code": "TDW-BOOT-BRANCH-INFLIGHT",
+    "outcome": "RETRYABLE"
+  },
+  "license_branch_limit": {
+    "code": "TDW-BOOT-BRANCH-LIMIT",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "license_device_limit": {
+    "code": "TDW-BOOT-DEVICE-LIMIT",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "device_limit_exceeded": {
+    "code": "TDW-BOOT-DEVICE-LIMIT",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "device_duplicate": {
+    "code": "TDW-BOOT-DEVICE-DUP",
+    "outcome": "RETRYABLE"
+  },
+  "business_setup_invalid": {
+    "code": "TDW-BOOT-BIZ-INVALID",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "publication_failed": {
+    "code": "TDW-BOOT-PUB-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "readback_failed": {
+    "code": "TDW-BOOT-READBACK-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "readback_stale": {
+    "code": "TDW-BOOT-READBACK-STALE",
+    "outcome": "RETRYABLE"
+  },
+  "readback_mismatch": {
+    "code": "TDW-BOOT-READBACK-MISMATCH",
+    "outcome": "RETRYABLE"
+  },
+  "backup_password_required": {
+    "code": "TDW-BOOT-RESTORE-PASSWORD",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "backup_password_invalid": {
+    "code": "TDW-BOOT-RESTORE-PASSWORD",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "restore_interrupted": {
+    "code": "TDW-BOOT-RESTORE-INTERRUPT",
+    "outcome": "RETRYABLE"
+  },
+  "cloud_download_failed": {
+    "code": "TDW-BOOT-RESTORE-DOWNLOAD",
+    "outcome": "RETRYABLE"
+  },
+  "cloud_backup_restore_failed": {
+    "code": "TDW-BOOT-RESTORE-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "local_restore_failed": {
+    "code": "TDW-BOOT-RESTORE-LOCAL",
+    "outcome": "RETRYABLE"
+  },
+  "restore_reconcile_incomplete": {
+    "code": "TDW-BOOT-RESTORE-RECONCILE",
+    "outcome": "RETRYABLE"
+  },
+  "restore_cancelled": {
+    "code": "TDW-BOOT-RESTORE-CANCEL",
+    "outcome": "CANCELLED"
+  },
+  "backup_cancelled": {
+    "code": "TDW-BOOT-RESTORE-CANCEL",
+    "outcome": "CANCELLED"
+  },
+  "initial_sync_failed": {
+    "code": "TDW-BOOT-SYNC-FAIL",
+    "outcome": "RETRYABLE"
+  },
+  "sync_not_ready": {
+    "code": "TDW-BOOT-SYNC-NOT-READY",
+    "outcome": "RETRYABLE"
+  },
+  "sync_plan_invalid": {
+    "code": "TDW-BOOT-SYNC-PLAN",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "sync_post_restore_blocked": {
+    "code": "TDW-BOOT-SYNC-EMPTY-PUSH",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "sync_push_blocked_pull_only": {
+    "code": "TDW-BOOT-SYNC-PULL-ONLY",
+    "outcome": "FATAL"
+  },
+  "sync_interrupted": {
+    "code": "TDW-BOOT-SYNC-INTERRUPT",
+    "outcome": "RETRYABLE"
+  },
+  "bootstrap_unavailable": {
+    "code": "TDW-BOOT-RUNTIME-UNAVAILABLE",
+    "outcome": "FATAL"
+  },
+  "database_integrity_failed": {
+    "code": "TDW-BOOT-DB-INTEGRITY",
+    "outcome": "FATAL"
+  },
+  "signed_license_corrupt": {
+    "code": "TDW-BOOT-LICENSE-CORRUPT",
+    "outcome": "FATAL"
+  },
+  "step_required": {
+    "code": "TDW-BOOT-STEP-REQUIRED",
+    "outcome": "USER_ACTION_REQUIRED"
+  },
+  "step_failed": {
+    "code": "TDW-BOOT-STEP-FAIL",
+    "outcome": "RETRYABLE"
+  }
+}
