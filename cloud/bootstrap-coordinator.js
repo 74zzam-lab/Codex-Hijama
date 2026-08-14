@@ -133,15 +133,22 @@
       case 'business_setup':
         if (!BF?.deviceStepResolved?.()) return false;
         return !!(BF?.businessSetupStepResolved?.() || BF?.validateStep?.('business_setup'));
+      case 'publication':
+        if (!BF?.businessSetupStepResolved?.()) return false;
+        return !!(BF?.publicationStepResolved?.() || BF?.validateStep?.('publication'));
       case 'owner':
         return !!(BF?.ownerStepResolved?.() || BF?.ownerSetupRequirementMet?.() || SS?.hasOwnerCredential?.());
       case 'restore':
         if (!BF?.deviceStepResolved?.()) return false;
-        if (coord?.userPathChoice === 'new' && !BF?.businessSetupStepResolved?.()) return false;
+        if (coord?.userPathChoice === 'new') {
+          if (!BF?.businessSetupStepResolved?.()) return false;
+          if (!BF?.publicationStepResolved?.()) return false;
+        }
         return !!(BF?.hasRestoreDecision?.() || SS?.hasDataSource?.());
       case 'sync':
         if (!BF?.deviceStepResolved?.()) return false;
         if (!BF?.businessSetupStepResolved?.()) return false;
+        if (!BF?.publicationStepResolved?.()) return false;
         return !!(BF?.hasSyncDone?.() || metaBootstrapCommitted());
       case 'ready':
         return !!(BF?.isBootComplete?.() || SS?.evaluateReady?.({ ignoreRestart: true })?.ready);

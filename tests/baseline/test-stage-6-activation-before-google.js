@@ -318,11 +318,11 @@ await (async () => {
   const discoveryIdx = steps.indexOf('discovery');
   const tail = steps.slice(discoveryIdx + 1);
   const expectedTail = steps.includes('owner') && steps.indexOf('owner') < steps.indexOf('branch')
-    ? ['path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready']
+    ? ['path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready']
     : (steps.includes('path_decision')
-      ? ['path_decision', 'organization', 'branch', 'device', 'business_setup', 'restore', 'owner', 'sync', 'ready']
-      : ['organization', 'branch', 'device', 'business_setup', 'restore', 'owner', 'sync', 'ready']);
-  check(JSON.stringify(tail) === JSON.stringify(expectedTail), 'NEW tail after discovery reflects Stage 12 business_setup');
+      ? ['path_decision', 'organization', 'branch', 'device', 'business_setup', 'publication', 'restore', 'owner', 'sync', 'ready']
+      : ['organization', 'branch', 'device', 'business_setup', 'publication', 'restore', 'owner', 'sync', 'ready']);
+  check(JSON.stringify(tail) === JSON.stringify(expectedTail), 'NEW tail after discovery reflects Stage 13 publication');
 })();
 
 // Gate model alignment

@@ -303,7 +303,7 @@ async function run() {
     wizard: { path: 'new', currentStep: 9, wizardFlowVersion: 11, completedSteps: ['device'] },
   });
   mig.BootFlow.loadWizard();
-  check(mig._snap.wizard.wizardFlowVersion === 12, '50 v11 migrates to v12');
+  check(mig._snap.wizard.wizardFlowVersion === 13, '50 v11 migrates to v13');
   check(mig._snap.wizard.completedSteps.includes('business_setup'), '51 legacy configured skips step');
 
   const legacyReady = baseEnv({
@@ -323,7 +323,7 @@ async function run() {
   const gates = fs.readFileSync(path.join(root, 'cloud/bootstrap-gates.js'), 'utf8');
   check(/BusinessSetupContract/.test(gates), '8 BUSINESS_SETUP_RESOLVED uses contract');
 
-  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION === 12, '49 wizard flow version 12');
+  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION >= 13, '49 wizard flow version >= 13');
 
   if (errors.length) {
     console.error('FAIL stage-12-business-setup-gate');

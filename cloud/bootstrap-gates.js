@@ -9,10 +9,10 @@
   const PATH_EXISTING = 'existing';
 
   const CURRENT_NEW_RUNTIME = Object.freeze([
-    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready',
+    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready',
   ]);
   const CURRENT_EXISTING_RUNTIME = Object.freeze([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready',
   ]);
 
   const TARGET_NEW_GATES = Object.freeze([
@@ -38,7 +38,10 @@
     'LICENSE_ORG_RECOVERY_RESOLVED',
     'BRANCH_RESOLVED',
     'DEVICE_RESOLVED',
+    'BUSINESS_SETUP_RESOLVED',
     'RESTORE_DECISION_RESOLVED',
+    'PUBLICATION_RESOLVED',
+    'READBACK_VERIFIED',
     'INITIAL_SYNC_RESOLVED',
     'READY',
   ]);
@@ -222,32 +225,36 @@
   }
 
   function evaluatePublicationResolved() {
-    const m = meta();
-    if (m.setupActivationCommittedAt || m.setupOrganizationDeviceCommittedAt) {
-      return gateResult('PUBLICATION_RESOLVED', GATE_STATUS.RESOLVED, 'setup commits recorded in meta', '__tdw_meta__');
+    const PC = global.PublicationContract;
+    if (PC?.isResolved?.()) {
+      const rec = PC.readPublicationRecord?.();
+      return gateResult('PUBLICATION_RESOLVED', GATE_STATUS.RESOLVED,
+        'remote publication verified with read-back', '__tdw_meta__.setupPublication',
+        { artifacts: rec?.artifacts });
     }
-    const lic = licenseLocal();
-    if (lic?.centerId && global.LicenseActivationGate?.isConsumed?.(lic)) {
-      return gateResult('PUBLICATION_RESOLVED', GATE_STATUS.RESOLVED, 'activation consumed (local commit)', 'LicenseActivationGate');
-    }
-    return gateResult('PUBLICATION_RESOLVED', GATE_STATUS.MISSING, 'no setup publication markers', '__tdw_meta__');
+    const state = PC?.getState?.() || 'PUBLICATION_PENDING';
+    const rec = PC?.readPublicationRecord?.();
+    const err = rec?.lastError?.error || rec?.lastError || null;
+    return gateResult('PUBLICATION_RESOLVED', GATE_STATUS.MISSING,
+      err ? `publication: ${state} (${err})` : `publication: ${state}`,
+      'PublicationContract', { state, lastError: rec?.lastError || null });
   }
 
   function evaluateReadbackVerified() {
-    const m = meta();
-    const lic = licenseLocal();
-    const cfg = deviceConfig();
-    const parts = [];
-    if (lic?.centerId) parts.push('license');
-    if (cfg?.lockedBranchId) parts.push('device');
-    if (m.setupOrganizationDeviceCommittedAt) parts.push('org_device_commit');
-    if (parts.length >= 2) {
-      return gateResult('READBACK_VERIFIED', GATE_STATUS.RESOLVED, `hydrated: ${parts.join(',')}`, 'SqliteBridge.hydrateIntoMemory (post-commit)');
+    const PC = global.PublicationContract;
+    if (PC?.isResolved?.()) {
+      const rec = PC.readPublicationRecord?.();
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.RESOLVED,
+        'publication remote read-back verified', '__tdw_meta__.setupPublication',
+        { artifacts: rec?.artifacts });
     }
-    if (lic?.centerId) {
-      return gateResult('READBACK_VERIFIED', GATE_STATUS.MISSING, 'license only — branch/device read-back pending', 'partial');
+    const rec = PC?.readPublicationRecord?.();
+    if (rec?.lastError?.readBack === false || rec?.lastError?.error === 'cloud_readback_failed') {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
+        'upload without matching read-back', 'PublicationContract', { lastError: rec.lastError });
     }
-    return gateResult('READBACK_VERIFIED', GATE_STATUS.MISSING, 'no post-commit read-back evidence', 'meta+DeviceConfig');
+    return gateResult('READBACK_VERIFIED', GATE_STATUS.MISSING,
+      'publication read-back pending', 'PublicationContract');
   }
 
   function evaluateInitialSyncResolved() {
@@ -373,7 +380,7 @@
       } else if (cap === 'login') {
         row.currentNew = 'post-READY startup'; row.targetNew = 'post-READY'; row.currentExisting = 'post-READY'; row.targetExisting = 'post-READY'; row.changeRequired = 'none (Stage 3)';
       } else {
-        row.currentNew = CURRENT_NEW_RUNTIME.indexOf(cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'read-back' ? 'sync' : cap === 'business setup' ? 'business_setup' : cap === 'restore' ? 'restore' : cap === 'publication' ? 'sync' : cap === 'READY' ? 'ready' : cap);
+        row.currentNew = CURRENT_NEW_RUNTIME.indexOf(cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'read-back' ? 'publication' : cap === 'business setup' ? 'business_setup' : cap === 'restore' ? 'restore' : cap === 'publication' ? 'publication' : cap === 'READY' ? 'ready' : cap);
         row.targetNew = TARGET_NEW_GATES.indexOf(cap.toUpperCase().replace(/ /g, '_') + (cap === 'restore' ? '_DECISION_RESOLVED' : cap === 'initial sync' ? '_RESOLVED' : cap === 'read-back' ? '_VERIFIED' : cap === 'business setup' ? '_RESOLVED' : cap === 'READY' ? '' : '_RESOLVED'));
         row.currentExisting = CURRENT_EXISTING_RUNTIME.indexOf(cap === 'branch' ? 'branch_select' : cap === 'organization' ? 'organization' : cap === 'initial sync' ? 'sync' : cap === 'restore' ? 'restore' : cap === 'READY' ? 'ready' : cap);
         row.targetExisting = TARGET_EXISTING_GATES.findIndex((g) => g.includes(cap.toUpperCase().split(' ')[0]));

@@ -44,6 +44,7 @@ function makeDocument() {
 function loadModules(ctx) {
   const files = [
     'cloud/business-setup-contract.js',
+    'cloud/publication-contract.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
     'cloud/bootstrap-coordinator.js',
@@ -74,7 +75,7 @@ function readyEnv(overrides = {}) {
     deviceConfig: { deviceUuid: 'DEV-S5', deviceName: 'D', lockedBranchId: 'BR-1', branchLocked: true },
     users: [{ id: 'O1', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     wizard: {
-      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], lang: 'ar', wizardFlowVersion: 12,
+      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], lang: 'ar', wizardFlowVersion: 13,
       discoveryCompletedAt: new Date().toISOString(),
       licenseDiscoveryAttempted: true,
       cloudDiscovery: { result: { ok: true, status: 'no_existing_business' }, googleAccountKey: null },

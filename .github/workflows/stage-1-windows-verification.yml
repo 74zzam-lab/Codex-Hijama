@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7+8+9+10+11+12 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
 
 on:
   push:
@@ -14,6 +14,7 @@ on:
       - cursor/stage-10-owner-seed-retirement-beb8
       - cursor/stage-11-explicit-device-step-beb8
       - cursor/stage-12-business-setup-gate-beb8
+      - cursor/stage-13-publication-gate-beb8
       - main
   pull_request:
     branches:
@@ -29,6 +30,7 @@ on:
       - cursor/stage-10-owner-seed-retirement-beb8
       - cursor/stage-11-explicit-device-step-beb8
       - cursor/stage-12-business-setup-gate-beb8
+      - cursor/stage-13-publication-gate-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -40,7 +42,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -56,6 +58,7 @@ jobs:
       STAGE10_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE11_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE12_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE13_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -293,6 +296,17 @@ jobs:
         working-directory: ${{ env.SRC }}
         run: node tests/baseline/test-stage-12-business-setup-gate.js
 
+      - name: Stage 13 publication-gate UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE13_BUILD_ID: ${{ env.STAGE13_BUILD_ID }}
+        run: node scripts/windows-uat/stage-13-publication-gate-uat.cjs
+
+      - name: Stage 13 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-13-publication-gate.js
+
       - name: Generate packaging inputs
         working-directory: ${{ env.SRC }}
         shell: pwsh
@@ -340,6 +354,16 @@ jobs:
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
 
+      - name: Package Stage 13 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE13_BUILD_ID: ${{ env.STAGE13_BUILD_ID }}
+          STAGE_NUMBER: '13'
+          STAGE_ZIP_LABEL: PUBLICATION-GATE-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
+
       - name: Package Stage 12 source ZIP (artifact only)
         if: success()
         working-directory: ${{ env.SRC }}
@@ -381,6 +405,7 @@ jobs:
           name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
           path: |
             ${{ env.SRC }}/ci-artifacts/stage1-evidence-*/
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-13-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-12-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-11-*.zip
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-2-READY-PURE/**/*
@@ -392,6 +417,7 @@ jobs:
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-13-PUBLICATION-GATE/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-12-BUSINESS-SETUP/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-11-EXPLICIT-DEVICE-STEP/**/*
           retention-days: 14

@@ -13,6 +13,7 @@
     'branch',
     'device',
     'businessSetup',
+    'publication',
     'dataSource',
     'initialSync',
     'google',
@@ -79,6 +80,19 @@
     return !!(snap.centerName && snap.phone && snap.centerName !== 'مركز الحجامة');
   }
 
+  function publicationResolved(snapshot) {
+    if (snapshot.meta?.bootstrapCompletedAt) return true;
+    const PC = typeof global !== 'undefined' ? global.PublicationContract : null;
+    if (PC?.isResolved) {
+      return PC.isResolved({
+        meta: snapshot.meta,
+        path: snapshot.wizard?.path,
+        setupPublication: snapshot.meta?.setupPublication,
+      });
+    }
+    return false;
+  }
+
   function organizationResolved(snapshot) {
     const centerId = String(
       snapshot.license?.centerId
@@ -137,6 +151,7 @@
     if (missing.includes('branch')) return STATES.BRANCH_REQUIRED;
     if (missing.includes('device')) return STATES.DEVICE_REQUIRED;
     if (missing.includes('businessSetup')) return STATES.CENTER_REQUIRED;
+    if (missing.includes('publication')) return STATES.SYNC_INITIALIZING;
     if (missing.includes('dataSource')) return STATES.DATA_SOURCE_REQUIRED;
     if (missing.includes('owner')) return STATES.OWNER_REQUIRED;
     if (missing.includes('initialSync')) return STATES.SYNC_INITIALIZING;
@@ -227,6 +242,16 @@
       };
     } else {
       missing.push('businessSetup');
+    }
+
+    if (publicationResolved(snapshot)) {
+      resolved.push('publication');
+      source.publication = {
+        state: snapshot.meta?.setupPublication?.state || 'PUBLICATION_VERIFIED',
+        verifiedAt: snapshot.meta?.setupPublication?.verifiedAt || null,
+      };
+    } else {
+      missing.push('publication');
     }
 
     if (dataSourceResolved(snapshot)) {

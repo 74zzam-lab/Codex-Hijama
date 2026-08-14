@@ -6,8 +6,9 @@
  * V2-5.13+ Stage 9 — NEW Start New: Owner before first Branch (organization → owner → branch → restore).
  * V2-5.14+ Stage 11 — Explicit Device step after Branch (branch/device orchestration split).
  * V2-5.15+ Stage 12 — Explicit Business Setup gate after Device (NEW) / after Restore (EXISTING).
- * NEW: Language → Activation → Google → Discovery → Path decision (if needed) → Organization → Owner → Branch → Device → Business Setup → Restore → Sync → Ready
- * EXISTING: Language → Google → Discovery → License → Organization → Branch_select → Device → Restore → Business Setup → Owner → Sync → Ready
+ * V2-5.16+ Stage 13 — Explicit Publication gate with remote read-back after Business Setup (NEW) / after Business Setup (EXISTING).
+ * NEW: Language → Activation → Google → Discovery → Path decision (if needed) → Organization → Owner → Branch → Device → Business Setup → Publication → Restore → Sync → Ready
+ * EXISTING: Language → Google → Discovery → License → Organization → Branch_select → Device → Restore → Business Setup → Publication → Owner → Sync → Ready
  *
  * Google Login never implies Owner. Owner is a seeded normal user account.
  * Dashboard/login completion requires Google + license + org + device branch + data decision + sync.
@@ -27,7 +28,7 @@
     establishedOfflineStartAllowed: true,
   });
 
-  const WIZARD_FLOW_VERSION = 12;
+  const WIZARD_FLOW_VERSION = 13;
   const LEGACY_NEW_STEPS_PRE_STAGE6 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready',
   ]);
@@ -46,6 +47,9 @@
   const LEGACY_NEW_STEPS_PRE_STAGE12 = Object.freeze([
     'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'restore', 'sync', 'ready',
   ]);
+  const LEGACY_NEW_STEPS_PRE_STAGE13 = Object.freeze([
+    'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready',
+  ]);
   const LEGACY_EXISTING_STEPS_PRE_STAGE7 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch_select', 'restore', 'owner', 'sync', 'ready',
   ]);
@@ -55,9 +59,12 @@
   const LEGACY_EXISTING_STEPS_PRE_STAGE12 = Object.freeze([
     'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'owner', 'sync', 'ready',
   ]);
+  const LEGACY_EXISTING_STEPS_PRE_STAGE13 = Object.freeze([
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
+  ]);
 
-  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready'];
+  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready'];
 
   const STEP_LABELS = {
     language: 'اللغة',
@@ -70,6 +77,7 @@
     branch_select: 'اختيار فرع موجود',
     device: 'تسجيل الجهاز',
     business_setup: 'إعداد بيانات المركز',
+    publication: 'نشر الإعداد إلى السحابة',
     owner: 'حساب المالك',
     restore: 'مصدر البيانات',
     sync: 'المزامنة الأولية',
@@ -88,6 +96,7 @@
     branch_select: 'فرع',
     device: 'جهاز',
     business_setup: 'بيانات',
+    publication: 'نشر',
     owner: 'مالك',
     restore: 'بيانات',
     sync: 'مزامنة',
@@ -105,6 +114,7 @@
     branch_select: 'اختر فرعاً موجوداً — تسجيل الجهاز في الخطوة التالية.',
     device: 'أدخل اسم هذا الجهاز لربطه بالفرع المحدد.',
     business_setup: 'أكمل بيانات المركز الأساسية (الاسم والهاتف) قبل متابعة الإعداد.',
+    publication: 'ارفع بيانات الإعداد إلى Google Drive مع تحقق read-back قبل الاستعادة/المزامنة.',
     owner: 'أنشئ حساب المالك الحقيقي للمؤسسة — مطلوب قبل إنشاء أول فرع.',
     restore: 'فحص سريع للمصادر ثم تأكيد الاستعادة — سحابة / محلي / Backup V2 / فارغ بلا تنزيل أثناء الاكتشاف.',
     sync: 'المزامنة تُفعَّل بعد اكتمال الربط.',
@@ -116,6 +126,7 @@
   let branchBindInFlight = false;
   let deviceRegisterInFlight = false;
   let businessSetupInFlight = false;
+  let publicationInFlight = false;
   let licenseActivateInFlight = false;
   let ownerLoginInFlight = false;
   let setupOwnerSessionUserId = null;
@@ -126,7 +137,8 @@
 
   function isCriticalOpInFlight() {
     if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight
-        || deviceRegisterInFlight || ownerLoginInFlight || restoreInFlight || syncInFlight || discoveryInFlight) {
+        || deviceRegisterInFlight || ownerLoginInFlight || restoreInFlight || syncInFlight || discoveryInFlight
+        || publicationInFlight) {
       return true;
     }
     return !!global.OwnerManagement?.isOwnerCreationInProgress?.();
@@ -144,7 +156,8 @@
       const legacySteps = w.path === PATHS.EXISTING
         ? (version < 7 ? LEGACY_EXISTING_STEPS_PRE_STAGE7
           : (version < 11 ? LEGACY_EXISTING_STEPS_PRE_STAGE11
-            : (version < 12 ? LEGACY_EXISTING_STEPS_PRE_STAGE12 : EXISTING_STEPS)))
+            : (version < 12 ? LEGACY_EXISTING_STEPS_PRE_STAGE12
+              : (version < 13 ? LEGACY_EXISTING_STEPS_PRE_STAGE13 : EXISTING_STEPS))))
         : (version < 6
           ? LEGACY_NEW_STEPS_PRE_STAGE6
           : (version < 7
@@ -154,7 +167,8 @@
               : (version < 9
                 ? LEGACY_NEW_STEPS_PRE_STAGE9
                 : (version < 11 ? LEGACY_NEW_STEPS_PRE_STAGE11
-                  : (version < 12 ? LEGACY_NEW_STEPS_PRE_STAGE12 : NEW_STEPS))))));
+                  : (version < 12 ? LEGACY_NEW_STEPS_PRE_STAGE12
+                    : (version < 13 ? LEGACY_NEW_STEPS_PRE_STAGE13 : NEW_STEPS)))))));
       const steps = stepsFor(w.path);
       const legacyIdx = Number(w.currentStep);
       if (Number.isFinite(legacyIdx) && legacyIdx >= 0 && legacyIdx < legacySteps.length) {
@@ -181,6 +195,11 @@
       if (version < 12 && businessSetupStepResolved()) {
         if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
         if (!w.completedSteps.includes('business_setup')) w.completedSteps.push('business_setup');
+        changed = true;
+      }
+      if (version < 13 && publicationStepResolved()) {
+        if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
+        if (!w.completedSteps.includes('publication')) w.completedSteps.push('publication');
         changed = true;
       }
       if (changed) saveWizard(w);
@@ -338,6 +357,21 @@
     if (BSC?.isResolved) return BSC.isResolved(readBusinessSetupState());
     const snap = readBusinessSetupState();
     return !!(snap.centerName && snap.phone);
+  }
+
+  function publicationStepResolved() {
+    const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
+    if (meta.bootstrapCompletedAt) return true;
+    const PC = global.PublicationContract;
+    if (PC?.isResolved) {
+      return PC.isResolved({ meta, path: loadWizard().path, setupPublication: meta.setupPublication });
+    }
+    return false;
+  }
+
+  function readPublicationState() {
+    const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
+    return meta.setupPublication || null;
   }
 
   function branchStepResolved() {
@@ -590,7 +624,7 @@
       return evaluation.ready;
     }
     const base = hasGoogle() && hasValidLicense() && hasCenterData() && hasDeviceBranch()
-      && businessSetupStepResolved() && hasRestoreDecision() && ownerSetupRequirementMet() && hasSyncDone();
+      && businessSetupStepResolved() && publicationStepResolved() && hasRestoreDecision() && ownerSetupRequirementMet() && hasSyncDone();
     if (!base) {
       try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
       return false;
@@ -816,15 +850,23 @@
         if (!deviceStepResolved()) return false;
         return businessSetupStepResolved();
       }
+      case 'publication': {
+        if (!businessSetupStepResolved()) return false;
+        return publicationStepResolved();
+      }
       case 'restore': {
         if (!deviceStepResolved()) return false;
         const w = loadWizard();
-        if (w.path === PATHS.NEW && !businessSetupStepResolved()) return false;
+        if (w.path === PATHS.NEW) {
+          if (!businessSetupStepResolved()) return false;
+          if (!publicationStepResolved()) return false;
+        }
         return hasRestoreDecision();
       }
       case 'sync': {
         if (!deviceStepResolved()) return false;
         if (!businessSetupStepResolved()) return false;
+        if (!publicationStepResolved()) return false;
         return hasSyncDone();
       }
       case 'ready': return isBootComplete();
@@ -1674,6 +1716,47 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     }
   }
 
+  async function commitPublicationFromWizard() {
+    if (publicationInFlight) {
+      return { ok: false, error: 'publication_in_flight' };
+    }
+    if (!businessSetupStepResolved()) {
+      setStatus('⚠️ يجب إكمال بيانات المركز قبل النشر', true);
+      return { ok: false, error: 'business_setup_required_before_publication' };
+    }
+    if (publicationStepResolved()) {
+      setStatus('✅ النشر إلى السحابة مكتمل ومُتحقق منه');
+      return { ok: true, already: true };
+    }
+    publicationInFlight = true;
+    setStatus('⏳ جارٍ نشر الإعداد إلى Google Drive والتحقق...');
+    try {
+      const result = await global.PublicationGateService?.runSetupPublication?.({
+        inFlightGuard: () => publicationInFlight,
+      });
+      if (!result?.ok) {
+        const code = result?.error || result?.lastError?.error || 'publication_failed';
+        setStatusFromErr({ message: code }, code);
+        return { ok: false, error: code, result };
+      }
+      const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+      if (hydrated && hydrated.ok !== true) {
+        throw new Error(hydrated.error || 'publication_hydrate_failed');
+      }
+      if (!publicationStepResolved()) {
+        throw new Error('publication_readback_mismatch');
+      }
+      setStatus('✅ تم النشر والتحقق من السحابة بنجاح');
+      return { ok: true, setupPublication: result.setupPublication || readPublicationState() };
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false, error: e?.message || e?.code || 'publication_failed' };
+    } finally {
+      publicationInFlight = false;
+      renderNavButtons(loadWizard());
+    }
+  }
+
   /** @deprecated Stage 11 — use selectExistingBranchOnly + registerDeviceFromForm */
   async function bindExistingBranch() {
     const selected = await selectExistingBranchOnly();
@@ -2133,6 +2216,28 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         addBtn(actions, businessSetupInFlight ? '⏳ جارٍ الحفظ...' : '💾 حفظ بيانات المركز', 'btn-primary', () => commitBusinessSetupFromForm(), businessSetupInFlight);
         break;
       }
+      case 'publication': {
+        if (!businessSetupStepResolved()) {
+          content.innerHTML = '<p class="tdw-field-error">يجب إكمال بيانات المركز قبل النشر إلى السحابة.</p>';
+          setStatus('⚠️ بيانات المركز مطلوبة أولاً', true);
+          break;
+        }
+        const pub = readPublicationState();
+        if (publicationStepResolved()) {
+          const arts = Object.entries(pub?.artifacts || {}).filter(([, v]) => v?.ok).map(([k]) => k).join(', ');
+          content.innerHTML = `<p>✅ تم نشر الإعداد والتحقق من السحابة.</p>
+            <p class="bf-source-meta">${arts || 'verified'}</p>`;
+          setStatus('✅ النشر مكتمل');
+          break;
+        }
+        const scope = global.PublicationContract?.requiredArtifactsForPath?.(w.path) || [];
+        content.innerHTML = `
+          <p><strong>نشر الإعداد إلى Google Drive</strong> مع تحقق read-back حقيقي.</p>
+          <p class="bf-source-meta">النطاق: ${scope.join(' → ')}</p>
+          <p class="bf-source-meta">لن يُعتبر النشر مكتملاً بدون تطابق read-back من السحابة.</p>`;
+        addBtn(actions, publicationInFlight ? '⏳ جارٍ النشر...' : '☁️ نشر والتحقق', 'btn-primary', () => commitPublicationFromWizard(), publicationInFlight);
+        break;
+      }
       case 'owner': {
         const st = global.OwnerManagement?.getOwnerState?.()?.state;
         if (st === 'OWNER_EXISTS' || hasOwnerPasswordAccount()) {
@@ -2564,6 +2669,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           ['المؤسسة', hasCenterData()],
           ['الفرع والجهاز', hasDeviceBranch()],
           ['بيانات المركز', businessSetupStepResolved()],
+          ['النشر إلى السحابة', publicationStepResolved()],
           ['مصدر البيانات', hasRestoreDecision()],
           ['حساب المالك', ownerSetupRequirementMet()],
           ['المزامنة', hasSyncDone()]
@@ -2863,14 +2969,19 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_NEW_STEPS_PRE_STAGE9,
     LEGACY_NEW_STEPS_PRE_STAGE11,
     LEGACY_NEW_STEPS_PRE_STAGE12,
+    LEGACY_NEW_STEPS_PRE_STAGE13,
     LEGACY_EXISTING_STEPS_PRE_STAGE7,
     LEGACY_EXISTING_STEPS_PRE_STAGE11,
     LEGACY_EXISTING_STEPS_PRE_STAGE12,
+    LEGACY_EXISTING_STEPS_PRE_STAGE13,
     branchStepResolved,
     deviceStepResolved,
     businessSetupStepResolved,
     readBusinessSetupState,
     commitBusinessSetupFromForm,
+    publicationStepResolved,
+    readPublicationState,
+    commitPublicationFromWizard,
     getSelectedBranchId,
     readDeviceCommitState,
     registerDeviceFromForm,

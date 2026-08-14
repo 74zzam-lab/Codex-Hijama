@@ -246,7 +246,7 @@ await (async () => {
   });
   ctx._setOwnerState('OWNER_EXISTS');
   const w = ctx.BootFlow.loadWizard();
-  check(w.wizardFlowVersion === 12, 'legacy v8 migrates to v12');
+  check(w.wizardFlowVersion === 13, 'legacy v8 migrates to v13');
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', w.currentStep);
   check(ctx.BootFlow.NEW_STEPS[resume] === 'branch', `restart after owner resumes branch (got ${ctx.BootFlow.NEW_STEPS[resume]})`);
 })();
@@ -338,7 +338,7 @@ await (async () => {
   ctx._setOwnerState('OWNER_EXISTS');
   ctx.BootFlow.loadWizard();
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', ctx._snap.wizard.currentStep);
-  check(['device', 'business_setup', 'restore', 'sync', 'ready'].includes(ctx.BootFlow.NEW_STEPS[resume]), 'legacy branch+owner → continue device/business_setup/restore/sync');
+  check(['device', 'business_setup', 'publication', 'restore', 'sync', 'ready'].includes(ctx.BootFlow.NEW_STEPS[resume]), 'legacy branch+owner → continue device/business_setup/publication/restore/sync');
 })();
 
 // 24. legacy restore done / owner missing
@@ -378,8 +378,8 @@ await (async () => {
 (() => {
   const existing = baseEnv().BootFlow.EXISTING_STEPS;
   check(JSON.stringify(existing) === JSON.stringify([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
-  ]), 'direct EXISTING runtime includes explicit business_setup step');
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready',
+  ]), 'direct EXISTING runtime includes explicit business_setup + publication steps');
 })();
 
 // 28. Stage8 Start New honored
