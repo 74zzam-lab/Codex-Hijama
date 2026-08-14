@@ -179,11 +179,10 @@ async function run() {
   const devNew = newSteps.indexOf('device');
   const restoreNew = newSteps.indexOf('restore');
   const devEx = exSteps.indexOf('device');
-  const restoreEx = exSteps.indexOf('restore');
-  const bsEx = exSteps.indexOf('business_setup');
 
   check(bsNew > devNew && restoreNew > bsNew, '1 NEW reaches Business Setup after Device');
-  check(bsEx > restoreEx && bsEx > devEx, '37 EXISTING: restore before business_setup');
+  check(!exSteps.includes('business_setup'), '37 EXISTING short path skips business_setup wizard step');
+  check(exSteps.indexOf('restore') > devEx, '37b EXISTING: device before restore');
 
   const ctxNoDev = baseEnv({ deviceConfig: { deviceUuid: '', lockedBranchId: '', deviceName: '' } });
   check(!ctxNoDev.BootFlow.validateStep('business_setup'), '2 cannot reach before Device');
@@ -303,7 +302,7 @@ async function run() {
     wizard: { path: 'new', currentStep: 9, wizardFlowVersion: 11, completedSteps: ['device'] },
   });
   mig.BootFlow.loadWizard();
-  check(mig._snap.wizard.wizardFlowVersion === 14, '50 v11 migrates to v14');
+  check(mig._snap.wizard.wizardFlowVersion === 16, '50 v11 migrates to v16');
   check(mig._snap.wizard.completedSteps.includes('business_setup'), '51 legacy configured skips step');
 
   const legacyReady = baseEnv({

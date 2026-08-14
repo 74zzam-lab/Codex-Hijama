@@ -46,6 +46,8 @@ function loadModules(ctx) {
     'cloud/business-setup-contract.js',
     'cloud/publication-contract.js',
     'cloud/readback-verification-contract.js',
+    'cloud/initial-sync-direction-contract.js',
+    'cloud/existing-short-path-contract.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
     'cloud/bootstrap-coordinator.js',
@@ -76,7 +78,7 @@ function readyEnv(overrides = {}) {
     deviceConfig: { deviceUuid: 'DEV-S5', deviceName: 'D', lockedBranchId: 'BR-1', branchLocked: true },
     users: [{ id: 'O1', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     wizard: {
-      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], lang: 'ar', wizardFlowVersion: 14,
+      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], lang: 'ar', wizardFlowVersion: 16,
       discoveryCompletedAt: new Date().toISOString(),
       licenseDiscoveryAttempted: true,
       cloudDiscovery: { result: { ok: true, status: 'no_existing_business' }, googleAccountKey: null },
@@ -312,7 +314,7 @@ function readyEnv(overrides = {}) {
   check(/const NEW_STEPS = \['language', 'license', 'google'/.test(bootSrc), 'NEW runtime activation before google');
   const hasDiscovery = /'discovery'/.test(bootSrc);
   if (hasDiscovery) {
-    check(/const EXISTING_STEPS = \['language', 'google', 'discovery', 'license'/.test(bootSrc), 'EXISTING google→discovery→license (Stage 7)');
+    check(/const EXISTING_STEPS = \['language', 'google', 'discovery', 'license_org_recovery'/.test(bootSrc), 'EXISTING google→discovery→license_org_recovery (Stage 16)');
   } else {
     check(/const EXISTING_STEPS = \['language', 'google', 'license'/.test(bootSrc), 'EXISTING runtime google before license unchanged');
   }

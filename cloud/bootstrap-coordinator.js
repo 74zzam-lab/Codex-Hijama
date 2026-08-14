@@ -30,7 +30,7 @@
   });
 
   const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license_org_recovery', 'branch_select', 'device', 'restore', 'owner_auth', 'sync', 'ready'];
 
   function stepsFor(path) {
     return path === 'existing' ? EXISTING_STEPS : NEW_STEPS;
@@ -119,6 +119,8 @@
         return !!(BF?.hasDiscoveryResolved?.() || BF?.validateStep?.('discovery'));
       case 'path_decision':
         return !!(BF?.hasPathDecisionResolved?.() || BF?.validateStep?.('path_decision'));
+      case 'license_org_recovery':
+        return !!(BF?.licenseOrgRecoveryResolved?.() || BF?.validateStep?.('license_org_recovery'));
       case 'license':
         return !!(BF?.hasValidLicense?.() || SS?.hasLicense?.());
       case 'organization':
@@ -136,6 +138,8 @@
       case 'publication':
         if (!BF?.businessSetupStepResolved?.()) return false;
         return !!(BF?.publicationStepResolved?.() && BF?.readbackStepResolved?.());
+      case 'owner_auth':
+        return !!(BF?.ownerAuthStepResolved?.() || BF?.validateStep?.('owner_auth'));
       case 'owner':
         return !!(BF?.ownerStepResolved?.() || BF?.ownerSetupRequirementMet?.() || SS?.hasOwnerCredential?.());
       case 'restore':
@@ -148,6 +152,10 @@
         return !!(BF?.hasRestoreDecision?.() || SS?.hasDataSource?.());
       case 'sync':
         if (!BF?.deviceStepResolved?.()) return false;
+        if (coord?.userPathChoice === 'existing') {
+          if (!BF?.hasRestoreDecision?.()) return false;
+          return !!(BF?.hasSyncDone?.() || metaBootstrapCommitted());
+        }
         if (!BF?.businessSetupStepResolved?.()) return false;
         if (!BF?.publicationStepResolved?.()) return false;
         if (!BF?.readbackStepResolved?.()) return false;

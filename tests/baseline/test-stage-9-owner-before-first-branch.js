@@ -246,7 +246,7 @@ await (async () => {
   });
   ctx._setOwnerState('OWNER_EXISTS');
   const w = ctx.BootFlow.loadWizard();
-  check(w.wizardFlowVersion === 14, 'legacy v8 migrates to v14');
+  check(w.wizardFlowVersion === 16, 'legacy v8 migrates to v16');
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', w.currentStep);
   check(ctx.BootFlow.NEW_STEPS[resume] === 'branch', `restart after owner resumes branch (got ${ctx.BootFlow.NEW_STEPS[resume]})`);
 })();
@@ -370,16 +370,17 @@ await (async () => {
     wizard: { path: 'existing', forkDecision: 'use_existing', wizardFlowVersion: 9 },
   });
   check(ctx.BootFlow.isNewFreshStartPath() === false, 'use existing not fresh NEW path');
-  check(ctx.BootFlow.EXISTING_STEPS.indexOf('owner') > ctx.BootFlow.EXISTING_STEPS.indexOf('branch_select'),
-    'EXISTING owner still after branch_select');
+  check(ctx.BootFlow.EXISTING_STEPS.indexOf('owner_auth') > ctx.BootFlow.EXISTING_STEPS.indexOf('branch_select'),
+    'EXISTING owner_auth after branch_select');
+  check(ctx.BootFlow.EXISTING_STEPS.indexOf('owner') === -1, 'EXISTING no owner creation step');
 })();
 
 // 27. Direct EXISTING unchanged
 (() => {
   const existing = baseEnv().BootFlow.EXISTING_STEPS;
   check(JSON.stringify(existing) === JSON.stringify([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready',
-  ]), 'direct EXISTING runtime includes explicit business_setup + publication steps');
+    'language', 'google', 'discovery', 'license_org_recovery', 'branch_select', 'device', 'restore', 'owner_auth', 'sync', 'ready',
+  ]), 'direct EXISTING short path runtime (Stage 16)');
 })();
 
 // 28. Stage8 Start New honored

@@ -222,11 +222,11 @@ async function run() {
   const pubNew = newSteps.indexOf('publication');
   const bsNew = newSteps.indexOf('business_setup');
   const restoreNew = newSteps.indexOf('restore');
-  const pubEx = exSteps.indexOf('publication');
-  const bsEx = exSteps.indexOf('business_setup');
 
   check(pubNew > bsNew && restoreNew > pubNew, '1 NEW publication after business setup');
-  check(pubEx > bsEx, '39 EXISTING publication after business setup');
+  check(!exSteps.includes('publication'), '39 EXISTING short path skips publication wizard step');
+  check(!exSteps.includes('business_setup'), '39b EXISTING short path skips business_setup wizard step');
+  check(exSteps.includes('license_org_recovery'), '39c EXISTING includes license_org_recovery');
 
   const ctx = baseEnv();
   check(!ctx.BootFlow.validateStep('publication'), '2 publication unresolved initially');
@@ -394,7 +394,7 @@ async function run() {
     wizard: { path: 'new', currentStep: 10, wizardFlowVersion: 12, completedSteps: ['business_setup'] },
   });
   mig.BootFlow.loadWizard();
-  check(mig._snap.wizard.wizardFlowVersion === 14, 'v12 migrates to v14');
+  check(mig._snap.wizard.wizardFlowVersion === 16, 'v12 migrates to v16');
   check(mig._snap.wizard.completedSteps.includes('publication'), 'legacy publication skip migration');
 
   const devSrc = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -403,7 +403,7 @@ async function run() {
   const gates = fs.readFileSync(path.join(root, 'cloud/bootstrap-gates.js'), 'utf8');
   check(/PublicationContract/.test(gates), 'PUBLICATION_RESOLVED uses contract');
 
-  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION >= 14, 'wizard flow version >= 14');
+  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION >= 16, 'wizard flow version >= 16');
 
   if (errors.length) {
     console.error('FAIL stage-13-publication-gate');

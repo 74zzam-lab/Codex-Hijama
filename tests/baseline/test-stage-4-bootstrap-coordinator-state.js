@@ -47,6 +47,8 @@ function loadModules(ctx) {
     'cloud/business-setup-contract.js',
     'cloud/publication-contract.js',
     'cloud/readback-verification-contract.js',
+    'cloud/initial-sync-direction-contract.js',
+    'cloud/existing-short-path-contract.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
     'cloud/bootstrap-coordinator.js',
@@ -75,7 +77,7 @@ function readyEnv(overrides = {}) {
     deviceConfig: { deviceUuid: 'DEV-S4', deviceName: 'D', lockedBranchId: 'BR-1', branchLocked: true },
     users: [{ id: 'O1', role: 'owner', active: true, hasUsableCredential: true, password: 'pbkdf2:x' }],
     wizard: {
-      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], wizardFlowVersion: 14,
+      path: 'new', currentStep: 0, restoreChoice: 'empty', syncDone: false, completedSteps: [], wizardFlowVersion: 16,
       discoveryCompletedAt: new Date().toISOString(),
       licenseDiscoveryAttempted: true,
       cloudDiscovery: { result: { ok: true, status: 'no_existing_business' }, googleAccountKey: null },

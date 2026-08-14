@@ -7,8 +7,9 @@
  * V2-5.14+ Stage 11 — Explicit Device step after Branch (branch/device orchestration split).
  * V2-5.15+ Stage 12 — Explicit Business Setup gate after Device (NEW) / after Restore (EXISTING).
  * V2-5.16+ Stage 13 — Explicit Publication gate with remote read-back after Business Setup (NEW) / after Business Setup (EXISTING).
+ * V2-5.17+ Stage 16 — Existing customer short path (recovery-only, no re-creation).
  * NEW: Language → Activation → Google → Discovery → Path decision (if needed) → Organization → Owner → Branch → Device → Business Setup → Publication → Restore → Sync → Ready
- * EXISTING: Language → Google → Discovery → License → Organization → Branch_select → Device → Restore → Business Setup → Publication → Owner → Sync → Ready
+ * EXISTING: Language → Google → Discovery → License/Org recovery → Branch_select → Device → Restore → Owner auth → Sync → Ready
  *
  * Google Login never implies Owner. Owner is a seeded normal user account.
  * Dashboard/login completion requires Google + license + org + device branch + data decision + sync.
@@ -28,7 +29,7 @@
     establishedOfflineStartAllowed: true,
   });
 
-  const WIZARD_FLOW_VERSION = 14;
+  const WIZARD_FLOW_VERSION = 16;
   const LEGACY_NEW_STEPS_PRE_STAGE6 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready',
   ]);
@@ -63,8 +64,12 @@
     'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready',
   ]);
 
+  const LEGACY_EXISTING_STEPS_PRE_STAGE16 = Object.freeze([
+    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready',
+  ]);
+
   const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license_org_recovery', 'branch_select', 'device', 'restore', 'owner_auth', 'sync', 'ready'];
 
   const STEP_LABELS = {
     language: 'اللغة',
@@ -72,6 +77,8 @@
     discovery: 'اكتشاف السحابة',
     path_decision: 'اختيار المسار',
     license: 'التفعيل والترخيص',
+    license_org_recovery: 'استرداد الترخيص والمؤسسة',
+    owner_auth: 'تحقق المالك',
     organization: 'المؤسسة',
     branch: 'إنشاء أول فرع',
     branch_select: 'اختيار فرع موجود',
@@ -91,6 +98,8 @@
     discovery: 'اكتشاف',
     path_decision: 'مسار',
     license: 'ترخيص',
+    license_org_recovery: 'استرداد',
+    owner_auth: 'مالك',
     organization: 'مؤسسة',
     branch: 'فرع',
     branch_select: 'فرع',
@@ -109,6 +118,8 @@
     discovery: 'فحص read-only للمؤسسة/الترخيص/النسخ/الفروع على السحابة — بلا إنشاء أو استعادة.',
     path_decision: 'إذا وُجدت بيانات سابقة على Google، اختر: استخدام الموجود أو بدء إعداد جديد.',
     license: 'يُسحب الترخيص من Drive إن وُجد؛ وإلا أدخل المفتاح.',
+    license_org_recovery: 'استرداد الترخيص والمؤسسة من السحابة — بلا تفعيل يدوي ولا إنشاء مؤسسة جديدة.',
+    owner_auth: 'تحقق من حساب المالك الحالي — ليس إنشاء مالك جديد.',
     organization: 'أكد المؤسسة المصرّح بها فقط.',
     branch: 'اسم الفرع الأول فقط — تسجيل الجهاز في الخطوة التالية.',
     branch_select: 'اختر فرعاً موجوداً — تسجيل الجهاز في الخطوة التالية.',
@@ -157,7 +168,8 @@
         ? (version < 7 ? LEGACY_EXISTING_STEPS_PRE_STAGE7
           : (version < 11 ? LEGACY_EXISTING_STEPS_PRE_STAGE11
             : (version < 12 ? LEGACY_EXISTING_STEPS_PRE_STAGE12
-              : (version < 13 ? LEGACY_EXISTING_STEPS_PRE_STAGE13 : EXISTING_STEPS))))
+              : (version < 13 ? LEGACY_EXISTING_STEPS_PRE_STAGE13
+                : (version < 16 ? LEGACY_EXISTING_STEPS_PRE_STAGE16 : EXISTING_STEPS)))))
         : (version < 6
           ? LEGACY_NEW_STEPS_PRE_STAGE6
           : (version < 7
@@ -173,9 +185,20 @@
       const legacyIdx = Number(w.currentStep);
       if (Number.isFinite(legacyIdx) && legacyIdx >= 0 && legacyIdx < legacySteps.length) {
         const legacyStepId = legacySteps[legacyIdx];
-        const newIdx = steps.indexOf(legacyStepId);
+        const ESC = global.ExistingShortPathContract;
+        const mappedStepId = (w.path === PATHS.EXISTING && ESC?.mapLegacyStep)
+          ? (ESC.mapLegacyStep(legacyStepId) || legacyStepId)
+          : legacyStepId;
+        const newIdx = steps.indexOf(mappedStepId);
         if (newIdx >= 0 && newIdx !== w.currentStep) {
           w.currentStep = newIdx;
+          changed = true;
+        }
+      }
+      if (version < 16 && w.path === PATHS.EXISTING && global.ExistingShortPathContract?.migrateCompletedSteps) {
+        const migrated = global.ExistingShortPathContract.migrateCompletedSteps(w.completedSteps);
+        if (JSON.stringify(migrated) !== JSON.stringify(w.completedSteps || [])) {
+          w.completedSteps = migrated;
           changed = true;
         }
       }
@@ -364,9 +387,54 @@
     return !!(snap.centerName && snap.phone);
   }
 
+  function isExistingCustomerPath() {
+    const w = loadWizard();
+    return w.path === PATHS.EXISTING || w.forkDecision === 'use_existing';
+  }
+
+  function licenseOrgRecoveryResolved() {
+    if (!hasValidLicense()) return false;
+    if (!hasCenterData()) return false;
+    const lic = global.LicenseCloud?.loadLocal?.() || {};
+    const centerId = String(lic.centerId || global.CenterId?.getStoredCenterId?.() || '').trim();
+    const w = loadWizard();
+    const discovery = getCachedDiscoveryResult();
+    const selected = w.forkSelectedCandidateId || w.selectedCandidateId;
+    if (selected && centerId && selected !== centerId && !String(selected).includes(centerId)) {
+      return false;
+    }
+    if (discovery?.organizationCandidates?.length > 1 && !selected) return false;
+    return !!centerId;
+  }
+
+  function ownerAuthStepResolved() {
+    if (!hasOwnerPasswordAccount()) return false;
+    return setupOwnerSessionReady();
+  }
+
+  function existingGatesBeforeSyncSatisfied() {
+    if (!isExistingCustomerPath()) return true;
+    const ESC = global.ExistingShortPathContract;
+    const gates = ESC?.gatesBeforeSyncSatisfied?.({
+      wizard: loadWizard(),
+      meta: global.DB?.get?.('__tdw_meta__', {}) || {},
+      settings: global.settings || {},
+    });
+    if (gates?.ok === true) return true;
+    return businessSetupStepResolved()
+      && (publicationStepResolved() || ESC?.minimalPublicationSatisfied?.({ wizard: loadWizard(), meta: global.DB?.get?.('__tdw_meta__', {}) }))
+      && (readbackStepResolved() || ESC?.minimalReadbackSatisfied?.({ wizard: loadWizard(), meta: global.DB?.get?.('__tdw_meta__', {}) }))
+      && ownerAuthStepResolved();
+  }
+
   function publicationStepResolved() {
     const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
     if (meta.bootstrapCompletedAt) return true;
+    if (isExistingCustomerPath() && global.ExistingShortPathContract?.minimalPublicationSatisfied?.({
+      meta, wizard: loadWizard(), settings: global.settings,
+    })) {
+      return true;
+    }
     const PC = global.PublicationContract;
     if (PC?.isResolved) {
       return PC.isResolved({ meta, path: loadWizard().path, setupPublication: meta.setupPublication });
@@ -377,6 +445,11 @@
   function readbackStepResolved() {
     const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
     if (meta.bootstrapCompletedAt) return true;
+    if (isExistingCustomerPath() && global.ExistingShortPathContract?.minimalReadbackSatisfied?.({
+      meta, wizard: loadWizard(), settings: global.settings,
+    })) {
+      return true;
+    }
     const RVC = global.ReadbackVerificationContract;
     if (RVC?.isVerified) {
       return RVC.isVerified({ meta, readbackVerification: meta.readbackVerification, path: loadWizard().path });
@@ -960,8 +1033,8 @@
     }
     w.path = PATHS.EXISTING;
     const exSteps = EXISTING_STEPS;
-    const licenseIdx = exSteps.indexOf('license');
-    w.currentStep = licenseIdx >= 0 ? licenseIdx : 3;
+    const recoveryIdx = exSteps.indexOf('license_org_recovery');
+    w.currentStep = recoveryIdx >= 0 ? recoveryIdx : 3;
     ['language', 'google', 'discovery', 'path_decision'].forEach((step) => {
       if (!w.completedSteps.includes(step)) w.completedSteps.push(step);
     });
@@ -981,14 +1054,18 @@
   }
 
   function validateStep(step) {
+    const w = loadWizard();
+    const isExisting = w.path === PATHS.EXISTING || w.forkDecision === 'use_existing';
     switch (step) {
       case 'language': return !!(loadWizard().lang);
       case 'google': return hasGoogle();
       case 'discovery': return hasDiscoveryResolved();
       case 'path_decision': return hasPathDecisionResolved();
       case 'license': return hasValidLicense();
-      case 'organization': return hasCenterData();
+      case 'license_org_recovery': return licenseOrgRecoveryResolved();
+      case 'organization': return isExisting ? licenseOrgRecoveryResolved() : hasCenterData();
       case 'owner': return ownerStepResolved();
+      case 'owner_auth': return ownerAuthStepResolved();
       case 'branch': {
         if (newBranchRequiresOwner()) return false;
         return branchStepResolved();
@@ -1005,8 +1082,8 @@
       }
       case 'restore': {
         if (!deviceStepResolved()) return false;
-        const w = loadWizard();
-        if (w.path === PATHS.NEW) {
+        const wRestore = loadWizard();
+        if (wRestore.path === PATHS.NEW) {
           if (!businessSetupStepResolved()) return false;
           if (!publicationStepResolved()) return false;
           if (!readbackStepResolved()) return false;
@@ -1015,9 +1092,14 @@
       }
       case 'sync': {
         if (!deviceStepResolved()) return false;
-        if (!businessSetupStepResolved()) return false;
-        if (!publicationStepResolved()) return false;
-        if (!readbackStepResolved()) return false;
+        if (isExisting) {
+          if (!hasRestoreDecision()) return false;
+          if (!ownerAuthStepResolved()) return false;
+        } else {
+          if (!businessSetupStepResolved()) return false;
+          if (!publicationStepResolved()) return false;
+          if (!readbackStepResolved()) return false;
+        }
         return hasSyncDone();
       }
       case 'ready': return isBootComplete();
@@ -1345,6 +1427,54 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     };
   }
 
+  async function runLicenseOrgRecovery(options) {
+    options = options || {};
+    const w = loadWizard();
+    if (!hasDiscoveryResolved()) {
+      return { ok: false, error: 'discovery_required' };
+    }
+    const discovery = getCachedDiscoveryResult();
+    const PG = global.PostGoogleCloudDiscovery;
+    const status = discovery?.status || discovery?.result?.status || '';
+    const noBusiness = status === 'no_existing_business'
+      || status === PG?.STATUS_NO_EXISTING
+      || (discovery?.organizationCandidates?.length === 0
+        && discovery?.licenseCandidates?.length === 0
+        && w.path === PATHS.EXISTING);
+    if (noBusiness && !options.allowRetry) {
+      return { ok: false, error: 'existing_business_not_found' };
+    }
+    const activationCountBefore = Number(global.LicenseActivationGate?.getConsumeCount?.() || 0);
+    const result = await autoDiscoverActivationAfterGoogle({
+      forceDriveRescan: options.forceDriveRescan === true,
+      existingRecovery: true,
+    });
+    if (result?.error === 'multiple_licenses' || result?.needsSelection) {
+      return { ok: false, error: 'existing_candidate_ambiguous', result };
+    }
+    if (!hasValidLicense() || !hasCenterData()) {
+      return { ok: false, error: result?.error || 'existing_license_recovery_failed', result };
+    }
+    const lic = global.LicenseCloud?.loadLocal?.() || {};
+    const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
+    meta.existingShortPathRecovery = {
+      recoveredAt: new Date().toISOString(),
+      organizationId: lic.centerId || meta.centerId,
+      licenseRecovered: true,
+      activationConsumed: false,
+      activationConsumeDelta: Number(global.LicenseActivationGate?.getConsumeCount?.() || 0) - activationCountBefore,
+      minimalPublicationWaived: true,
+      minimalReadbackWaived: true,
+      businessSetupFromRecovery: businessSetupStepResolved(),
+      googleAccount: global.settings?.backup?.providers?.google?.email || null,
+      candidateId: w.forkSelectedCandidateId || w.selectedCandidateId || discovery?.selectedOrUniqueCandidate?.id || null,
+    };
+    global.DB?.set?.('__tdw_meta__', meta);
+    if (!w.completedSteps.includes('license_org_recovery')) w.completedSteps.push('license_org_recovery');
+    saveWizard(w);
+    return { ok: true, recovered: true, activationConsumeDelta: meta.existingShortPathRecovery.activationConsumeDelta };
+  }
+
   /**
    * License recovery apply (license step / manual rescan) — NOT the Discovery gate.
    * NEW Stage 6/7: skipped when local activation already authoritative — no re-consume.
@@ -1352,7 +1482,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   async function autoDiscoverActivationAfterGoogle(options) {
     options = options || {};
     const w = loadWizard();
-    if (w.path === PATHS.NEW && hasValidLicense() && !options.forceDriveRescan) {
+    if (w.path === PATHS.NEW && hasValidLicense() && !options.forceDriveRescan && !options.existingRecovery) {
       setStatus('✅ التفعيل محفوظ — متابعة إعداد السحابة بعد Google');
       return { ok: true, skipped: true, reason: 'activation_already_authoritative', discovered: false };
     }
@@ -2249,6 +2379,35 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         }
         break;
       }
+      case 'license_org_recovery': {
+        content.innerHTML = `
+          <p><strong>استرداد الترخيص والمؤسسة</strong> من السحابة — بلا تفعيل يدوي ولا إنشاء مؤسسة جديدة.</p>
+          <p class="bf-source-meta">يتم سحب الترخيص والهوية المؤسسية من Google Drive وفق اكتشاف السحابة.</p>
+          <div id="bf-license-recovery-status" class="bf-source-meta"></div>`;
+        if (licenseOrgRecoveryResolved()) {
+          const lic = global.LicenseCloud?.loadLocal?.() || {};
+          setStatus('✅ تم استرداد الترخيص والمؤسسة');
+          content.querySelector('#bf-license-recovery-status').textContent =
+            `Center: ${lic.centerId || '—'} / ${lic.centerName || global.settings?.centerName || '—'}`;
+        }
+        addBtn(actions, licenseActivateInFlight ? '⏳ جارٍ الاسترداد...' : '☁️ استرداد من السحابة', 'btn-primary', async () => {
+          const r = await runLicenseOrgRecovery({ forceDriveRescan: true });
+          if (!r?.ok) {
+            if (r?.error === 'existing_business_not_found') {
+              setStatus('⚠️ لم تُعثر على مؤسسة موجودة — يمكنك العودة واختيار بدء إعداد جديد', true);
+            } else if (r?.error === 'existing_candidate_ambiguous') {
+              setStatus('⚠️ أكثر من مؤسسة — اختر المرشح من خطوة المسار أولاً', true);
+            } else {
+              setStatusFromErr(r, r?.error || 'existing_license_recovery_failed');
+            }
+            return;
+          }
+          setStatus('✅ تم استرداد الترخيص والمؤسسة بنجاح');
+          renderNavButtons(loadWizard());
+          renderStepUI(loadWizard());
+        }, licenseActivateInFlight || !hasDiscoveryResolved());
+        break;
+      }
       case 'license': {
         const isNew = w.path === PATHS.NEW;
         content.innerHTML = `
@@ -2407,6 +2566,28 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           <p class="bf-source-meta">النطاق: ${scope.join(' → ')}</p>
           <p class="bf-source-meta">لن يُعتبر النشر مكتملاً بدون تطابق read-back من السحابة.</p>`;
         addBtn(actions, publicationInFlight ? '⏳ جارٍ النشر...' : '☁️ نشر والتحقق', 'btn-primary', () => commitPublicationFromWizard(), publicationInFlight);
+        break;
+      }
+      case 'owner_auth': {
+        const owner = getUsableOwnerAccount();
+        if (!hasOwnerPasswordAccount()) {
+          content.innerHTML = '<p class="tdw-field-error">لا يوجد مالك مسترد بعد — أكمل الاستعادة أولاً.</p>';
+          setStatus('⚠️ existing_owner_auth_required', true);
+          break;
+        }
+        if (setupOwnerSessionReady()) {
+          content.innerHTML = '<p>✅ تم التحقق من حساب المالك لهذه الجلسة.</p>';
+          setStatus('✅ Owner auth جاهز');
+        } else {
+          content.innerHTML = `
+            <p>تحقق من حساب المالك الحالي — <strong>ليس إنشاء مالك جديد</strong>.</p>
+            <div class="form-group"><label>حساب المالك</label><div id="bf-owner-account" class="form-control" dir="ltr"></div></div>
+            <div class="form-group"><label for="bf-owner-password">كلمة مرور المالك الحالية</label><input type="password" id="bf-owner-password" class="form-control" autocomplete="current-password"></div>`;
+          const account = content.querySelector('#bf-owner-account');
+          if (account) account.textContent = String(owner?.username || owner?.fullName || 'Owner');
+          addBtn(actions, ownerLoginInFlight ? '⏳ جارٍ التحقق...' : '🔐 تحقق من حساب المالك', 'btn-primary', () => authenticateExistingOwnerFromWizard(), ownerLoginInFlight);
+          setStatus('يجب التحقق من كلمة مرور المالك قبل المزامنة', true);
+        }
         break;
       }
       case 'owner': {
@@ -3144,7 +3325,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_EXISTING_STEPS_PRE_STAGE7,
     LEGACY_EXISTING_STEPS_PRE_STAGE11,
     LEGACY_EXISTING_STEPS_PRE_STAGE12,
-    LEGACY_EXISTING_STEPS_PRE_STAGE13,
+    LEGACY_EXISTING_STEPS_PRE_STAGE16,
     branchStepResolved,
     deviceStepResolved,
     businessSetupStepResolved,
@@ -3177,6 +3358,11 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     hasDeviceBranch,
     hasRestoreDecision,
     hasSyncDone,
+    isExistingCustomerPath,
+    licenseOrgRecoveryResolved,
+    ownerAuthStepResolved,
+    existingGatesBeforeSyncSatisfied,
+    runLicenseOrgRecovery,
     getSetupConnectivityPolicy,
     initialOperationForChoice,
     buildInitialSyncPlanContext,

@@ -45,6 +45,8 @@ function makeDocument() {
 
 function loadModules(ctx) {
   const files = [
+    'cloud/initial-sync-direction-contract.js',
+    'cloud/existing-short-path-contract.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
     'cloud/bootstrap-coordinator.js',
@@ -259,11 +261,12 @@ await (async () => {
   check(ctx.BootFlow.hasOwnerPasswordAccount() === false, 'no owner early');
 })();
 
-// 15. EXISTING google-first (Stage 7: discovery before license)
+// 15. EXISTING google-first (Stage 16: discovery then license_org_recovery)
 (() => {
   const steps = baseEnv().BootFlow.EXISTING_STEPS;
   check(steps[1] === 'google', 'EXISTING google-first');
-  check(steps.indexOf('license') > steps.indexOf('google'), 'EXISTING license after google');
+  check(steps.indexOf('license_org_recovery') > steps.indexOf('google'), 'EXISTING license_org_recovery after google');
+  check(steps.indexOf('license') === -1, 'EXISTING no standalone license step');
 })();
 
 // 16. legacy wizard state migration (old index 2 = license → new index 1)

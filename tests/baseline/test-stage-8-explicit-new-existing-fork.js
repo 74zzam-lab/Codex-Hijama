@@ -233,7 +233,7 @@ async function runTests() {
   });
   const r = ctx.BootFlow.commitForkUseExisting();
   check(r.ok === true && r.path === 'existing', 'choose existing flips path once');
-  check(ctx.BootFlow.EXISTING_STEPS[ctx._snap.wizard.currentStep] === 'license', 'resume EXISTING at license');
+  check(ctx.BootFlow.EXISTING_STEPS[ctx._snap.wizard.currentStep] === 'license_org_recovery', 'resume EXISTING at license_org_recovery');
 })();
 
 // 5. choose new
@@ -352,7 +352,7 @@ async function runTests() {
   });
   ctx.BootFlow.commitForkUseExisting();
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('existing', ctx._snap.wizard.currentStep);
-  check(ctx.BootFlow.EXISTING_STEPS[resume] === 'license', 'restart after existing → EXISTING license');
+  check(ctx.BootFlow.EXISTING_STEPS[resume] === 'license_org_recovery', 'restart after existing → EXISTING license_org_recovery');
 })();
 
 (() => {

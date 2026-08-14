@@ -12,7 +12,7 @@
     'language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready',
   ]);
   const CURRENT_EXISTING_RUNTIME = Object.freeze([
-    'language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready',
+    'language', 'google', 'discovery', 'license_org_recovery', 'branch_select', 'device', 'restore', 'owner_auth', 'sync', 'ready',
   ]);
 
   const TARGET_NEW_GATES = Object.freeze([
@@ -42,6 +42,7 @@
     'RESTORE_DECISION_RESOLVED',
     'PUBLICATION_RESOLVED',
     'READBACK_VERIFIED',
+    'OWNER_AUTH_RESOLVED',
     'INITIAL_SYNC_RESOLVED',
     'READY',
   ]);
@@ -164,6 +165,17 @@
       return gateResult('LICENSE_ORG_RECOVERY_RESOLVED', GATE_STATUS.MISSING, 'license without organization metadata', 'license without center');
     }
     return gateResult('LICENSE_ORG_RECOVERY_RESOLVED', GATE_STATUS.MISSING, 'remote license/org not recovered', 'LicenseCloud');
+  }
+
+  function evaluateOwnerAuthResolved() {
+    const BFm = BF();
+    if (BFm?.ownerAuthStepResolved?.()) {
+      return gateResult('OWNER_AUTH_RESOLVED', GATE_STATUS.RESOLVED, 'owner session authenticated', 'BootFlow.ownerAuthStepResolved');
+    }
+    if (BFm?.hasOwnerPasswordAccount?.()) {
+      return gateResult('OWNER_AUTH_RESOLVED', GATE_STATUS.MISSING, 'owner exists — session auth required', 'BootFlow.setupOwnerSessionReady');
+    }
+    return gateResult('OWNER_AUTH_RESOLVED', GATE_STATUS.MISSING, 'owner auth pending recovery', 'OwnerManagement');
   }
 
   function evaluateOwnerResolved() {
@@ -331,6 +343,7 @@
     PUBLICATION_RESOLVED: () => evaluatePublicationResolved(),
     READBACK_VERIFIED: () => evaluateReadbackVerified(),
     INITIAL_SYNC_RESOLVED: () => evaluateInitialSyncResolved(),
+    OWNER_AUTH_RESOLVED: () => evaluateOwnerAuthResolved(),
     READY: () => evaluateReadyGate(),
   });
 
