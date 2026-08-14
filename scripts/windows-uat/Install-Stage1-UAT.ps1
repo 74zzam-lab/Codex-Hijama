@@ -51,12 +51,28 @@ $meta.installedExeSha256 = (Get-FileHash -Algorithm SHA256 $installedExe).Hash.T
 $meta.installedExeSizeBytes = (Get-Item $installedExe).Length
 
 $stderrLog = Join-Path $EvidenceDir 'installed-exe-smoke-stderr.log'
-$proc = Start-Process -FilePath $installedExe -ArgumentList @("--user-data-dir=$isolatedUserData") -PassThru -RedirectStandardError $stderrLog -WindowStyle Minimized
-Start-Sleep -Seconds 8
-$meta.smokeRunning = -not $proc.HasExited
-if (-not $proc.HasExited) { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue }
-$meta.smokeExitCode = $proc.ExitCode
-$meta.ok = (Test-Path $installedExe) -and $meta.smokeRunning -ne $false
+$startupSmokeScript = Join-Path $RepoRoot 'scripts/windows-uat/installed-startup-license-smoke.cjs'
+$startupSmokeJson = Join-Path $EvidenceDir 'INSTALLED-STARTUP-LICENSE-SMOKE.json'
+$startupSmoke = @{ ok = $false; finalState = 'FAIL'; licensePending = $true; result = 'FAIL' }
+if (Test-Path $startupSmokeScript) {
+  try {
+    & node $startupSmokeScript --exe $installedExe --user-data $isolatedUserData --output $startupSmokeJson --timeout-ms 15000 2> $stderrLog | Out-Null
+    if (Test-Path $startupSmokeJson) {
+      $startupSmoke = Get-Content $startupSmokeJson -Raw | ConvertFrom-Json
+    }
+  } catch {
+    $startupSmoke.error = $_.Exception.Message
+  }
+} else {
+  $startupSmoke.error = 'installed-startup-license-smoke.cjs missing'
+}
+
+$meta.smokeRunning = $true
+$meta.smokeExitCode = $(if ($startupSmoke.ok -eq $true) { 0 } else { 1 })
+$meta.installedStartupLicenseSmoke = $startupSmoke
+$meta.licenseVerificationSettled = ($startupSmoke.licensePending -ne $true)
+$meta.installedFinalState = $startupSmoke.finalState
+$meta.ok = (Test-Path $installedExe) -and ($startupSmoke.ok -eq $true) -and ($startupSmoke.licensePending -ne $true)
 
 $meta | ConvertTo-Json -Depth 6 | Set-Content (Join-Path $EvidenceDir 'INSTALLED-EXE-SMOKE.json') -Encoding UTF8
 if (-not $meta.ok) { exit 1 }

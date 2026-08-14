@@ -1900,7 +1900,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
     }
     if (typeof global.licCheck === 'function') {
-      try { await global.licCheck(); } catch { /* license readiness is checked separately */ }
+      try { await global.licCheck({ silent: true }); } catch { /* license readiness is checked separately */ }
     }
     const connected = hasGoogle();
     return {
@@ -2005,7 +2005,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
             return { ...applied, discovery: true };
           }
         }
-        if (typeof global.licCheck === 'function') await global.licCheck();
+        if (typeof global.licCheck === 'function') await global.licCheck({ silent: true });
         const w = loadWizard();
         if (!w.completedSteps.includes('license')) w.completedSteps.push('license');
         if (hasBranch() && hasCenterData() && !w.completedSteps.includes('organization')) {

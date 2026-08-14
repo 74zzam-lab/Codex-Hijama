@@ -4726,6 +4726,19 @@ tr.client-row-selected { background: #ecfdf5 !important; outline: 2px solid var(
   if (login) login.classList.remove('hidden');
   if (shell) shell.classList.add('app-shell--locked');
   document.body.classList.add('app-locked');
+  // Early safety net: clear sticky login license pending before late inline scripts load.
+  function earlyClearLoginLicensePending(reason) {
+    var el = document.getElementById('login-license-status');
+    if (!el) return;
+    if (!/جار[ٍي]?\s*التحقق/.test(String(el.textContent || ''))) return;
+    el.textContent = reason || '⛔ تعذّر إكمال التحقق بسرعة — الدخول للموظفين فقط (قراءة)';
+    el.style.color = '#ffa05a';
+  }
+  [4500, 9000, 15000].forEach(function (ms) {
+    setTimeout(function () {
+      try { earlyClearLoginLicensePending(); } catch { /* empty */ }
+    }, ms);
+  });
 })();
 </script>
 
@@ -26840,10 +26853,12 @@ function finalizeLicCheckUi(reason) {
 }
 
 // ── Main license check (called at startup) ──
-async function licCheck() {
+async function licCheck(options) {
+  options = options || {};
   const checkId = ++_licCheckSeq;
   const statusEl = document.getElementById('login-license-status');
-  if (statusEl) statusEl.textContent = 'جارٍ التحقق من الترخيص...';
+  const showPending = options.silent !== true;
+  if (showPending && statusEl) statusEl.textContent = 'جارٍ التحقق من الترخيص...';
 
   const stillCurrent = () => checkId === _licCheckSeq;
 
@@ -26861,14 +26876,14 @@ async function licCheck() {
     const lastRun  = new Date(meta.lastRunDate);
     const rollback = (lastRun - now) / 86400000; // positive = device went back
     if (rollback > 2) {
-      return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز (أكثر من يومين). يرجى التحقق من إعدادات التاريخ.');
+      return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز (أكثر من يومين). يرجى التحقق من إعدادات التاريخ.', showPending);
     }
   }
   if (meta.highestTrustedDate) {
     const highest  = new Date(meta.highestTrustedDate);
     const rollback = (highest - now) / 86400000;
     if (rollback > 2) {
-      return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز. يرجى التحقق من إعدادات التاريخ والوقت.');
+      return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز. يرجى التحقق من إعدادات التاريخ والوقت.', showPending);
     }
   }
 
@@ -26896,7 +26911,7 @@ async function licCheck() {
       const lastRun  = new Date(meta.lastRunDate);
       const rollback = (lastRun - realNow) / 86400000;
       if (rollback > 2) {
-        return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز (مقارنةً بالوقت الفعلي).');
+        return _licHardBlock('⚠️ تم اكتشاف تعديل كبير في تاريخ الجهاز (مقارنةً بالوقت الفعلي).', showPending);
       }
     }
   } else {
@@ -26908,7 +26923,8 @@ async function licCheck() {
       licLog('offline_grace_exceeded', graceEval.message || 'offline grace exceeded');
       return _licHardBlock(
         graceEval.message ||
-        `⚠️ انتهت فترة السماح للعمل دون اتصال (${Math.round(graceEval.offlineDays || 0)} يوم). اتصل بالإنترنت للتحقق من الترخيص.`
+        `⚠️ انتهت فترة السماح للعمل دون اتصال (${Math.round(graceEval.offlineDays || 0)} يوم). اتصل بالإنترنت للتحقق من الترخيص.`,
+        showPending
       );
     }
     if (meta.lastSuccessfulOnlineValidation) {
@@ -26933,7 +26949,7 @@ async function licCheck() {
     _licStatus = 'none';
     _licDaysLeft = null;
     _licExpiringSoon = false;
-    if (statusEl) { statusEl.textContent = '⛔ البرنامج غير مفعل — الدخول للموظفين فقط (قراءة)'; statusEl.style.color = '#ffa05a'; }
+    if (showPending && statusEl) { statusEl.textContent = '⛔ البرنامج غير مفعل — الدخول للموظفين فقط (قراءة)'; statusEl.style.color = '#ffa05a'; }
     licLog('no_license', 'لا يوجد ترخيص');
     _licApplyLoginRestrictions();
     licUpdateLoginDevNotice();
@@ -26944,7 +26960,7 @@ async function licCheck() {
   // ── Fingerprint check (hard block) — skip for multi-device / DEVICE_ANY ──
   const fpAny = lic.device === 'DEVICE_ANY' || lic.deviceMode === 'any' || lic.fingerprint === 'DEVICE_ANY';
   if (!fpAny && !licFingerprintMatch(lic.fingerprint, fp)) {
-    return _licHardBlock('⚠️ هذا الترخيص مرتبط بجهاز مختلف. يرجى التواصل مع المطور.');
+    return _licHardBlock('⚠️ هذا الترخيص مرتبط بجهاز مختلف. يرجى التواصل مع المطور.', showPending);
   }
 
   // ── Expiry check ──
@@ -26953,7 +26969,7 @@ async function licCheck() {
     _licStatus = 'expired';
     _licDaysLeft = 0;
     _licExpiringSoon = false;
-    if (statusEl) { statusEl.textContent = `❌ انتهت صلاحية البرنامج في ${lic.expiry} — الدخول للموظفين فقط`; statusEl.style.color = '#ff8888'; }
+    if (showPending && statusEl) { statusEl.textContent = `❌ انتهت صلاحية البرنامج في ${lic.expiry} — الدخول للموظفين فقط`; statusEl.style.color = '#ff8888'; }
     licLog('expired', `منتهي منذ ${lic.expiry}`);
     _licApplyLoginRestrictions();
     licUpdateLoginDevNotice();
@@ -26966,7 +26982,7 @@ async function licCheck() {
   _licDaysLeft = Math.ceil((expiry - realNow) / 86400000);
   _licExpiringSoon = _licDaysLeft <= 14;
   const expiryStr = expiry.toLocaleDateString('en-US');
-  if (statusEl) {
+  if (showPending && statusEl) {
     statusEl.textContent = _licExpiringSoon
       ? `⚠️ الترخيص صالح حتى: ${expiryStr} (متبقي ${_licDaysLeft} يوم)`
       : `✓ الترخيص صالح حتى: ${expiryStr}`;
@@ -26984,7 +27000,7 @@ async function licCheck() {
     _licBlocked = false;
     _licDaysLeft = null;
     _licExpiringSoon = false;
-    if (statusEl) {
+    if (showPending && statusEl) {
       statusEl.textContent = '⛔ تعذّر التحقق من الترخيص — الدخول للموظفين فقط (قراءة)';
       statusEl.style.color = '#ffa05a';
     }
@@ -26997,31 +27013,40 @@ async function licCheck() {
   };
 
   // Hard ceiling so the login UI never stays stuck on "جارٍ التحقق..."
-  const result = await Promise.race([
-    run(),
-    new Promise((resolve) => setTimeout(() => {
-      if (stillCurrent()) {
-        finalizeLicCheckUi('⛔ تعذّر إكمال التحقق بسرعة — الدخول للموظفين فقط (قراءة)');
-      }
-      resolve(false);
-    }, 3500))
-  ]);
-  if (stillCurrent()) finalizeLicCheckUi();
+  let result = false;
+  try {
+    result = await Promise.race([
+      run(),
+      new Promise((resolve) => setTimeout(() => {
+        const el = document.getElementById('login-license-status');
+        if (showPending && licStatusLooksPending(el?.textContent)) {
+          finalizeLicCheckUi('⛔ تعذّر إكمال التحقق بسرعة — الدخول للموظفين فقط (قراءة)');
+        }
+        resolve(false);
+      }, 3500))
+    ]);
+  } finally {
+    if (showPending && stillCurrent()) {
+      const el = document.getElementById('login-license-status');
+      if (licStatusLooksPending(el?.textContent)) finalizeLicCheckUi();
+    }
+  }
   return result;
 }
 
 // Hard block — fingerprint mismatch only
-function _licHardBlock(msg) {
+function _licHardBlock(msg, touchUi) {
+  if (touchUi !== false) touchUi = true;
   _licStatus = 'blocked';
   _licBlocked = true;
   _licExpiringSoon = false;
   licLog('hard_block', msg);
   const statusEl = document.getElementById('login-license-status');
-  if (statusEl) { statusEl.textContent = msg; statusEl.style.color = '#ff5555'; }
+  if (touchUi && statusEl) { statusEl.textContent = msg; statusEl.style.color = '#ff5555'; }
   licUpdateLoginDevNotice();
   // Disable login button entirely
   const loginBtn = document.querySelector('.login-btn');
-  if (loginBtn) { loginBtn.disabled = true; loginBtn.style.opacity = '0.35'; loginBtn.style.cursor = 'not-allowed'; }
+  if (touchUi && loginBtn) { loginBtn.disabled = true; loginBtn.style.opacity = '0.35'; loginBtn.style.cursor = 'not-allowed'; }
   return false;
 }
 
@@ -27253,6 +27278,7 @@ try {
   window.authenticateSetupOwner = authenticateSetupOwner;
   window.getUiScopedRecords = getUiScopedRecords;
   window.finalizeLicCheckUi = finalizeLicCheckUi;
+  window.licCheck = licCheck;
   window.isPreAuthDbKeyAllowed = isPreAuthDbKeyAllowed;
   window.loginConnectGoogleAndBootstrap = loginConnectGoogleAndBootstrap;
   window.connectGoogleDriveOnly = connectGoogleDriveOnly;
@@ -28088,12 +28114,18 @@ if (typeof CommercialLicense !== 'undefined' && CommercialLicense.engine) {
       await withTimeout(syncCloudStatusFromElectron(), 3000, 'syncCloudStatusFromElectron');
     }
     if (tdwCloudV2()) {
-      const initialized = await tdwCloudV2().init({ alwaysMigrateMeta: true });
+      const initialized = await withTimeout(
+        tdwCloudV2().init({ alwaysMigrateMeta: true }),
+        8000,
+        'cloudV2Init'
+      );
       if (!initialized || initialized.ok !== true) {
-        throw new Error(initialized?.error || 'cloud_v2_initialization_failed');
+        console.warn('startup CloudV2.init:', initialized?.error || 'cloud_v2_initialization_failed');
       }
     }
-    if (tdwCloudV2()?.maybeAutoEnableCloudV2) await tdwCloudV2().maybeAutoEnableCloudV2();
+    if (tdwCloudV2()?.maybeAutoEnableCloudV2) {
+      await withTimeout(tdwCloudV2().maybeAutoEnableCloudV2(), 3000, 'cloudV2AutoEnable');
+    }
     // V2-5.10: CenterSetupUI.maybeAutoOpen is a no-op (BootFlow + Owner Hub only).
     if (typeof CenterSetupUI !== 'undefined') {
       CenterSetupUI.maybeAutoOpen();
