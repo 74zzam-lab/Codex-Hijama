@@ -1,0 +1,29 @@
+{
+  "entryPoints": [
+    {
+      "file": "cloud/boot-flow-ui.js",
+      "function": "runInitialSyncPipeline",
+      "caller": "sync wizard step",
+      "canPush": "plan-bound",
+      "canPull": "plan-bound"
+    },
+    {
+      "file": "cloud/sync-engine.js",
+      "function": "runOnce",
+      "caller": "BootFlow + manual sync",
+      "direction": "explicit options.direction"
+    },
+    {
+      "file": "cloud/restore-reconciliation.js",
+      "function": "reconcileAfterRestore",
+      "caller": "post-restore",
+      "direction": "pull only"
+    },
+    {
+      "file": "cloud/initial-sync-direction-contract.js",
+      "function": "resolveInitialSyncPlan",
+      "caller": "bootstrap orchestration",
+      "direction": "read-only plan"
+    }
+  ]
+}

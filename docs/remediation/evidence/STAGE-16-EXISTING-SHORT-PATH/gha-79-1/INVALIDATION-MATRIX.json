@@ -1,0 +1,25 @@
+{
+  "accountChange": [
+    "discovery"
+  ],
+  "organizationChange": [
+    "branch",
+    "device",
+    "restore",
+    "publication",
+    "readback",
+    "sync"
+  ],
+  "branchChange": [
+    "device",
+    "restore",
+    "readback",
+    "sync"
+  ],
+  "deviceChange": [
+    "device-bound downstream"
+  ],
+  "restoreChoiceChange": [
+    "initial sync plan"
+  ]
+}

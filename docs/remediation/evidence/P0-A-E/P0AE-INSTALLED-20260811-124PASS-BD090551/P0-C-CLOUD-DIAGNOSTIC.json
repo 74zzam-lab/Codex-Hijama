@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-08-11T08:37:56.322Z",
+  "userDataProfile": "Cupping Center",
+  "stages": [
+    {
+      "stage": "google_status",
+      "ok": true,
+      "durationMs": 7356,
+      "result": {
+        "connected": true,
+        "needsReauth": false,
+        "hasRefreshToken": true,
+        "tokenExpired": false,
+        "provider": "google",
+        "error": null
+      }
+    },
+    {
+      "stage": "list:NajjarTech",
+      "ok": true,
+      "durationMs": 9608,
+      "result": {
+        "ok": true,
+        "needsReauth": false,
+        "itemCount": 18,
+        "licenseCount": 1,
+        "error": null
+      }
+    },
+    {
+      "stage": "list:NajjarTech Hijama Management",
+      "ok": true,
+      "durationMs": 761,
+      "result": {
+        "ok": true,
+        "needsReauth": false,
+        "itemCount": 0,
+        "licenseCount": 0,
+        "error": null
+      }
+    },
+    {
+      "stage": "license_signature_verification",
+      "ok": true,
+      "result": {
+        "discovered": 1,
+        "valid": 1,
+        "invalid": 0,
+        "downloadErrors": 0
+      }
+    },
+    {
+      "stage": "setup_activation_verification",
+      "ok": true,
+      "result": {
+        "attempted": 1,
+        "valid": 1,
+        "failed": 0,
+        "errors": []
+      }
+    }
+  ]
+}

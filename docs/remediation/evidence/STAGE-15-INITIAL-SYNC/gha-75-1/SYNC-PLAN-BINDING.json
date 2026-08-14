@@ -1,0 +1,9 @@
+{
+  "fields": [
+    "organizationId",
+    "branchId",
+    "deviceId",
+    "path",
+    "restoreChoice"
+  ]
+}

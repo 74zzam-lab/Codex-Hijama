@@ -1,0 +1,32 @@
+{
+  "states": [
+    "LOCAL_RESOLVED",
+    "PUBLICATION_PENDING",
+    "PUBLICATION_IN_PROGRESS",
+    "PUBLICATION_FAILED",
+    "PUBLICATION_VERIFIED"
+  ],
+  "requiredArtifacts": [
+    "license",
+    "settings",
+    "users",
+    "outbox"
+  ],
+  "existingMinimalScope": [
+    "license",
+    "outbox"
+  ],
+  "newFullScope": [
+    "license",
+    "settings",
+    "users",
+    "outbox"
+  ],
+  "authority": "__tdw_meta__.setupPublication (remote read-back verified)",
+  "notBasedOn": [
+    "wizard.completedSteps alone",
+    "upload return without read-back",
+    "local commit markers alone"
+  ],
+  "signedLicenseImmutable": true
+}

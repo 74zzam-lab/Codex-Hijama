@@ -1,0 +1,60 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "setup": {
+    "path": "D:\\Hijama-Clinic-Production\\dist\\HijamaManagement-Setup-2.0.1.exe",
+    "size": 106931184,
+    "sha256": "97B2C694687B996A20772D24A3E5512A48696FBA7B7A0D31662D2A81873E16A5",
+    "modifiedAt": "2026-08-05T13:02:50.771Z"
+  },
+  "buildCommand": "npm run build",
+  "target": "nsis x64",
+  "productionDependencyValidation": "PASS",
+  "oauthConfigPackaged": true,
+  "asar": {
+    "installed": {
+      "path": "D:\\Hijama-Clinic-Production\\.codex-p0a\\installed-p0a\\resources\\app.asar",
+      "size": 19438382,
+      "sha256": "FD8015AD789C73D3AFBA40640B6215F3E9530F153BC76C2C98B1FAB98FC6B6A0",
+      "modifiedAt": "2026-08-05T13:02:40.000Z"
+    },
+    "distSha256": "FD8015AD789C73D3AFBA40640B6215F3E9530F153BC76C2C98B1FAB98FC6B6A0",
+    "installedMatchesDist": true,
+    "packagedSourceComparisons": [
+      {
+        "path": "index.html",
+        "sourceSha256": "7C5D6F31F4894F011AE8C9E3203BAFAE584CBC0B74343490AF8D16C9211D134C",
+        "packagedSha256": "7C5D6F31F4894F011AE8C9E3203BAFAE584CBC0B74343490AF8D16C9211D134C",
+        "match": true
+      },
+      {
+        "path": "electron/main.js",
+        "sourceSha256": "7413694FA3AC03A0EBB22076959052C92DA3D8E17FC89B4AB5953D7CD4D65504",
+        "packagedSha256": "7413694FA3AC03A0EBB22076959052C92DA3D8E17FC89B4AB5953D7CD4D65504",
+        "match": true
+      },
+      {
+        "path": "electron/rbac-session.js",
+        "sourceSha256": "EF91C7B86DDFB6B21E062D3525E33D3D4231F7BB8CE284CE01219AFEAA7D6CD0",
+        "packagedSha256": "EF91C7B86DDFB6B21E062D3525E33D3D4231F7BB8CE284CE01219AFEAA7D6CD0",
+        "match": true
+      },
+      {
+        "path": "electron/security/window-policy.js",
+        "sourceSha256": "CD0E88886A77A5D341B4952DCE931817E45652B5DABB477C8E6398D5457E2EFB",
+        "packagedSha256": "CD0E88886A77A5D341B4952DCE931817E45652B5DABB477C8E6398D5457E2EFB",
+        "match": true
+      },
+      {
+        "path": "renderer/security/safe-render.js",
+        "sourceSha256": "ADF80F85422EB730F015AEEFEFFA0788702775A780709264C4991AD74C622F02",
+        "packagedSha256": "ADF80F85422EB730F015AEEFEFFA0788702775A780709264C4991AD74C622F02",
+        "match": true
+      }
+    ]
+  },
+  "authenticode": {
+    "status": "NotSigned",
+    "note": "No signing certificate was configured; not a P0-A finding, commercial release remains blocked."
+  }
+}

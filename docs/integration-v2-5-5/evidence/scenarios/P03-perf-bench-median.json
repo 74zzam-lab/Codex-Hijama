@@ -1,0 +1,31 @@
+{
+  "id": "P03-perf-bench-median",
+  "title": "Perf benches median-of-3 + incremental policy",
+  "result": "PASS",
+  "ms": 356,
+  "evidence": {
+    "labels": [
+      "scaleSeed",
+      "coldOpen",
+      "warmOpen",
+      "offlineStartup",
+      "onlineStartup",
+      "dashboardQuery",
+      "clientSearch",
+      "largeReport",
+      "largeExport",
+      "largeImport",
+      "fullBackup",
+      "incrementalBackupPolicy",
+      "fullRestore",
+      "initialSync",
+      "noChangePoll",
+      "singleEventPush",
+      "flush100",
+      "flush1000",
+      "largeAttachmentMeta",
+      "claimGate"
+    ],
+    "claimGate": true
+  }
+}

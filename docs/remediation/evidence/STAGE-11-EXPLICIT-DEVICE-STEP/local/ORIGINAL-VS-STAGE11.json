@@ -1,0 +1,6 @@
+{
+  "before": "branch step combined branch+device registration",
+  "after": "branch → device explicit gates",
+  "wizardFlowVersion": 11,
+  "orchestrationOnly": true
+}

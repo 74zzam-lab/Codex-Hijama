@@ -1,0 +1,9 @@
+{
+  "sourceResult": "PASS",
+  "p0aChecks": 47,
+  "forgedDeveloperBind": "DENIED",
+  "intentionalDeveloperLogin": "PRESERVED_BY_TEST",
+  "unknownIpc": "DENIED",
+  "runtimeLicenseSigning": "ABSENT",
+  "installedResult": "UNVERIFIED"
+}

@@ -1,0 +1,8 @@
+{
+  "sourceResult": "PASS",
+  "covered": [
+    "outbox retry survives database reopen", "payroll finalization survives reopen",
+    "credential revision survives repeated merge cycles", "financial reversal remains idempotent"
+  ],
+  "installedResult": "UNVERIFIED"
+}

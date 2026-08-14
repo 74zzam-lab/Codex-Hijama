@@ -1,0 +1,4 @@
+{
+  "pullFirstAllowOutboxDrain": false,
+  "pushPathAllowOutboxDrain": true
+}

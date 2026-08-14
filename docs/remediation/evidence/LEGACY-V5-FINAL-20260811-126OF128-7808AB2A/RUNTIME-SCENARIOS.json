@@ -1,0 +1,23 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "installedExe": {
+    "developerAuthentication": "PASS",
+    "mainProofIssued": true,
+    "developerBind": "PASS",
+    "prooflessDeveloperBind": "DENIED",
+    "legacyV5Generated": true,
+    "lifetimeExpiry": "2099-12-31",
+    "customFarFutureUsesBundleAuthority": true,
+    "activationSheetColumns": 6,
+    "bundleSheetColumns": 2,
+    "builderActionCards": 4,
+    "subscriptionChoices": 9,
+    "branchCountChoices": 6,
+    "developerToolButtons": 11,
+    "pageErrors": 0,
+    "consoleErrors": 0
+  },
+  "sqlite": { "integrity": "ok", "migrations": 6, "tables": 43 },
+  "googleSheetsLiveReadonly": { "result": "PASS", "durationMs": 3854, "expectedResponse": "not_found" },
+  "googleDriveLiveFinal": { "result": "UNVERIFIED", "connected": false, "needsReauth": true, "hasRefreshToken": false }
+}

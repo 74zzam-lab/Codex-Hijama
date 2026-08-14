@@ -1,0 +1,25 @@
+{
+  "hardDependencies": [
+    "organization",
+    "owner (NEW)",
+    "branch",
+    "device",
+    "business_setup"
+  ],
+  "order": [
+    "license",
+    "settings",
+    "users",
+    "outbox"
+  ],
+  "existingMinimal": [
+    "license",
+    "outbox"
+  ],
+  "newFull": [
+    "license",
+    "settings",
+    "users",
+    "outbox"
+  ]
+}

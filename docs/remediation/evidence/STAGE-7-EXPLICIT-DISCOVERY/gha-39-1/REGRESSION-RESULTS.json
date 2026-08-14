@@ -1,0 +1,12 @@
+{
+  "stage1": "PASS",
+  "stage2": "PASS",
+  "stage3": "PASS",
+  "stage4": "PASS",
+  "stage5": "PASS",
+  "stage6": "PASS",
+  "stage7": "PASS",
+  "npmTest": "PASS",
+  "npmTestE2e": "PASS",
+  "lint": "PASS"
+}

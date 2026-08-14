@@ -1,0 +1,10 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "schemaOwnershipMatrix": "PASS",
+  "crossScopeRelationships": "DENIED",
+  "branchAScopedReplacePreservesBranchB": true,
+  "aggregateWriteWithoutExplicitBranch": "DENIED",
+  "forgedSourceOverridesContext": false,
+  "crossBranchSyncOp": "DENIED"
+}

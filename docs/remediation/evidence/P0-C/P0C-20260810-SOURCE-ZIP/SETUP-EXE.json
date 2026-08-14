@@ -1,0 +1,9 @@
+{
+  "phase": "P0-C",
+  "built": false,
+  "reason": "Product owner explicitly requested source ZIP only and will perform the build.",
+  "path": null,
+  "sha256": null,
+  "result": "UNVERIFIED"
+}
+

@@ -1,0 +1,24 @@
+{
+  "device": "B",
+  "role": "ux-adversarial-recovery-uat",
+  "startedAt": "2026-08-13T15:13:03.011Z",
+  "finishedAt": "2026-08-13T15:13:03.248Z",
+  "host": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.12.94+"
+  },
+  "scenarios": [
+    "U01-restore-wizard",
+    "U02-progress-honesty",
+    "U04-redact-export",
+    "U05-i18n-a11y"
+  ],
+  "focus": [
+    "cancel mid restore",
+    "fake 100% blocked",
+    "token leak blocked",
+    "rtl/ltr"
+  ],
+  "result": "PASS"
+}
