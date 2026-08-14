@@ -1,0 +1,10 @@
+{
+  "step": "license_org_recovery",
+  "prohibited": [
+    "createOrganization",
+    "createOwner",
+    "createFirstBranch",
+    "manual activation"
+  ],
+  "activationConsumed": false
+}

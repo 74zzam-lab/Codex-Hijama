@@ -1,0 +1,8 @@
+{
+  "note": "populated after package-stage-source-zip",
+  "artifactName": "Tadawi-Stage-16-EXISTING-SHORT-PATH-PASS-0a59173.zip",
+  "sha256": "f72159864dfa8ee0e2245798d2890af22056b41780fb923ce4d681d7f76d0639",
+  "fileCount": 2208,
+  "uploadedAsGhaArtifact": true,
+  "committedToGit": false
+}
