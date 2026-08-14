@@ -1,0 +1,24 @@
+{
+  "outcomes": {
+    "SUCCESS": "SUCCESS",
+    "RETRYABLE": "RETRYABLE",
+    "USER_ACTION_REQUIRED": "USER_ACTION_REQUIRED",
+    "FATAL": "FATAL",
+    "CANCELLED": "CANCELLED"
+  },
+  "fields": [
+    "ok",
+    "outcome",
+    "code",
+    "message",
+    "retryable",
+    "userActionRequired",
+    "fatal",
+    "cancelled",
+    "details",
+    "correlationId",
+    "stepId"
+  ],
+  "truthySuccessRule": "ok===true only; {ok:false} is never success",
+  "unknownPolicy": "map known codes; avoid literal unknown when classifiable"
+}

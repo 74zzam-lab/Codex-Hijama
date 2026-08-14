@@ -1,0 +1,14 @@
+{
+  "gates": [
+    "Activation",
+    "Google",
+    "Discovery",
+    "Owner",
+    "Device",
+    "Publication",
+    "Readback",
+    "Restore",
+    "Sync"
+  ],
+  "harness": "stage-18-failure-policy-uat.cjs"
+}

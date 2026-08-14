@@ -1,0 +1,37 @@
+{
+  "owner_password_required": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-PASSWORD"
+  },
+  "owner_password_mismatch": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-MISMATCH"
+  },
+  "owner_password_weak": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-WEAK"
+  },
+  "owner_duplicate": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-DUP"
+  },
+  "owner_credential_required": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-CRED"
+  },
+  "owner_session_required": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-SESSION"
+  },
+  "setup_owner_authentication_failed": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-AUTH"
+  }
+}

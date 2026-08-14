@@ -1,0 +1,37 @@
+{
+  "stage4Focused": "PASS",
+  "stage3Focused": "PASS",
+  "stage2Focused": "PASS",
+  "stage1Details": [
+    {
+      "name": "tests/baseline/test-v2-5-10-cloud-discovery-restore.js",
+      "pass": true,
+      "stdout": "PASS v2-5-10:cloud-discovery-restore (fast_discovery, no_full_download, confirm_cta, timeout_180s, progress, z_index, ipc)",
+      "stderr": ""
+    },
+    {
+      "name": "tests/baseline/test-p0-c-restore-truth-and-boot-gate.js",
+      "pass": true,
+      "stdout": "PASS  AUD-RST-005 checkpoint UI never claims Backup V2 verification stages\nPASS  AUD-RST-007 cloud restore forwards download progress without percent regression\nPASS  AUD-RST-005 Backup V2 stages are emitted only from returned native proof\nPASS  AUD-RST-006 checkpoint restore stops when mandatory safety snapshot fails\nPASS  AUD-RST-006 checkpoint restore fails on hydrate or reconciliation failure\nPASS  AUD-RST-006 initial sync failure matrix never persists syncDone\nPASS  AUD-RST-006 initial sync marks completion only after every downstream result passes\nPASS  AUD-BOOT-002 setup connectivity policy is explicit and stable\nPASS  AUD-BOOT-003 source choices map to explicit non-overwriting operations\nPASS  AUD-BOOT-003 verified local choice never calls initial pull/bootstrap hydrate\nPASS  AUD-BOOT-008 verified Backup V2 runs operation pull but skips duplicate full-config hydrate\nPASS  AUD-BOOT-001 authenticated FirstRun wizard cannot auto-open from dataset heuristics\n\nP0-C restore truth + Boot gate: 12/12 passed",
+      "stderr": ""
+    },
+    {
+      "name": "tests/baseline/test-current-restore-license-login.js",
+      "pass": true,
+      "stdout": "PASS current restore/license/login: cloneable password + SQLite license + Main-owned user authentication",
+      "stderr": ""
+    },
+    {
+      "name": "tests/baseline/test-current-setup-restore-runtime.js",
+      "pass": true,
+      "stdout": "PASS setup restore runtime: Main safeStorage fallback + cloneable result + wrong-password no-swap",
+      "stderr": "(node:3312) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.\n(Use `node --trace-deprecation ...` to show where the warning was created)"
+    },
+    {
+      "name": "tests/baseline/test-v2-5-8-auth-activation-ui.js",
+      "pass": true,
+      "stdout": "OK: v2-5.8 activation unit",
+      "stderr": ""
+    }
+  ]
+}

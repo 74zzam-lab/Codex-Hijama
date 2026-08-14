@@ -1,0 +1,6 @@
+{
+  "backup_file": "Backup V2 restore",
+  "sync_checkpoint": "pull/recovery path",
+  "cloud_operational": "pull without .tdw",
+  "no_data": "empty local protected"
+}

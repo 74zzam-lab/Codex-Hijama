@@ -1,0 +1,82 @@
+{
+  "statuses": {
+    "DONE": "DONE",
+    "REQUIRED": "REQUIRED",
+    "IN_PROGRESS": "IN_PROGRESS",
+    "ERROR": "ERROR",
+    "FUTURE": "FUTURE",
+    "SKIPPED": "SKIPPED"
+  },
+  "newChecklist": [
+    "language",
+    "license",
+    "google",
+    "discovery",
+    "path_decision",
+    "organization",
+    "owner",
+    "branch",
+    "device",
+    "business_setup",
+    "publication",
+    "restore",
+    "sync",
+    "ready"
+  ],
+  "existingChecklist": [
+    "language",
+    "google",
+    "discovery",
+    "license_org_recovery",
+    "branch_select",
+    "device",
+    "restore",
+    "owner_auth",
+    "sync",
+    "ready"
+  ],
+  "userLabels": {
+    "language": "اللغة",
+    "license": "تفعيل البرنامج",
+    "google": "ربط حساب Google",
+    "discovery": "البحث عن البيانات السابقة",
+    "path_decision": "اختيار طريقة الإعداد",
+    "organization": "بيانات المؤسسة",
+    "owner": "حساب المالك",
+    "branch": "إعداد الفرع",
+    "branch_select": "اختيار الفرع",
+    "device": "إعداد الجهاز",
+    "business_setup": "البيانات الأساسية",
+    "publication": "حفظ البيانات على السحابة",
+    "restore": "استرجاع البيانات",
+    "owner_auth": "تأكيد حساب المالك",
+    "license_org_recovery": "استرداد الترخيص والمؤسسة",
+    "sync": "المزامنة الأولية",
+    "ready": "جاهز للاستخدام"
+  },
+  "gateToUiMapping": {
+    "language": null,
+    "license": "licenseActivate",
+    "google": "oauth",
+    "discovery": "discovery",
+    "path_decision": null,
+    "organization": "branchBind",
+    "owner": "ownerCreate",
+    "branch": "branchCreate",
+    "branch_select": "branchBind",
+    "device": "deviceRegister",
+    "business_setup": "businessSetup",
+    "publication": "publication",
+    "restore": "restore",
+    "sync": "sync",
+    "license_org_recovery": "licenseActivate",
+    "owner_auth": "ownerLogin",
+    "ready": null
+  },
+  "autoResolvedHidden": [
+    "business_setup",
+    "publication",
+    "readback"
+  ],
+  "authority": "BootstrapGates + BootFlow.validateStep (read-only)"
+}

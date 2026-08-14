@@ -1,0 +1,7 @@
+{
+  "binding": [
+    "deviceId",
+    "branchId",
+    "organizationId"
+  ]
+}

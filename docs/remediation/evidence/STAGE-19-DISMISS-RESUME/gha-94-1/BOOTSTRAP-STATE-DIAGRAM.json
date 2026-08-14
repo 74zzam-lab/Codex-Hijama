@@ -1,0 +1,49 @@
+{
+  "states": [
+    "UNCONFIGURED",
+    "PARTIAL",
+    "READY",
+    "ERROR_RETRYABLE",
+    "USER_ACTION_REQUIRED",
+    "FATAL",
+    "CANCELLED"
+  ],
+  "transitions": [
+    {
+      "from": "UNCONFIGURED",
+      "to": "PARTIAL",
+      "when": "path chosen / first gate started"
+    },
+    {
+      "from": "PARTIAL",
+      "to": "READY",
+      "when": "evaluateReady.ready === true"
+    },
+    {
+      "from": "PARTIAL",
+      "to": "ERROR_RETRYABLE",
+      "when": "transient failure (UI only)"
+    },
+    {
+      "from": "PARTIAL",
+      "to": "USER_ACTION_REQUIRED",
+      "when": "validation/selection required (UI only)"
+    },
+    {
+      "from": "PARTIAL",
+      "to": "CANCELLED",
+      "when": "user cancelled step (UI only)"
+    },
+    {
+      "from": "PARTIAL",
+      "to": "FATAL",
+      "when": "integrity/corruption (re-derived from truth)"
+    },
+    {
+      "from": "READY",
+      "to": "READY",
+      "when": "restart/logout/login — bootstrap skipped"
+    }
+  ],
+  "note": "Error outcomes are UI state only; READY authority is Stage 2 evaluator"
+}

@@ -1,0 +1,22 @@
+{
+  "discovery_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-DISC-FAIL"
+  },
+  "discovery_in_flight": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-DISC-INFLIGHT"
+  },
+  "discovery_module_unavailable": {
+    "outcome": "FATAL",
+    "fatal": true,
+    "code": "TDW-BOOT-DISC-MODULE"
+  },
+  "discovery_required": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-DISC-REQUIRED"
+  }
+}

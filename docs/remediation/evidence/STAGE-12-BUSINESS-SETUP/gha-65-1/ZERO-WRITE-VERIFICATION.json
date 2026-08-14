@@ -1,0 +1,8 @@
+{
+  "gateEvaluatorWrites": false,
+  "sources": [
+    "bootstrap-gates.evaluateBusinessSetupResolved",
+    "BusinessSetupContract.isResolved"
+  ],
+  "stage12Test": "PASS"
+}

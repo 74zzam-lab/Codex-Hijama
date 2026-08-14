@@ -1,0 +1,32 @@
+{
+  "restore_interrupted": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-RESTORE-INTERRUPT"
+  },
+  "cloud_backup_restore_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-RESTORE-FAIL"
+  },
+  "local_restore_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-RESTORE-LOCAL"
+  },
+  "restore_reconcile_incomplete": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-RESTORE-RECONCILE"
+  },
+  "restore_cancelled": {
+    "outcome": "CANCELLED",
+    "cancelled": true,
+    "code": "TDW-BOOT-RESTORE-CANCEL"
+  },
+  "sync_post_restore_blocked": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-SYNC-EMPTY-PUSH"
+  }
+}

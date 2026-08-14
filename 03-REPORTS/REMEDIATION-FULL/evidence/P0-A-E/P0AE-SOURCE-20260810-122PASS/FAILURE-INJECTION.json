@@ -1,0 +1,9 @@
+{
+  "sourceResult": "PASS",
+  "covered": [
+    "setup activation SQLite rollback", "initial Owner rollback", "sync failed upload restart retry",
+    "duplicate sync delivery", "delete/update conflict", "financial transaction step rollback",
+    "wrong backup secret", "failed report scope assertions"
+  ],
+  "installedResult": "UNVERIFIED"
+}

@@ -1,0 +1,10 @@
+{
+  "phase": "P0-C",
+  "semanticRestoreTargetGate": "PASS",
+  "populatedTargetRejected": "PASS",
+  "usableOwnerTargetRejected": "PASS",
+  "mandatoryCheckpointSafetyFailureStopsMutation": "PASS",
+  "nativeBackupEmergencyRollbackPathRetained": true,
+  "installedP0CDataLossRegression": "UNVERIFIED"
+}
+

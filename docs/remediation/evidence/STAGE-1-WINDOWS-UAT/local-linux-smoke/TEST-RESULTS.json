@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "buildId": "local-linux-smoke",
+  "startedAt": "2026-08-13T08:21:44.985Z",
+  "finishedAt": "2026-08-13T08:21:45.864Z",
+  "restore": true,
+  "progress": true,
+  "data": true,
+  "failureInjection": true,
+  "runtimeErrors": true,
+  "cloudRealUat": "UNVERIFIED"
+}

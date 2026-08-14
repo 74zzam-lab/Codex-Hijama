@@ -1,0 +1,12 @@
+{
+  "states": [
+    "NO_OWNER",
+    "SEED_ONLY",
+    "REAL_OWNER",
+    "REAL_OWNER + LEGACY_SEED",
+    "AMBIGUOUS_MULTIPLE_OWNER",
+    "RESTORED_OWNER",
+    "INVALID_OWNER_CREDENTIAL"
+  ],
+  "module": "OwnerSeedRetirement.classifyOwnerState"
+}

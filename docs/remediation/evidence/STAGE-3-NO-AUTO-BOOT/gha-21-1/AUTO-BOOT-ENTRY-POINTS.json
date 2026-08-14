@@ -1,0 +1,43 @@
+{
+  "entryPoints": [
+    {
+      "file": "index.html",
+      "function": "startup",
+      "condition": "BootFlow.maybeAutoOpenBootFlow",
+      "auto": true,
+      "guardedBy": "evaluateReady().ready"
+    },
+    {
+      "file": "index.html",
+      "function": "finishLogin",
+      "condition": "SetupStateDom.needsBootFlow",
+      "auto": true,
+      "guardedBy": "evaluateReady().ready via getState"
+    },
+    {
+      "file": "index.html",
+      "function": "showPage",
+      "condition": "SetupStateDom.needsBootFlow",
+      "auto": true,
+      "guardedBy": "evaluateReady().ready via getState"
+    },
+    {
+      "file": "cloud/boot-flow-ui.js",
+      "function": "forceOpen",
+      "condition": "manual / URL ?boot=1",
+      "auto": false
+    },
+    {
+      "file": "index.html",
+      "function": "openBootWizardFromLogin",
+      "condition": "user click CTA",
+      "auto": false
+    },
+    {
+      "file": "cupping-first-run.js",
+      "function": "shouldShowSetupWizard",
+      "condition": "forceWizard only + READY guard",
+      "auto": false
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "path": "User enters key → CommercialLicense.router → setupCommitSignedActivation → hydrateIntoMemory",
+  "requiresCustomerGoogleOAuth": false,
+  "sheetsBackendSeparate": true
+}

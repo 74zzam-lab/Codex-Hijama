@@ -1,0 +1,19 @@
+{
+  "language": "KEEP",
+  "google": "KEEP",
+  "discovery": "KEEP",
+  "license_org_recovery": "MERGE",
+  "branch_select": "KEEP",
+  "device": "KEEP",
+  "restore": "KEEP",
+  "owner_auth": "MERGE",
+  "sync": "KEEP",
+  "ready": "KEEP",
+  "license": "MERGE",
+  "organization": "MERGE",
+  "business_setup": "AUTO_RESOLVE",
+  "publication": "AUTO_RESOLVE",
+  "readback": "AUTO_RESOLVE",
+  "owner": "MERGE",
+  "path_decision": "REMOVE_FROM_EXISTING_FLOW"
+}

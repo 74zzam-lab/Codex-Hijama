@@ -1,0 +1,21 @@
+{
+  "wizardContainer": "bootFlowOverlay / bf-dialog",
+  "progressBar": "bf-progress dots + bf-stepper horizontal list",
+  "stepTitle": "bf-wizard-title, bf-step-label",
+  "stepBody": "bf-step-content",
+  "navigation": "bf-step-nav prev/next",
+  "actions": "bf-step-actions",
+  "errorBox": "bf-wizard-status.bf-status",
+  "statusBox": "bf-step-meta, bf-step-hint",
+  "loadingState": "in-flight flags + disabled buttons",
+  "completedIndicators": "bf-stepper data-state=done (wizard.completedSteps derived)",
+  "pathSelector": "bf-step-choose new/existing buttons",
+  "renderFunctions": [
+    "renderProgress",
+    "renderStepUI",
+    "renderNavButtons",
+    "getDisplayWizard"
+  ],
+  "responsive": "@media max-width 640px stepper scroll",
+  "stage17Target": "bf-checklist sidebar + bf-checklist-main content panel"
+}

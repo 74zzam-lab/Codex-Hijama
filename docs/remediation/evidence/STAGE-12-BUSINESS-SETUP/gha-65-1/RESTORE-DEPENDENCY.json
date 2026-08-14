@@ -1,0 +1,6 @@
+{
+  "NEW": "device → business_setup → restore (business setup required before restore decision)",
+  "EXISTING": "device → restore → business_setup (restore may supply authoritative business data)",
+  "restoreCoreUnchanged": true,
+  "noExistingData": "Start New does not require restore to complete business setup"
+}

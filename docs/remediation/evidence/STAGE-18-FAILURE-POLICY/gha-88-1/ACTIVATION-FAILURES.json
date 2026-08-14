@@ -1,0 +1,32 @@
+{
+  "license_invalid": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-ACT-INVALID"
+  },
+  "license_expired": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-ACT-EXPIRED"
+  },
+  "existing_license_recovery_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-ACT-RECOVERY"
+  },
+  "license_branch_limit": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-BRANCH-LIMIT"
+  },
+  "license_device_limit": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-DEVICE-LIMIT"
+  },
+  "signed_license_corrupt": {
+    "outcome": "FATAL",
+    "fatal": true,
+    "code": "TDW-BOOT-LICENSE-CORRUPT"
+  }
+}

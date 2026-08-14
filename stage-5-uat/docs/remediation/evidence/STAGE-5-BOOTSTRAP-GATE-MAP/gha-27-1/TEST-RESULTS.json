@@ -1,0 +1,6 @@
+{
+  "stage5Focused": "PASS",
+  "runtimeOrderingUnchanged": "PASS",
+  "gateZeroWrite": "PASS",
+  "gateIdempotent": "PASS"
+}

@@ -1,0 +1,73 @@
+{
+  "hard": [
+    {
+      "from": "language",
+      "to": "google",
+      "reason": "wizard navigation"
+    },
+    {
+      "from": "google",
+      "to": "license",
+      "reason": "initialSetupRequiresGoogle + Drive discovery"
+    },
+    {
+      "from": "license",
+      "to": "organization",
+      "reason": "centerId from license"
+    },
+    {
+      "from": "organization",
+      "to": "branch",
+      "reason": "setupCommitOrganizationDevice"
+    },
+    {
+      "from": "branch",
+      "to": "restore",
+      "reason": "device lockedBranchId for sync targets"
+    },
+    {
+      "from": "restore",
+      "to": "owner",
+      "reason": "restore may hydrate owner; sync requires owner session"
+    },
+    {
+      "from": "owner",
+      "to": "sync",
+      "reason": "verifySetupOwnerSession in runInitialSyncPipeline"
+    },
+    {
+      "from": "sync",
+      "to": "ready",
+      "reason": "bootstrapCompletedAt before finalize"
+    }
+  ],
+  "soft": [
+    {
+      "from": "owner",
+      "to": "branch",
+      "reason": "target: owner should authorize branch creation"
+    },
+    {
+      "from": "activation",
+      "to": "google",
+      "reason": "target NEW: activation before Google"
+    }
+  ],
+  "accidental": [
+    {
+      "from": "branch",
+      "to": "owner",
+      "reason": "current runtime places branch before owner (legacy)"
+    },
+    {
+      "from": "google",
+      "to": "activation",
+      "reason": "current NEW starts Google before license step"
+    },
+    {
+      "from": "bootstrapCompletedAt",
+      "to": "restore",
+      "reason": "meta marker satisfies hasRestoreDecision retroactively"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "npmTest": {
+    "command": "node tests/run-all.js",
+    "result": "PASS",
+    "passed": 109,
+    "total": 109,
+    "durationSeconds": 337.9
+  },
+  "p0bGate": {
+    "command": "node tests/baseline/test-p0-b-authority-branch-isolation.js",
+    "result": "PASS",
+    "passed": 11,
+    "total": 11
+  },
+  "installedRuntime": {
+    "command": "node scripts/windows-uat/p0-b-authority-runtime.cjs",
+    "result": "PASS",
+    "passed": 7,
+    "total": 7
+  }
+}

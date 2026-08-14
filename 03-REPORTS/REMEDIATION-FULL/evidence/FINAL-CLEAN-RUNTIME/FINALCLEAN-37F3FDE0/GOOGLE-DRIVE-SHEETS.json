@@ -1,0 +1,14 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "boundary": "read-only product-module diagnostic using an isolated copy of the live protected token store",
+  "googleConnected": true,
+  "needsReauth": false,
+  "driveItems": 45,
+  "licenseCandidates": 1,
+  "validLicenseCandidates": 1,
+  "setupActivationVerification": "PASS",
+  "driveMutationOnFinalBytes": "UNVERIFIED",
+  "sheetsActivationConsumptionOnFinalBytes": "UNVERIFIED",
+  "backupRestoreOnFinalBytes": "UNVERIFIED",
+  "result": "UNVERIFIED"
+}

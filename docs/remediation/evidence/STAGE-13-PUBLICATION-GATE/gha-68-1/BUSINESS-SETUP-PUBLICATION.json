@@ -1,0 +1,8 @@
+{
+  "via": "publishSettings",
+  "fields": [
+    "centerName",
+    "phone"
+  ],
+  "readBackRequired": true
+}

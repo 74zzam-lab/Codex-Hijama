@@ -1,0 +1,8 @@
+[
+  "final action success",
+  "authoritative state update",
+  "evaluate READY",
+  "clear transient bootstrap state",
+  "close bootstrap",
+  "show login once"
+]

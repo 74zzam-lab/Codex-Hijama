@@ -1,0 +1,12 @@
+{
+  "org_fetch_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-ORG-FETCH"
+  },
+  "organization_commit_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-ORG-COMMIT"
+  }
+}
