@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18 Windows Verification
 
 on:
   push:
@@ -19,6 +19,7 @@ on:
       - cursor/stage-15-initial-sync-direction-beb8
       - cursor/stage-16-existing-short-path-beb8
       - cursor/stage-17-bootstrap-checklist-beb8
+      - cursor/stage-18-failure-policy-beb8
       - main
   pull_request:
     branches:
@@ -39,6 +40,7 @@ on:
       - cursor/stage-15-initial-sync-direction-beb8
       - cursor/stage-16-existing-short-path-beb8
       - cursor/stage-17-bootstrap-checklist-beb8
+      - cursor/stage-18-failure-policy-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -50,7 +52,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15+16+17+18 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -71,6 +73,7 @@ jobs:
       STAGE15_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE16_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE17_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE18_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -363,6 +366,17 @@ jobs:
         working-directory: ${{ env.SRC }}
         run: node tests/baseline/test-stage-17-bootstrap-checklist-ui.js
 
+      - name: Stage 18 failure-policy UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE18_BUILD_ID: ${{ env.STAGE18_BUILD_ID }}
+        run: node scripts/windows-uat/stage-18-failure-policy-uat.cjs
+
+      - name: Stage 18 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-18-bootstrap-failure-policy.js
+
       - name: Generate packaging inputs
         working-directory: ${{ env.SRC }}
         shell: pwsh
@@ -409,6 +423,16 @@ jobs:
             -RepoRoot $PWD `
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
+
+      - name: Package Stage 18 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE18_BUILD_ID: ${{ env.STAGE18_BUILD_ID }}
+          STAGE_NUMBER: '18'
+          STAGE_ZIP_LABEL: FAILURE-POLICY-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package Stage 17 source ZIP (artifact only)
         if: success()

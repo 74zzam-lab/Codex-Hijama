@@ -10,8 +10,19 @@
     REQUIRED: 'REQUIRED',
     IN_PROGRESS: 'IN_PROGRESS',
     ERROR: 'ERROR',
+    USER_ACTION: 'USER_ACTION',
+    FATAL: 'FATAL',
+    CANCELLED: 'CANCELLED',
     FUTURE: 'FUTURE',
     SKIPPED: 'SKIPPED',
+  });
+
+  const OUTCOME_TO_STATUS = Object.freeze({
+    SUCCESS: STATUS.DONE,
+    RETRYABLE: STATUS.ERROR,
+    USER_ACTION_REQUIRED: STATUS.USER_ACTION,
+    FATAL: STATUS.FATAL,
+    CANCELLED: STATUS.CANCELLED,
   });
 
   const NEW_CHECKLIST_STEPS = Object.freeze([
@@ -138,9 +149,19 @@
     return ctx.uiOps[key] === true;
   }
 
+  function resolveFailureStatus(stepError) {
+    if (!stepError) return null;
+    const outcome = stepError.outcome || null;
+    if (outcome && OUTCOME_TO_STATUS[outcome]) return OUTCOME_TO_STATUS[outcome];
+    if (stepError.fatal) return STATUS.FATAL;
+    if (stepError.cancelled) return STATUS.CANCELLED;
+    if (stepError.userActionRequired) return STATUS.USER_ACTION;
+    return STATUS.ERROR;
+  }
+
   function resolveItemStatus(stepId, ctx, firstUnresolvedId) {
     if (ctx.stepError && ctx.stepError.stepId === stepId) {
-      return STATUS.ERROR;
+      return resolveFailureStatus(ctx.stepError) || STATUS.ERROR;
     }
     if (isStepDone(stepId, ctx)) return STATUS.DONE;
     if (ctx.currentStepId === stepId && isStepInProgress(stepId, ctx)) return STATUS.IN_PROGRESS;
@@ -158,16 +179,23 @@
     const firstUnresolved = steps.find((id) => !isStepDone(id, ctx) && id !== 'ready') || null;
     const items = steps.map((id) => {
       const status = resolveItemStatus(id, ctx, firstUnresolved);
-      const error = status === STATUS.ERROR ? ctx.stepError : null;
+      const failureStatuses = [STATUS.ERROR, STATUS.USER_ACTION, STATUS.FATAL, STATUS.CANCELLED];
+      const error = failureStatuses.includes(status) ? ctx.stepError : null;
       return {
         id,
         label: USER_LABELS[id] || id,
         status,
-        required: status === STATUS.REQUIRED || status === STATUS.ERROR,
+        required: status === STATUS.REQUIRED || status === STATUS.ERROR || status === STATUS.USER_ACTION || status === STATUS.FATAL,
         active: ctx.currentStepId === id,
         error: error ? humanizeError(error.diagnostic || error.code, error.message) : null,
-        diagnostic: error?.diagnostic || error?.code || null,
-        actionAvailable: status === STATUS.REQUIRED || status === STATUS.ERROR || status === STATUS.IN_PROGRESS,
+        diagnostic: error?.correlationId || error?.diagnostic || error?.code || null,
+        outcome: error?.outcome || null,
+        retryable: !!error?.retryable,
+        userActionRequired: !!error?.userActionRequired,
+        fatal: !!error?.fatal,
+        cancelled: !!error?.cancelled,
+        actionAvailable: status === STATUS.REQUIRED || status === STATUS.ERROR || status === STATUS.USER_ACTION
+          || status === STATUS.IN_PROGRESS || (status === STATUS.CANCELLED && error?.userActionRequired),
       };
     });
     const countable = items.filter((i) => i.status !== STATUS.SKIPPED);
@@ -216,12 +244,14 @@
 
   const BootstrapChecklistContract = {
     STATUS,
+    OUTCOME_TO_STATUS,
     NEW_CHECKLIST_STEPS,
     EXISTING_CHECKLIST_STEPS,
     USER_LABELS,
     ERROR_MESSAGES,
     escapeHtml,
     humanizeError,
+    resolveFailureStatus,
     visibleStepsForPath,
     buildChecklistModel,
     buildContract,

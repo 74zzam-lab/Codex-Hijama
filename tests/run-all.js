@@ -62,6 +62,7 @@ const baseline = [
   ['tests/baseline/test-stage-15-initial-sync-direction.js', 'stage-15:initial-sync-direction'],
   ['tests/baseline/test-stage-16-existing-short-path.js', 'stage-16:existing-short-path'],
   ['tests/baseline/test-stage-17-bootstrap-checklist-ui.js', 'stage-17:bootstrap-checklist-ui'],
+  ['tests/baseline/test-stage-18-bootstrap-failure-policy.js', 'stage-18:bootstrap-failure-policy'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],
   ['tests/baseline/test-p0-c-credential-publication.js', 'p0-c:credential-publication'],
   ['tests/baseline/test-p0-c-setup-owner-session.js', 'p0-c:setup-owner-session'],

@@ -146,6 +146,8 @@
   let discoveryInFlight = false;
   let lastFocusEl = null;
   let checklistStepError = null;
+  let failureContextSnapshot = { googleEmail: null, branchId: null, restoreChoice: null, organizationId: null };
+  let lastGateRetryHandler = null;
 
   function isCriticalOpInFlight() {
     if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight
@@ -284,6 +286,86 @@
     return { title: 'خطأ', detail: String(err && err.message || err || code || ''), diagnosticCode: 'TDW-ACT-FALLBACK' };
   }
 
+  function normalizeBootstrapFailure(err, code, stepId) {
+    const BFPC = global.BootstrapFailurePolicyContract;
+    if (BFPC?.normalizeFailure) {
+      return BFPC.normalizeFailure(err, { code, stepId });
+    }
+    const ue = userError(err, code);
+    return {
+      ok: false,
+      outcome: 'RETRYABLE',
+      code: code || ue.diagnosticCode || 'step_failed',
+      message: ue.detail || ue.title,
+      retryable: true,
+      userActionRequired: false,
+      fatal: false,
+      cancelled: false,
+      correlationId: `TDW-BOOT-FALLBACK-${Date.now()}`,
+      stepId: stepId || null,
+    };
+  }
+
+  function formatFailureForStatus(normalized) {
+    if (!normalized || normalized.ok) return '';
+    if (normalized.cancelled) return `${normalized.message} (${normalized.correlationId})`;
+    const prefix = normalized.fatal ? 'خطأ حرج'
+      : (normalized.userActionRequired ? 'إجراء مطلوب' : 'خطأ');
+    const retryHint = normalized.retryable ? ' — يمكن إعادة المحاولة' : '';
+    return `${prefix} — ${normalized.message}${retryHint} (${normalized.correlationId})`;
+  }
+
+  function logNormalizedFailure(stepId, normalized) {
+    const BFPC = global.BootstrapFailurePolicyContract;
+    if (BFPC?.logBootstrapFailure && normalized && !normalized.ok) {
+      BFPC.logBootstrapFailure({
+        step: stepId,
+        stepId,
+        outcome: normalized.outcome,
+        code: normalized.code,
+        correlationId: normalized.correlationId,
+        safeDetails: normalized.message,
+      });
+    }
+  }
+
+  function clearChecklistStepError(stepIds) {
+    if (!checklistStepError) return;
+    const ids = Array.isArray(stepIds) ? stepIds : [stepIds];
+    if (!ids.length || ids.includes(checklistStepError.stepId)) {
+      checklistStepError = null;
+      lastGateRetryHandler = null;
+    }
+  }
+
+  function invalidateStaleChecklistErrors(w) {
+    w = w || loadWizard();
+    const googleEmail = global.settings?.backup?.providers?.google?.email || null;
+    const branchId = getSelectedBranchId() || null;
+    const restoreChoice = w.restoreChoice || null;
+    const organizationId = global.CenterId?.getStoredCenterId?.()
+      || global.LicenseCloud?.loadLocal?.()?.centerId || null;
+    const snap = failureContextSnapshot;
+    const staleSteps = [];
+    if (snap.googleEmail && googleEmail && snap.googleEmail !== googleEmail) {
+      staleSteps.push('google', 'discovery', 'path_decision', 'license_org_recovery');
+    }
+    if (snap.organizationId && organizationId && snap.organizationId !== organizationId) {
+      staleSteps.push('organization', 'owner', 'branch', 'branch_select', 'device', 'business_setup', 'publication', 'sync');
+    }
+    if (snap.branchId && branchId && snap.branchId !== branchId) {
+      staleSteps.push('device', 'restore', 'sync');
+    }
+    if (snap.restoreChoice && restoreChoice && snap.restoreChoice !== restoreChoice) {
+      staleSteps.push('restore', 'sync');
+    }
+    if (staleSteps.length && checklistStepError && staleSteps.includes(checklistStepError.stepId)) {
+      checklistStepError = null;
+      lastGateRetryHandler = null;
+    }
+    failureContextSnapshot = { googleEmail, branchId, restoreChoice, organizationId };
+  }
+
   function setStatus(msg, isError) {
     const el = document.getElementById('bf-wizard-status');
     if (!el) return;
@@ -293,34 +375,50 @@
     if (!isError && msg && String(msg).includes('✅')) {
       const w = getDisplayWizard(loadWizard());
       const step = stepsFor(w.path)[w.currentStep];
-      if (checklistStepError?.stepId === step) checklistStepError = null;
+      if (checklistStepError?.stepId === step) {
+        checklistStepError = null;
+        lastGateRetryHandler = null;
+      }
       renderChecklist(w);
     }
   }
 
-  function setStatusFromErr(err, code) {
-    const ue = userError(err, code);
-    setStatus(global.ActivationErrors?.formatForUi?.(ue) || `${ue.title} — ${ue.detail}`, true);
+  function setStatusFromErr(err, code, options) {
+    options = options || {};
     const w = getDisplayWizard(loadWizard());
-    const step = stepsFor(w.path)[w.currentStep];
-    if (step) {
+    invalidateStaleChecklistErrors(w);
+    const step = options.stepId || stepsFor(w.path)[w.currentStep];
+    const normalized = normalizeBootstrapFailure(err, code, step);
+    if (options.retryHandler) lastGateRetryHandler = options.retryHandler;
+    const isOperationalError = !normalized.cancelled;
+    setStatus(formatFailureForStatus(normalized), isOperationalError);
+    if (step && !normalized.ok) {
+      logNormalizedFailure(step, normalized);
       checklistStepError = {
         stepId: step,
-        code: code || ue.diagnosticCode || 'step_failed',
-        message: ue.detail || ue.title,
-        diagnostic: code || ue.diagnosticCode || null,
+        code: normalized.code,
+        message: normalized.message,
+        diagnostic: normalized.code,
+        outcome: normalized.outcome,
+        retryable: normalized.retryable,
+        userActionRequired: normalized.userActionRequired,
+        fatal: normalized.fatal,
+        cancelled: normalized.cancelled,
+        correlationId: normalized.correlationId,
       };
       renderChecklist(w);
     }
-    return ue;
+    return normalized;
   }
 
   function getChecklistUiContext(w) {
     w = w || getDisplayWizard(loadWizard());
+    invalidateStaleChecklistErrors(w);
     const steps = stepsFor(w.path);
     const currentStepId = steps[w.currentStep] || steps[0] || null;
     if (checklistStepError?.stepId && validateStep(checklistStepError.stepId)) {
       checklistStepError = null;
+      lastGateRetryHandler = null;
     }
     return {
       path: w.path,
@@ -357,7 +455,31 @@
       case S.REQUIRED: return { badge: 'مطلوب', icon: '●', className: 'required' };
       case S.IN_PROGRESS: return { badge: 'جارٍ', icon: '⟳', className: 'progress' };
       case S.ERROR: return { badge: 'خطأ', icon: '!', className: 'error' };
+      case S.USER_ACTION: return { badge: 'إجراء', icon: '✎', className: 'user-action' };
+      case S.FATAL: return { badge: 'حرج', icon: '⛔', className: 'fatal' };
+      case S.CANCELLED: return { badge: 'ملغى', icon: '⊘', className: 'cancelled' };
       default: return { badge: 'لاحقاً', icon: '○', className: 'future' };
+    }
+  }
+
+  async function retryCurrentGate() {
+    const w = getDisplayWizard(loadWizard());
+    const step = stepsFor(w.path)[w.currentStep];
+    if (!checklistStepError || checklistStepError.stepId !== step || !checklistStepError.retryable) {
+      return { ok: false, error: 'retry_not_available' };
+    }
+    if (typeof lastGateRetryHandler === 'function') {
+      return lastGateRetryHandler();
+    }
+    switch (step) {
+      case 'google': return runGoogleConnect();
+      case 'discovery': return runDiscoveryGate({ forceRefresh: true });
+      case 'license':
+      case 'license_org_recovery': return runLicenseOrgRecovery?.() || { ok: false, error: 'step_failed' };
+      case 'publication': return commitPublicationFromWizard();
+      case 'restore': return { ok: false, error: 'restore_retry_requires_ui' };
+      case 'sync': return runInitialSyncPipeline(w);
+      default: return { ok: false, error: 'retry_not_available' };
     }
   }
 
@@ -1228,6 +1350,9 @@
 .bf-checklist-item[data-status="required"]{background:#eff6ff;border-color:#bfdbfe}
 .bf-checklist-item[data-status="progress"]{background:#fffbeb;border-color:#fde68a}
 .bf-checklist-item[data-status="error"]{background:#fef2f2;border-color:#fecaca}
+.bf-checklist-item[data-status="user-action"]{background:#fff7ed;border-color:#fed7aa}
+.bf-checklist-item[data-status="fatal"]{background:#450a0a;border-color:#7f1d1d;color:#fecaca}
+.bf-checklist-item[data-status="cancelled"]{background:#f8fafc;border-color:#e2e8f0}
 .bf-checklist-item[data-status="future"]{opacity:.72}
 .bf-checklist-item[aria-current="step"]{box-shadow:0 0 0 1px var(--tdw-color-accent-500,#2f8f83)}
 .bf-checklist-icon{width:1.25rem;text-align:center;font-weight:900;line-height:1.2}
@@ -1237,8 +1362,14 @@
 .bf-checklist-item[data-status="required"] .bf-checklist-badge{color:#1d4ed8}
 .bf-checklist-item[data-status="progress"] .bf-checklist-badge{color:#b45309}
 .bf-checklist-item[data-status="error"] .bf-checklist-badge{color:#b91c1c}
+.bf-checklist-item[data-status="user-action"] .bf-checklist-badge{color:#c2410c}
+.bf-checklist-item[data-status="fatal"] .bf-checklist-badge{color:#fecaca}
+.bf-checklist-item[data-status="cancelled"] .bf-checklist-badge{color:#64748b}
 .bf-checklist-error{grid-column:1/-1;font-size:11px;color:var(--tdw-color-danger-600,#a94045);line-height:1.5}
+.bf-checklist-item[data-status="fatal"] .bf-checklist-error{color:#fecaca}
+.bf-checklist-item[data-status="cancelled"] .bf-checklist-error{color:#64748b}
 .bf-checklist-code{opacity:.75;font-size:10px}
+.bf-checklist-retry{grid-column:1/-1;margin-top:4px}
 .bf-checklist-main{min-width:0}
 .bf-step-meta{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px}
 .bf-step-hint{font-size:12px;color:var(--primary);background:var(--surface,#f4f6f8);border:1px solid var(--border,#ddd);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7}
@@ -1459,6 +1590,14 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           err.appendChild(code);
         }
         li.appendChild(err);
+      }
+      if (item.retryable && item.active) {
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'btn btn-secondary btn-sm bf-checklist-retry';
+        retryBtn.textContent = 'إعادة المحاولة';
+        retryBtn.onclick = () => retryCurrentGate();
+        li.appendChild(retryBtn);
       }
       list.appendChild(li);
     });
@@ -1762,7 +1901,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       return { ok: true, discovery: result };
     } catch (e) {
-      setStatusFromErr(e, 'discovery_failed');
+      setStatusFromErr(e, 'discovery_failed', { retryHandler: () => runDiscoveryGate({ forceRefresh: true }) });
       return { ok: false, error: String(e && e.message || e), retryable: true };
     } finally {
       discoveryInFlight = false;
@@ -1795,13 +1934,14 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }, true);
       await refreshGoogleConnectionState();
       if (!hasGoogle()) {
-        setStatusFromErr(res || { message: 'oauth_failed' }, res?.error || 'oauth_failed');
+        setStatusFromErr(res || { message: 'oauth_failed' }, res?.error || 'oauth_failed', { retryHandler: () => runGoogleConnect() });
         return res || { ok: false };
       }
       setStatus('✅ تم ربط Google' + (res?.email ? ' — ' + res.email : '') + ' — تابع لخطوة الاكتشاف');
+      clearChecklistStepError('google');
       return { ok: true, googleConnected: true, email: res?.email || '' };
     } catch (e) {
-      setStatusFromErr(e);
+      setStatusFromErr(e, e?.code || e?.error || 'oauth_failed', { retryHandler: () => runGoogleConnect() });
       return { ok: false, error: String(e && e.message || e) };
     } finally {
       oauthInFlight = false;
@@ -1843,6 +1983,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       wizard.restoreChoice = null;
       wizard.syncDone = false;
       global.PostGoogleCloudDiscovery?.invalidateDiscoveryCache?.(wizard);
+      clearChecklistStepError(['google', 'discovery', 'path_decision', 'license_org_recovery', 'restore', 'sync']);
+      failureContextSnapshot = { googleEmail: null, branchId: null, restoreChoice: null, organizationId: null };
       saveWizard(wizard);
       setStatus('تم فصل حساب Google. يمكنك ربط الحساب الصحيح الآن.');
       renderProgress(loadWizard());
@@ -3522,6 +3664,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     runGoogleConnect,
     runDiscoveryGate,
     disconnectGoogleDuringSetup,
+    retryCurrentGate,
+    normalizeBootstrapFailure,
     isCriticalOpInFlight,
     version: 'v2-5.14'
   };
