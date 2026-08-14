@@ -1,0 +1,11 @@
+{
+  "runner": "windows-2022",
+  "lint": "PASS",
+  "npmTest": "PASS",
+  "npmTestE2e": "PASS",
+  "stage10Focused": "PASS",
+  "setupExeSha256": "e5703e2ebd0f87afae104f256c957fded13551964896ba22896ce772752bc40f",
+  "installedExeSmoke": "PASS",
+  "fullInteractiveGui": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED"
+}

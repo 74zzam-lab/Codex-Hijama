@@ -1,0 +1,25 @@
+{
+  "requiredFields": [
+    "centerName",
+    "phone"
+  ],
+  "optionalFields": [
+    "centerNameEn",
+    "address",
+    "centerCity",
+    "taxNum",
+    "crNum",
+    "waNumber",
+    "siteUrl"
+  ],
+  "placeholderCenterNames": [
+    "مركز الحجامة",
+    "الفرع الرئيسي",
+    "Hijama Center",
+    "Main Branch",
+    "Clinic",
+    "Center"
+  ],
+  "evaluation": "read-only settings SoT",
+  "authority": "settings + license.centerName (read fallback only)"
+}

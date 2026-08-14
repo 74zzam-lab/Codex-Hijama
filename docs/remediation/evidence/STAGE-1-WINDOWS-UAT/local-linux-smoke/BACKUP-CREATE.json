@@ -1,0 +1,73 @@
+{
+  "at": "2026-08-13T08:21:45.482Z",
+  "path": "/tmp/uat-stage1-local-linux-smoke/Backups/V2/Tadawi-Backup-V2-2026-08-13T08-21-45-174Z.tdw",
+  "absolutePath": "/tmp/uat-stage1-local-linux-smoke/Backups/V2/Tadawi-Backup-V2-2026-08-13T08-21-45-174Z.tdw",
+  "sizeBytes": 14858,
+  "sha256": "4a86bf293d65853e1e4e6839817c81e38dc2ab89736c64f0e4135181b76d5400",
+  "manifest": {
+    "format": "tadawi-backup-v2",
+    "backupVersion": 2,
+    "backupId": "fd2d496c-3402-4402-a3da-7110d1095aa4",
+    "backupType": "uat-stage1",
+    "appVersion": "2.0.1",
+    "buildVersion": "2.0.1",
+    "createdAt": "2026-08-13T08:21:45.186Z",
+    "databaseSchemaVersion": 9,
+    "platform": "linux",
+    "source": {
+      "centerName": "Stage 1 UAT Center",
+      "deviceName": "Stage 1 UAT Device",
+      "organizationId": "CTR-STAGE1-UAT",
+      "centerId": "CTR-STAGE1-UAT",
+      "branchId": "BR-UAT-MAIN",
+      "deviceId": "DEV-STAGE1-UAT"
+    },
+    "scope": {
+      "type": "organization",
+      "organizationId": "CTR-STAGE1-UAT",
+      "branchIds": [
+        "BR-UAT-MAIN"
+      ]
+    },
+    "roots": [
+      "database",
+      "attachments",
+      "settings",
+      "center-assets"
+    ],
+    "encryption": {
+      "required": true,
+      "algorithm": "AES-256-GCM",
+      "kdf": "scrypt"
+    },
+    "integrity": {
+      "algorithm": "SHA-256",
+      "verifiedBeforeCommit": true
+    },
+    "files": [
+      {
+        "path": "attachments/uat-note.txt",
+        "size": 10,
+        "sha256": "0f80872839cb4d773c84f416a253faa5ec52ccb5dd221a4f74d8516679b87375"
+      },
+      {
+        "path": "database/tadawi.db",
+        "size": 524288,
+        "sha256": "9beee961a1bafd4a2bae710d1e79e8f9e41867afd490f500f231aca637708182"
+      },
+      {
+        "path": "settings/app.json",
+        "size": 86,
+        "sha256": "b0f6eee72f8220edfb31d4f2c11381b0112c507418228e6c4feb42242cbaf720"
+      }
+    ]
+  },
+  "encryptionSucceeded": true,
+  "checksum": "4a86bf293d65853e1e4e6839817c81e38dc2ab89736c64f0e4135181b76d5400",
+  "metadata": {
+    "backupType": "uat-stage1",
+    "format": "tadawi-backup-v2",
+    "appVersion": "2.0.1"
+  },
+  "viaIpc": "backup:v2:create"
+}

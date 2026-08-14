@@ -1,0 +1,14 @@
+{
+  "zipName": "Tadawi-Stage-8-EXPLICIT-FORK-PASS-fd6453c.zip",
+  "sizeBytes": 13043263,
+  "fileCount": 1568,
+  "sha256": "8d11736729bcfb8a7a210a01e2d68a1cc5d5bca5ed0246a17b7fdabddff6e9f4",
+  "cleanExtractValidation": {
+    "npmCi": "PASS",
+    "stage8Focused": "PASS",
+    "stage7Focused": "PASS",
+    "stage3Regression": "PASS"
+  },
+  "sourceCommitShort": "796d1f9",
+  "at": "2026-08-13T13:30:00.000Z"
+}

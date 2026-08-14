@@ -1,0 +1,10 @@
+{
+  "file":"dist/HijamaManagement-Setup-2.0.1.exe",
+  "sha256":"BD090551DE62EFCA1C2C49CBBBD18F69C7888796821F04EC4AF253424DCAFF18",
+  "bytes":106962953,
+  "buildResult":"PASS",
+  "installResult":"PASS",
+  "installExitCode":0,
+  "installRoot":".codex-p0a/installed-p0ae-final3-20260810",
+  "authenticode":"UNVERIFIED_NOT_CONFIGURED"
+}

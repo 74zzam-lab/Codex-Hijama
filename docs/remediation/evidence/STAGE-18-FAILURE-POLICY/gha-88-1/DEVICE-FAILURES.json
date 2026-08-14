@@ -1,0 +1,17 @@
+{
+  "license_device_limit": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-DEVICE-LIMIT"
+  },
+  "device_limit_exceeded": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-DEVICE-LIMIT"
+  },
+  "device_duplicate": {
+    "outcome": "RETRYABLE",
+    "retryable": false,
+    "code": "TDW-BOOT-DEVICE-DUP"
+  }
+}

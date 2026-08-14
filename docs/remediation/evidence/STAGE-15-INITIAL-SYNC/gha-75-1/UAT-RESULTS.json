@@ -1,0 +1,13 @@
+{
+  "matrix": [
+    "NEW start-new",
+    "Existing empty local",
+    "Post-restore",
+    "Replacement device",
+    "Restart during sync",
+    "Failure/retry",
+    "two-device simulated"
+  ],
+  "realGoogle": "UNVERIFIED",
+  "gui": "UNVERIFIED"
+}

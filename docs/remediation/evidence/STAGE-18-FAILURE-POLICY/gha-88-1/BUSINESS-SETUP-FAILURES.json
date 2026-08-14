@@ -1,0 +1,12 @@
+{
+  "existing_business_not_found": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-DISC-NONE"
+  },
+  "business_setup_invalid": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-BIZ-INVALID"
+  }
+}

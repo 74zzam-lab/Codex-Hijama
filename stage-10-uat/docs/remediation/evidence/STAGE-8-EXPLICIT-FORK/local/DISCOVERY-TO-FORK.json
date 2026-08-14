@@ -1,0 +1,13 @@
+{
+  "classifications": [
+    "no_existing_business",
+    "unique_existing_business",
+    "ambiguous_candidates",
+    "backup_only",
+    "license_only",
+    "partial_existing_state",
+    "discovery_error"
+  ],
+  "requiresForkWhen": "requiresPathFork(classification) === true",
+  "noForkWhen": "no_existing_business"
+}

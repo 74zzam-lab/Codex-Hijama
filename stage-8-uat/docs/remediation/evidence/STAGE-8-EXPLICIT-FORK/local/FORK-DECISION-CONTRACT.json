@@ -1,0 +1,19 @@
+{
+  "forkStep": "path_decision",
+  "newOnly": true,
+  "choices": [
+    "use_existing",
+    "start_new"
+  ],
+  "labelsAr": [
+    "استخدام البيانات الموجودة",
+    "بدء إعداد جديد"
+  ],
+  "noSilentPathFlip": true,
+  "noSilentOrgCreate": true,
+  "coordinatorFields": [
+    "forkDecision",
+    "forkSelectedCandidateId"
+  ],
+  "gate": "PATH_DECISION_RESOLVED"
+}

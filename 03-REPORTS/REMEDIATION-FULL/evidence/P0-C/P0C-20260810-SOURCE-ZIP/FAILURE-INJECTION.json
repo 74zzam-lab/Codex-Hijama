@@ -1,0 +1,14 @@
+{
+  "phase": "P0-C",
+  "sourceTests": {
+    "activationTransactionRollback": "PASS",
+    "ownerTransactionRollback": "PASS",
+    "restoreSafetySnapshotFailure": "PASS",
+    "checkpointHydrateFailure": "PASS",
+    "reconciliationFailure": "PASS",
+    "syncDownstreamFailureMatrix": "PASS",
+    "versionPublicationFailureRetry": "PASS"
+  },
+  "installedFailureInjection": "UNVERIFIED"
+}
+

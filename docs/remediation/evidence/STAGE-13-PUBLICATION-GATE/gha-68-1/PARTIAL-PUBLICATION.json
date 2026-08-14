@@ -1,0 +1,4 @@
+{
+  "behavior": "stop at first failed artifact; prior artifacts not destructive on retry",
+  "state": "PUBLICATION_FAILED with artifacts map"
+}

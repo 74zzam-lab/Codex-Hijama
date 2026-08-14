@@ -1,0 +1,10 @@
+{
+  "id": "P01-host-and-median",
+  "title": "Host documentation + median-of-3 harness",
+  "result": "PASS",
+  "ms": 217,
+  "evidence": {
+    "hostKeys": 9,
+    "platform": "linux"
+  }
+}

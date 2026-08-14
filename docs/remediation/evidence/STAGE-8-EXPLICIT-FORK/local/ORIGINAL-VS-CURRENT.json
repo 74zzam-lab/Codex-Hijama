@@ -1,0 +1,5 @@
+{
+  "original": "silent NEW→EXISTING flip possible via autoDiscoverActivationAfterGoogle",
+  "preStage8": "flip logged/blocked at discovery; no explicit fork UI",
+  "stage8": "explicit path_decision step; user must choose use_existing or start_new"
+}

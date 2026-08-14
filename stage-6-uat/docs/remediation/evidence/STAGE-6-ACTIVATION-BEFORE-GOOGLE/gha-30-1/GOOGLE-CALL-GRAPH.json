@@ -1,0 +1,4 @@
+{
+  "path": "runGoogleConnect → connectGoogleDriveOnly → autoDiscoverActivationAfterGoogle (EXISTING/full; NEW skips if activation resolved)",
+  "requiresPriorActivationNEW": true
+}

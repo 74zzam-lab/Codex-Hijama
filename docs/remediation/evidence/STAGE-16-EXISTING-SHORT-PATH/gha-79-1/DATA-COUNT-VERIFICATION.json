@@ -1,0 +1,16 @@
+{
+  "fixture": {
+    "organizations": 1,
+    "owners": 1,
+    "branches": 2,
+    "devices": 2,
+    "clients": 10,
+    "cases": 15,
+    "bookings": 5,
+    "expenses": 3,
+    "businessSettings": true,
+    "license": true,
+    "syncMetadata": true
+  },
+  "countsPreservedAfterRecovery": true
+}

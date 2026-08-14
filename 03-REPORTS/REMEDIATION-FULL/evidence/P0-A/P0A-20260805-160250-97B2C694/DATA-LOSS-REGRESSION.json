@@ -1,0 +1,41 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "persistedBeforeRestart": [
+    {
+      "name": "stored-payload-corpus-persisted",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "users": {
+          "ok": true,
+          "invalidatedSessions": 0
+        },
+        "clients": {
+          "ok": true
+        },
+        "doctors": {
+          "ok": true
+        },
+        "cases": {
+          "ok": true
+        }
+      }
+    }
+  ],
+  "restartEvidence": [
+    {
+      "name": "restart-stored-payload-corpus-present",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "users": 3,
+        "doctors": 1,
+        "cases": 1
+      }
+    }
+  ],
+  "realProfileUntouchedAfterIsolatedRun": true,
+  "destructiveCleanupPerformed": false,
+  "quarantinesRecoverable": true
+}

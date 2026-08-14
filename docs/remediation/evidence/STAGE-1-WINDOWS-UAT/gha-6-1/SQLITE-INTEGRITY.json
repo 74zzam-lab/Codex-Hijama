@@ -1,0 +1,18 @@
+{
+  "beforeBackup": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "fk": []
+  },
+  "afterRestore": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "fk": []
+  },
+  "afterRestart": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "fk": []
+  },
+  "pass": true
+}

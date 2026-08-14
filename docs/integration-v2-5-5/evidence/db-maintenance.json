@@ -1,0 +1,198 @@
+{
+  "at": "2026-08-13T15:12:52.030Z",
+  "pragmas": {
+    "journalMode": "wal",
+    "busyTimeout": 5000,
+    "foreignKeys": 1
+  },
+  "analyze": {
+    "ok": true,
+    "strategy": "full",
+    "table": null,
+    "ms": 1,
+    "policy": "run after bulk load / weekly idle; not every open"
+  },
+  "indexes": {
+    "ok": true,
+    "count": 25,
+    "indexes": [
+      {
+        "name": "idx_appointments_date",
+        "tableName": "appointments",
+        "sql": "CREATE INDEX idx_appointments_date ON appointments(date)"
+      },
+      {
+        "name": "idx_attendance_emp_date",
+        "tableName": "attendance",
+        "sql": "CREATE INDEX idx_attendance_emp_date ON attendance(employee_id, date)"
+      },
+      {
+        "name": "idx_clients_file_no",
+        "tableName": "clients",
+        "sql": "CREATE INDEX idx_clients_file_no ON clients(file_no)"
+      },
+      {
+        "name": "idx_clients_phone",
+        "tableName": "clients",
+        "sql": "CREATE INDEX idx_clients_phone ON clients(phone)"
+      },
+      {
+        "name": "uq_clients_scope_id",
+        "tableName": "clients",
+        "sql": "CREATE UNIQUE INDEX uq_clients_scope_id\n      ON clients(center_id, branch_id, id)"
+      },
+      {
+        "name": "uq_employees_scope_id",
+        "tableName": "employees",
+        "sql": "CREATE UNIQUE INDEX uq_employees_scope_id\n      ON employees(center_id, branch_id, id)"
+      },
+      {
+        "name": "idx_expenses_date",
+        "tableName": "expenses",
+        "sql": "CREATE INDEX idx_expenses_date ON expenses(date)"
+      },
+      {
+        "name": "idx_financial_reversals_scope",
+        "tableName": "financial_reversals",
+        "sql": "CREATE INDEX idx_financial_reversals_scope\n  ON financial_reversals(center_id, branch_id, reversed_at)"
+      },
+      {
+        "name": "idx_financial_transactions_case",
+        "tableName": "financial_transactions",
+        "sql": "CREATE INDEX idx_financial_transactions_case\n  ON financial_transactions(center_id, branch_id, case_id)"
+      },
+      {
+        "name": "uq_invoices_scoped_number",
+        "tableName": "invoices",
+        "sql": "CREATE UNIQUE INDEX uq_invoices_scoped_number\n      ON invoices(center_id, branch_id, invoice_number)\n      WHERE invoice_number IS NOT NULL AND invoice_number <> ''"
+      },
+      {
+        "name": "idx_p0b_entities_scope",
+        "tableName": "p0b_entities",
+        "sql": "CREATE INDEX idx_p0b_entities_scope\n      ON p0b_entities(center_id, branch_id, entity_type, deleted_at)"
+      },
+      {
+        "name": "idx_p0b_quarantine_source",
+        "tableName": "p0b_quarantine",
+        "sql": "CREATE INDEX idx_p0b_quarantine_source\n      ON p0b_quarantine(source_table, reason)"
+      },
+      {
+        "name": "idx_sync_audit_ts",
+        "tableName": "sync_audit",
+        "sql": "CREATE INDEX idx_sync_audit_ts ON sync_audit(timestamp_utc)"
+      },
+      {
+        "name": "idx_conflicts_open",
+        "tableName": "sync_conflicts",
+        "sql": "CREATE INDEX idx_conflicts_open\n  ON sync_conflicts(status, branch_id)"
+      },
+      {
+        "name": "idx_sync_operations_scope",
+        "tableName": "sync_operations_applied",
+        "sql": "CREATE INDEX idx_sync_operations_scope\n  ON sync_operations_applied(center_id, branch_id, applied_at)"
+      },
+      {
+        "name": "idx_outbox_branch",
+        "tableName": "sync_outbox",
+        "sql": "CREATE INDEX idx_outbox_branch\n  ON sync_outbox(branch_id, status)"
+      },
+      {
+        "name": "idx_outbox_status_next",
+        "tableName": "sync_outbox",
+        "sql": "CREATE INDEX idx_outbox_status_next\n  ON sync_outbox(status, next_attempt_at)"
+      },
+      {
+        "name": "idx_outbox_table",
+        "tableName": "sync_outbox",
+        "sql": "CREATE INDEX idx_outbox_table\n  ON sync_outbox(table_name, branch_id)"
+      },
+      {
+        "name": "idx_sync_tombstones_retention",
+        "tableName": "sync_tombstones",
+        "sql": "CREATE INDEX idx_sync_tombstones_retention\n  ON sync_tombstones(expires_at)"
+      },
+      {
+        "name": "uq_users_scoped_username",
+        "tableName": "users",
+        "sql": "CREATE UNIQUE INDEX uq_users_scoped_username\n      ON users(center_id, username)\n      WHERE username IS NOT NULL AND username <> ''"
+      },
+      {
+        "name": "idx_visits_client",
+        "tableName": "visits",
+        "sql": "CREATE INDEX idx_visits_client ON visits(client_id)"
+      },
+      {
+        "name": "idx_visits_date",
+        "tableName": "visits",
+        "sql": "CREATE INDEX idx_visits_date ON visits(date)"
+      },
+      {
+        "name": "idx_visits_invoice",
+        "tableName": "visits",
+        "sql": "CREATE INDEX idx_visits_invoice ON visits(invoice)"
+      },
+      {
+        "name": "uq_visits_scope_id",
+        "tableName": "visits",
+        "sql": "CREATE UNIQUE INDEX uq_visits_scope_id\n      ON visits(center_id, branch_id, id)"
+      },
+      {
+        "name": "uq_visits_scoped_invoice",
+        "tableName": "visits",
+        "sql": "CREATE UNIQUE INDEX uq_visits_scoped_invoice\n  ON visits(center_id, branch_id, invoice)\n  WHERE COALESCE(json_extract(payload_json, '$.sharedRole'), 'primary') <> 'partner'"
+      }
+    ]
+  },
+  "missing": {
+    "ok": true,
+    "expected": 9,
+    "missing": [],
+    "inventoryCount": 25
+  },
+  "foreignKeyCheck": {
+    "ok": true,
+    "violations": 0,
+    "rows": []
+  },
+  "integrityCheck": {
+    "ok": true,
+    "detail": "ok"
+  },
+  "wal": {
+    "ok": true,
+    "mode": "PASSIVE",
+    "ms": 3,
+    "result": [
+      {
+        "busy": 0,
+        "log": 131,
+        "checkpointed": 131
+      }
+    ],
+    "journalMode": "wal"
+  },
+  "vacuumPolicy": {
+    "autoVacuumOnEveryStart": false,
+    "reason": "VACUUM rewrites whole DB and can be slow/unsafe mid-session",
+    "allowedModes": [
+      "manual",
+      "scheduled_idle",
+      "vacuum_into_backup"
+    ],
+    "safe": true
+  },
+  "samplePlan": {
+    "ok": true,
+    "sql": "SELECT id, name, phone FROM clients WHERE phone = ?",
+    "plan": [
+      {
+        "id": 3,
+        "parent": 0,
+        "notused": 36,
+        "detail": "SEARCH clients USING INDEX idx_clients_phone (phone=?)"
+      }
+    ],
+    "usesIndex": true,
+    "tableScans": 0
+  }
+}

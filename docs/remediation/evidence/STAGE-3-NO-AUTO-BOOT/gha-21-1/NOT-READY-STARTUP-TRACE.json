@@ -1,0 +1,9 @@
+{
+  "expected": [
+    "DB ready",
+    "evaluateReady",
+    "ready=false",
+    "existing bootstrap behavior (shouldAutoOpenBoot true)"
+  ],
+  "nodeHarness": "covered in test-stage-3-no-auto-boot.js NOT READY cases"
+}

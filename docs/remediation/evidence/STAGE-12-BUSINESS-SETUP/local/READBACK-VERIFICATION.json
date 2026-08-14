@@ -1,0 +1,5 @@
+{
+  "afterSave": "readBusinessSetupState compared to input",
+  "mismatchFails": true,
+  "authority": "settings SoT"
+}

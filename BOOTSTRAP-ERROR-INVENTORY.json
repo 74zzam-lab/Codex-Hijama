@@ -1,0 +1,36 @@
+{
+  "sources": [
+    "activation",
+    "google",
+    "discovery",
+    "pathDecision",
+    "organization",
+    "owner",
+    "branch",
+    "branchSelect",
+    "device",
+    "businessSetup",
+    "publication",
+    "readback",
+    "restore",
+    "ownerAuth",
+    "licenseOrgRecovery",
+    "sync",
+    "ready"
+  ],
+  "patterns": [
+    "throw new Error",
+    "return {ok:false}",
+    "setStatusFromErr",
+    "ActivationErrors",
+    "catch"
+  ],
+  "files": [
+    "cloud/boot-flow-ui.js",
+    "cloud/bootstrap-checklist-contract.js",
+    "cloud/bootstrap-failure-policy-contract.js",
+    "cloud/activation-errors.js",
+    "cloud/bootstrap-coordinator.js",
+    "cloud/bootstrap-gates.js"
+  ]
+}

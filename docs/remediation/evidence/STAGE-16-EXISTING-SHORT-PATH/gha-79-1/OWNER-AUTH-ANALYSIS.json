@@ -1,0 +1,5 @@
+{
+  "separateFromCreation": true,
+  "gate": "OWNER_AUTH_RESOLVED",
+  "function": "authenticateExistingOwnerFromWizard"
+}
