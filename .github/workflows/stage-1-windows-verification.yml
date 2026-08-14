@@ -1,0 +1,434 @@
+name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
+
+on:
+  push:
+    branches:
+      - cursor/bootstrap-restore-fixes-beb8
+      - cursor/stage-3-no-auto-boot-beb8
+      - cursor/stage-4-coordinator-state-beb8
+      - cursor/stage-5-gate-map-beb8
+      - cursor/stage-6-activation-first-beb8
+      - cursor/stage-7-explicit-discovery-beb8
+      - cursor/stage-8-explicit-fork-beb8
+      - cursor/stage-9-owner-before-branch-beb8
+      - cursor/stage-10-owner-seed-retirement-beb8
+      - cursor/stage-11-explicit-device-step-beb8
+      - cursor/stage-12-business-setup-gate-beb8
+      - cursor/stage-13-publication-gate-beb8
+      - main
+  pull_request:
+    branches:
+      - main
+      - cursor/bootstrap-restore-fixes-beb8
+      - cursor/stage-3-no-auto-boot-beb8
+      - cursor/stage-4-coordinator-state-beb8
+      - cursor/stage-5-gate-map-beb8
+      - cursor/stage-6-activation-first-beb8
+      - cursor/stage-7-explicit-discovery-beb8
+      - cursor/stage-8-explicit-fork-beb8
+      - cursor/stage-9-owner-before-branch-beb8
+      - cursor/stage-10-owner-seed-retirement-beb8
+      - cursor/stage-11-explicit-device-step-beb8
+      - cursor/stage-12-business-setup-gate-beb8
+      - cursor/stage-13-publication-gate-beb8
+
+concurrency:
+  group: stage-1-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  stage-1-windows-verification:
+    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
+    runs-on: windows-2022
+    timeout-minutes: 180
+    env:
+      STAGE1_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE2_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE3_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE4_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE5_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE6_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE7_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE8_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE9_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE10_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE11_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE12_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE13_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve source root (natural tree or legacy ZIP overlay)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $rootPkg = Join-Path $env:GITHUB_WORKSPACE 'package.json'
+          if (Test-Path $rootPkg) {
+            $src = $env:GITHUB_WORKSPACE
+            Write-Host "Using natural source tree at repository root"
+          } else {
+            $src = Join-Path $env:GITHUB_WORKSPACE 'src'
+            $zip = Join-Path $env:GITHUB_WORKSPACE 'Hijama-Management-System-SOURCE-BUILD-2.0.1.zip'
+            if (-not (Test-Path $zip)) { throw "Missing source ZIP: $zip" }
+            if (Test-Path $src) { Remove-Item -LiteralPath $src -Recurse -Force }
+            New-Item -ItemType Directory -Force -Path $src | Out-Null
+            Expand-Archive -LiteralPath $zip -DestinationPath $src -Force
+            if (Test-Path 'app-source') {
+              Copy-Item -Path 'app-source\*' -Destination $src -Recurse -Force
+            }
+            foreach ($stage in @('stage-1-uat','stage-2-uat','stage-3-uat','stage-4-uat','stage-5-uat','stage-6-uat','stage-7-uat','stage-8-uat','stage-9-uat','stage-10-uat','stage-11-uat')) {
+              if (Test-Path $stage) {
+                Copy-Item -Path "$stage\*" -Destination $src -Recurse -Force
+              }
+            }
+            if (Test-Path 'stage-1-uat/stage-1-backup-restore-uat.cjs') {
+              New-Item -ItemType Directory -Force -Path (Join-Path $src 'scripts/windows-uat') | Out-Null
+              Copy-Item -Force 'stage-1-uat/stage-1-backup-restore-uat.cjs' (Join-Path $src 'scripts/windows-uat/stage-1-backup-restore-uat.cjs')
+            }
+            if (Test-Path 'stage-1-uat/Install-Stage1-UAT.ps1') {
+              Copy-Item -Force 'stage-1-uat/Install-Stage1-UAT.ps1' (Join-Path $src 'scripts/windows-uat/Install-Stage1-UAT.ps1')
+            }
+            if (Test-Path 'stage-1-uat/stage-1-package-evidence.cjs') {
+              New-Item -ItemType Directory -Force -Path (Join-Path $src 'scripts/ci') | Out-Null
+              Copy-Item -Force 'stage-1-uat/stage-1-package-evidence.cjs' (Join-Path $src 'scripts/ci/stage-1-package-evidence.cjs')
+            }
+            Write-Host "Using legacy ZIP extract overlay at src/"
+          }
+          if (-not (Test-Path (Join-Path $src 'package.json'))) { throw 'Resolved source missing package.json' }
+          "SRC=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "STAGE1_SRC_ROOT=$src" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Verify no tracked historical archives in Git
+        shell: pwsh
+        working-directory: ${{ env.SRC }}
+        run: node scripts/ci/verify-no-tracked-archives.cjs
+
+      - name: Record source manifest
+        shell: pwsh
+        working-directory: ${{ env.SRC }}
+        run: |
+          $manifest = [ordered]@{
+            branch = (git -C $env:GITHUB_WORKSPACE rev-parse --abbrev-ref HEAD)
+            commit = (git -C $env:GITHUB_WORKSPACE rev-parse HEAD)
+            gitStatusPorcelain = (git -C $env:GITHUB_WORKSPACE status --porcelain)
+            node = (node -v)
+            npm = (npm -v)
+            windowsVersion = (Get-CimInstance Win32_OperatingSystem).Version
+            buildId = $env:STAGE1_BUILD_ID
+            sourceMode = if ($env:SRC -eq $env:GITHUB_WORKSPACE) { 'natural-repo-root' } else { 'legacy-zip-overlay' }
+          }
+          New-Item -ItemType Directory -Force -Path docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID | Out-Null
+          $manifest | ConvertTo-Json -Depth 4 | Set-Content docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID/SOURCE-MANIFEST.json -Encoding UTF8
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: ${{ env.SRC }}/package-lock.json
+
+      - name: npm ci
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          npm ci --ignore-scripts
+          node -e "require('better-sqlite3'); console.log('better-sqlite3 OK')"
+
+      - name: Lint
+        working-directory: ${{ env.SRC }}
+        run: npm run lint
+
+      - name: Unit tests
+        working-directory: ${{ env.SRC }}
+        run: npm test
+
+      - name: E2E tests
+        working-directory: ${{ env.SRC }}
+        run: npm run test:e2e
+
+      - name: Stage 1 focused tests
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        run: |
+          $tests = @(
+            'tests/baseline/test-v2-5-10-cloud-discovery-restore.js',
+            'tests/baseline/test-p0-c-restore-truth-and-boot-gate.js',
+            'tests/baseline/test-current-restore-license-login.js',
+            'tests/baseline/test-current-setup-restore-runtime.js',
+            'tests/baseline/test-v2-5-8-auth-activation-ui.js'
+          )
+          foreach ($t in $tests) {
+            Write-Host "=== $t ==="
+            node $t
+            if ($LASTEXITCODE -ne 0) { throw "$t failed" }
+          }
+
+      - name: Stage 1 backup/restore UAT (isolated IPC)
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          TDAWI_UAT_USER_DATA: ${{ runner.temp }}\uat-stage1-${{ env.STAGE1_BUILD_ID }}
+        run: node scripts/windows-uat/stage-1-backup-restore-uat.cjs
+
+      - name: Stage 2 READY pure UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE2_BUILD_ID: ${{ env.STAGE2_BUILD_ID }}
+        run: node scripts/windows-uat/stage-2-ready-pure-uat.cjs
+
+      - name: Stage 2 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-2-ready-pure.js
+
+      - name: Stage 3 no-auto-boot UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE3_BUILD_ID: ${{ env.STAGE3_BUILD_ID }}
+        run: node scripts/windows-uat/stage-3-no-auto-boot-uat.cjs
+
+      - name: Stage 3 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-3-no-auto-boot.js
+
+      - name: Stage 4 coordinator state UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE4_BUILD_ID: ${{ env.STAGE4_BUILD_ID }}
+        run: node scripts/windows-uat/stage-4-coordinator-state-uat.cjs
+
+      - name: Stage 4 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-4-bootstrap-coordinator-state.js
+
+      - name: Stage 5 bootstrap gate map UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE5_BUILD_ID: ${{ env.STAGE5_BUILD_ID }}
+        run: node scripts/windows-uat/stage-5-bootstrap-gate-map-uat.cjs
+
+      - name: Stage 5 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-5-bootstrap-gate-map.js
+
+      - name: Stage 6 activation-before-google UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE6_BUILD_ID: ${{ env.STAGE6_BUILD_ID }}
+        run: node scripts/windows-uat/stage-6-activation-before-google-uat.cjs
+
+      - name: Stage 6 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-6-activation-before-google.js
+
+      - name: Stage 7 explicit-discovery-gate UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE7_BUILD_ID: ${{ env.STAGE7_BUILD_ID }}
+        run: node scripts/windows-uat/stage-7-explicit-discovery-gate-uat.cjs
+
+      - name: Stage 7 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-7-explicit-discovery-gate.js
+
+      - name: Stage 8 explicit-new-existing-fork UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE8_BUILD_ID: ${{ env.STAGE8_BUILD_ID }}
+        run: node scripts/windows-uat/stage-8-explicit-new-existing-fork-uat.cjs
+
+      - name: Stage 8 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-8-explicit-new-existing-fork.js
+
+      - name: Stage 9 owner-before-first-branch UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE9_BUILD_ID: ${{ env.STAGE9_BUILD_ID }}
+        run: node scripts/windows-uat/stage-9-owner-before-first-branch-uat.cjs
+
+      - name: Stage 9 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-9-owner-before-first-branch.js
+
+      - name: Stage 10 owner-seed-retirement UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE10_BUILD_ID: ${{ env.STAGE10_BUILD_ID }}
+        run: node scripts/windows-uat/stage-10-owner-seed-retirement-uat.cjs
+
+      - name: Stage 10 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-10-owner-seed-retirement.js
+
+      - name: Stage 11 explicit-device-step UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE11_BUILD_ID: ${{ env.STAGE11_BUILD_ID }}
+        run: node scripts/windows-uat/stage-11-explicit-device-step-uat.cjs
+
+      - name: Stage 11 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-11-explicit-device-step.js
+
+      - name: Stage 12 business-setup-gate UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE12_BUILD_ID: ${{ env.STAGE12_BUILD_ID }}
+        run: node scripts/windows-uat/stage-12-business-setup-uat.cjs
+
+      - name: Stage 12 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-12-business-setup-gate.js
+
+      - name: Stage 13 publication-gate UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE13_BUILD_ID: ${{ env.STAGE13_BUILD_ID }}
+        run: node scripts/windows-uat/stage-13-publication-gate-uat.cjs
+
+      - name: Stage 13 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-13-publication-gate.js
+
+      - name: Generate packaging inputs
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        run: |
+          node scripts/generate-oauth-config.mjs
+          node scripts/generate-license-registries.mjs
+          node scripts/generate-brand-assets.mjs
+
+      - name: Build Windows Setup EXE
+        id: build
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          ELECTRON_BUILDER_DISABLE_CODE_SIGN_WARNING: 'true'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          STAGE1_BUILD_STARTED_AT: ${{ github.run_started_at }}
+        run: |
+          $sw = [System.Diagnostics.Stopwatch]::StartNew()
+          npm run build:win
+          $sw.Stop()
+          $setup = Get-ChildItem dist\HijamaManagement-Setup-*.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $setup -or $setup.Length -lt 50MB) { throw "Invalid Setup EXE: $($setup.Length)" }
+          $sha = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
+          $commit = (git -C $env:GITHUB_WORKSPACE rev-parse HEAD).Trim()
+          $json = [ordered]@{
+            filename = $setup.Name
+            absolutePath = $setup.FullName
+            sizeBytes = $setup.Length
+            sha256 = $sha
+            buildDurationMs = [int]$sw.Elapsed.TotalMilliseconds
+            sourceCommit = $commit
+            at = (Get-Date).ToString('o')
+          }
+          $evidenceDir = "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID"
+          $json | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $evidenceDir 'SETUP-EXE.json') -Encoding UTF8
+          "$sha  $($setup.Name)" | Set-Content (Join-Path $evidenceDir 'SHA256SUMS.txt') -Encoding UTF8
+          "SETUP_SHA256=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Installed EXE smoke (isolated userData)
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        run: |
+          pwsh -File scripts/windows-uat/Install-Stage1-UAT.ps1 `
+            -RepoRoot $PWD `
+            -BuildId $env:STAGE1_BUILD_ID `
+            -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
+
+      - name: Package Stage 13 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE13_BUILD_ID: ${{ env.STAGE13_BUILD_ID }}
+          STAGE_NUMBER: '13'
+          STAGE_ZIP_LABEL: PUBLICATION-GATE-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
+
+      - name: Package Stage 12 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE12_BUILD_ID: ${{ env.STAGE12_BUILD_ID }}
+          STAGE_NUMBER: '12'
+          STAGE_ZIP_LABEL: BUSINESS-SETUP-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
+
+      - name: Package Stage 11 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE11_BUILD_ID: ${{ env.STAGE11_BUILD_ID }}
+          STAGE_NUMBER: '11'
+          STAGE_ZIP_LABEL: DEVICE-STEP-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
+
+      - name: Package evidence artifact
+        if: always()
+        working-directory: ${{ env.SRC }}
+        run: node scripts/ci/stage-1-package-evidence.cjs
+
+      - name: Upload Setup EXE
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: setup-exe-${{ github.run_number }}-${{ github.sha }}
+          path: ${{ env.SRC }}/dist/HijamaManagement-Setup-*.exe
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Upload Stage evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
+          path: |
+            ${{ env.SRC }}/ci-artifacts/stage1-evidence-*/
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-13-*.zip
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-12-*.zip
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-11-*.zip
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-2-READY-PURE/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-3-NO-AUTO-BOOT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-4-COORDINATOR-STATE/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-5-BOOTSTRAP-GATE-MAP/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-6-ACTIVATION-BEFORE-GOOGLE/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-7-EXPLICIT-DISCOVERY/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-13-PUBLICATION-GATE/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-12-BUSINESS-SETUP/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-11-EXPLICIT-DEVICE-STEP/**/*
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage1-test-reports-${{ github.run_number }}
+          path: |
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-1-WINDOWS-UAT/**/*
+          retention-days: 14
+          if-no-files-found: warn

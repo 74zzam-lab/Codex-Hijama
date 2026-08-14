@@ -1,0 +1,12 @@
+{
+  "id": "LIFE-257-008",
+  "title": "Explicit full wipe",
+  "ok": true,
+  "result": "PASS",
+  "at": "2026-08-13T15:13:05.818Z",
+  "evidence": {
+    "fullWipeExplicit": true,
+    "uninstallPrepFullWipe": true,
+    "nsis": true
+  }
+}

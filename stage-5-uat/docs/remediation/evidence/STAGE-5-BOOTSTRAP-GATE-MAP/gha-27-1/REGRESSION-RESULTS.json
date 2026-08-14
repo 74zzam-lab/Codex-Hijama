@@ -1,0 +1,39 @@
+{
+  "stage5Focused": "PASS",
+  "stage4Focused": "PASS",
+  "stage3Focused": "FAIL",
+  "stage2Focused": "FAIL",
+  "stage1Focused": "FAIL",
+  "stage1Details": [
+    {
+      "name": "tests/baseline/test-v2-5-10-cloud-discovery-restore.js",
+      "pass": false,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1228\n  throw err;\n  ^\n\nError: Cannot find module '/workspace/stage-5-uat/tests/baseline/test-v2-5-10-cloud-discovery-restore.js'\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)\n    at Function._load (node:internal/modules/cjs/loader:1055:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)\n    at node:internal/main/run_main_module:36:49 {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: []\n}\n\nNode.js v22.14.0"
+    },
+    {
+      "name": "tests/baseline/test-p0-c-restore-truth-and-boot-gate.js",
+      "pass": false,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1228\n  throw err;\n  ^\n\nError: Cannot find module '/workspace/stage-5-uat/tests/baseline/test-p0-c-restore-truth-and-boot-gate.js'\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)\n    at Function._load (node:internal/modules/cjs/loader:1055:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)\n    at node:internal/main/run_main_module:36:49 {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: []\n}\n\nNode.js v22.14.0"
+    },
+    {
+      "name": "tests/baseline/test-current-restore-license-login.js",
+      "pass": false,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1228\n  throw err;\n  ^\n\nError: Cannot find module '/workspace/stage-5-uat/tests/baseline/test-current-restore-license-login.js'\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)\n    at Function._load (node:internal/modules/cjs/loader:1055:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)\n    at node:internal/main/run_main_module:36:49 {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: []\n}\n\nNode.js v22.14.0"
+    },
+    {
+      "name": "tests/baseline/test-current-setup-restore-runtime.js",
+      "pass": false,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1228\n  throw err;\n  ^\n\nError: Cannot find module '/workspace/stage-5-uat/tests/baseline/test-current-setup-restore-runtime.js'\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)\n    at Function._load (node:internal/modules/cjs/loader:1055:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)\n    at node:internal/main/run_main_module:36:49 {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: []\n}\n\nNode.js v22.14.0"
+    },
+    {
+      "name": "tests/baseline/test-v2-5-8-auth-activation-ui.js",
+      "pass": false,
+      "stdout": "",
+      "stderr": "node:internal/modules/cjs/loader:1228\n  throw err;\n  ^\n\nError: Cannot find module '/workspace/stage-5-uat/tests/baseline/test-v2-5-8-auth-activation-ui.js'\n    at Function._resolveFilename (node:internal/modules/cjs/loader:1225:15)\n    at Function._load (node:internal/modules/cjs/loader:1055:27)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:220:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:170:5)\n    at node:internal/main/run_main_module:36:49 {\n  code: 'MODULE_NOT_FOUND',\n  requireStack: []\n}\n\nNode.js v22.14.0"
+    }
+  ]
+}

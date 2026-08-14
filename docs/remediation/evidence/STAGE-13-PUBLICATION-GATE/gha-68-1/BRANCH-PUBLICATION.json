@@ -1,0 +1,8 @@
+{
+  "via": "license.json branches + settings pack branchId",
+  "readBackFields": [
+    "branchId",
+    "organizationId",
+    "name"
+  ]
+}

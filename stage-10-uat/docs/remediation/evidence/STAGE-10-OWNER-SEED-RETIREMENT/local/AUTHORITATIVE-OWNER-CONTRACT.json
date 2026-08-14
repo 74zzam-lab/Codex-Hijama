@@ -1,0 +1,4 @@
+{
+  "rule": "active owner with usable credential, not seedDefaultPassword, not ownerSeedRetired",
+  "count": "OwnerSeedRetirement.countAuthoritativeOwners === 1"
+}

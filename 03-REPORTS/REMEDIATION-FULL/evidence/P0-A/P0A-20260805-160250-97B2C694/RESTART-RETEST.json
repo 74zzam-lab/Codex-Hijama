@@ -1,0 +1,183 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "scenarios": [
+    {
+      "name": "restart-main-session-not-restored-from-renderer-storage",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "ok": false,
+        "error": "no_session"
+      }
+    },
+    {
+      "name": "restart-forged-dev-still-denied",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "ok": false,
+        "error": "authentication_proof_required"
+      }
+    },
+    {
+      "name": "restart-authentication-throttle-persists",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "ok": false,
+        "error": "auth_rate_limited",
+        "retryAfterMs": 25312
+      }
+    },
+    {
+      "name": "restart-stored-payload-corpus-present",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "users": 3,
+        "doctors": 1,
+        "cases": 1
+      }
+    },
+    {
+      "name": "restart-intentional-developer-login-still-works",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "authenticated": {
+          "ok": true,
+          "proof": "f9VijHVZYz3GcgWYxIi_0OTEfvHqkzIbGgiwt0tp1B4",
+          "expiresAt": 1785937353871
+        },
+        "bound": {
+          "ok": true,
+          "session": {
+            "userId": "__dev__",
+            "role": "admin",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:41:33.872Z"
+          }
+        },
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "__dev__",
+            "role": "admin",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:41:33.872Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "restart-retest:stored-xss-execution-zero",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "restored": true,
+        "executionCount": 0,
+        "surfaces": {
+          "users": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "doctors": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "clients": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "ownerHub": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "reports": {
+            "exists": true,
+            "sandbox": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          }
+        },
+        "suspiciousResources": [],
+        "safeRenderMetrics": {
+          "assignments": 20,
+          "blockedAttributes": 16,
+          "blockedElements": 8
+        }
+      }
+    },
+    {
+      "name": "restart-retest:entity-renderers-strip-executable-markup",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "restored": true,
+        "executionCount": 0,
+        "surfaces": {
+          "users": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "doctors": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "clients": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "ownerHub": {
+            "exists": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          },
+          "reports": {
+            "exists": true,
+            "sandbox": true,
+            "scripts": 0,
+            "inlineHandlers": 0
+          }
+        },
+        "suspiciousResources": [],
+        "safeRenderMetrics": {
+          "assignments": 20,
+          "blockedAttributes": 16,
+          "blockedElements": 8
+        }
+      }
+    },
+    {
+      "name": "restart-retest:report-preview-sandboxed",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "exists": true,
+        "sandbox": true,
+        "scripts": 0,
+        "inlineHandlers": 0
+      }
+    },
+    {
+      "name": "restart:no-unhandled-page-errors",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": []
+    },
+    {
+      "name": "restart:no-unexpected-console-errors",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": []
+    }
+  ]
+}

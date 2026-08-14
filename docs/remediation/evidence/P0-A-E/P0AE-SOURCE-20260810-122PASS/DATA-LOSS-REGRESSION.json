@@ -1,0 +1,9 @@
+{
+  "sourceResult": "PASS",
+  "financialRollback": "PASS",
+  "appendOnlyReversal": "PASS",
+  "syncTombstones": "PASS",
+  "restoreTargetProtection": "PASS",
+  "ownerCredentialStaleOverwrite": "DENIED",
+  "installedResult": "UNVERIFIED"
+}

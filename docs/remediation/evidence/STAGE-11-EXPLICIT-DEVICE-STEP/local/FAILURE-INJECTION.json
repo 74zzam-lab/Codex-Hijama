@@ -1,0 +1,5 @@
+{
+  "beforeCommit": "stay on device step",
+  "afterCommit": "device gate resolved on restart",
+  "publicationFailure": "local authoritative commit preserved per existing contract"
+}

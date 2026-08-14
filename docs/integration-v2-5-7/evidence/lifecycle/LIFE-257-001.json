@@ -1,0 +1,17 @@
+{
+  "id": "LIFE-257-001",
+  "title": "Clean install",
+  "ok": true,
+  "result": "PASS",
+  "at": "2026-08-13T15:13:05.817Z",
+  "evidence": {
+    "policy": "NSIS oneClick=false allowToChangeInstallationDirectory; fresh INSTDIR",
+    "artifacts": {
+      "setup": null,
+      "winUnpacked": null,
+      "distDeferred": true
+    },
+    "nsisTest": true,
+    "nsisTargetConfigured": true
+  }
+}

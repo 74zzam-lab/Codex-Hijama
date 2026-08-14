@@ -1,0 +1,5 @@
+{
+  "beforeChoice": "resume fork",
+  "afterExisting": "resume EXISTING route",
+  "afterNew": "resume NEW next gate"
+}

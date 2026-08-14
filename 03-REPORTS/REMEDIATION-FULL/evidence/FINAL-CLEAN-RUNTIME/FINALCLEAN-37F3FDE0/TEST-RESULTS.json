@@ -1,0 +1,20 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "npmTest": {
+    "result": "FAIL",
+    "durationSeconds": 483.4,
+    "groups": 129,
+    "passed": 127,
+    "failed": [
+      "p0-e:licensing-production",
+      "license:test"
+    ],
+    "failureReason": "Both gates reject the explicitly retained customer-packaged Legacy V5 signing/mutation capability."
+  },
+  "lint": "PASS",
+  "phase12BuildConfiguration": "PASS",
+  "installedLifecycleChecks": "28/28 PASS",
+  "installedSecurityChecks": "41/41 PASS",
+  "installedSqliteBranchChecks": "7/7 PASS",
+  "result": "FAIL"
+}

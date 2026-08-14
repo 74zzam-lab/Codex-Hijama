@@ -1,0 +1,28 @@
+{
+  "comparisons": [
+    {
+      "topic": "Google vs Activation order",
+      "originalBehavior": "v2-5.9 NEW_STEPS: google(1) → license(2) — unchanged since v2-5.8",
+      "currentBehavior": "Same runtime order; Stage 4 adds owner step at index 6",
+      "reasonForDifference": "SETUP_CONNECTIVITY_POLICY.initialSetupRequiresGoogle; Drive license discovery requires OAuth",
+      "matchesProductTarget": "Target NEW wants activation first — neither original nor current",
+      "riskOfChanging": "high without discovery deferral + resume migration"
+    },
+    {
+      "topic": "Owner vs Branch order",
+      "originalBehavior": "v2-5.9: branch(4) → restore(5) → sync(6) — no owner step in customer journey",
+      "currentBehavior": "branch(4) → restore(5) → owner(6) → sync(7)",
+      "reasonForDifference": "Stage 4 re-inserted owner; branch still before owner for device registration + restore hydrate",
+      "matchesProductTarget": "Target wants owner before branch",
+      "riskOfChanging": "medium — device registration embedded in branch step"
+    },
+    {
+      "topic": "Device step",
+      "originalBehavior": "Device registration inside branch step via setupCommitOrganizationDevice",
+      "currentBehavior": "Unchanged",
+      "reasonForDifference": "Historical single-step branch+device commit",
+      "matchesProductTarget": "Target wants explicit device step (Stage 11)",
+      "riskOfChanging": "low for UI-only split; medium for service extraction"
+    }
+  ]
+}

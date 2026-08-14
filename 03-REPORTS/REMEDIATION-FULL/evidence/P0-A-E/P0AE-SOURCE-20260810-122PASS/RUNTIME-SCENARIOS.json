@@ -1,0 +1,15 @@
+{
+  "result": "UNVERIFIED",
+  "sourceHarness": "PASS",
+  "installedCurrentBuild": "UNVERIFIED",
+  "realGoogleDiagnostic": {
+    "evidence": ".codex-p0a/p0-c-license-prod-diagnostic.json",
+    "googleConnected": true,
+    "licenseDiscovered": true,
+    "licenseSignatureValid": true,
+    "setupActivationVerified": true,
+    "sandboxActivationCommit": true,
+    "sandboxOrganizationDeviceCommit": true,
+    "classification": "source/runtime diagnostic only; not final installed ZIP proof"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "evaluator": "cloud/ready-pure-evaluator.js",
+  "serviceApi": "SetupStateService.evaluateReady()",
+  "gates": [
+    "database",
+    "organization",
+    "license",
+    "owner",
+    "branch",
+    "device",
+    "dataSource",
+    "initialSync",
+    "google"
+  ],
+  "authoritativeSources": {
+    "database": "SQLite integrity + accessibility",
+    "organization": "__tdw_cloud_license__.centerId + centerName",
+    "license": "__tdw_cloud_license__ + commercial_license_data_v2",
+    "owner": "users table owner/hq_admin with usable credential",
+    "branch": "license.branches[] or device.lockedBranchId",
+    "device": "__tdw_device_config__",
+    "dataSource": "restoreChoice or bootstrapCompletedAt",
+    "initialSync": "meta.bootstrapCompletedAt (authoritative) — NOT wizard syncDone alone",
+    "google": "Drive connection state"
+  },
+  "notAuthoritative": [
+    "__tdw_boot_wizard__.syncDone alone",
+    "__tdw_boot_complete__ localStorage flag"
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "backup_file": true,
+  "sync_checkpoint": true,
+  "multiple_ambiguous": true
+}
