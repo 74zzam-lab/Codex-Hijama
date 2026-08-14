@@ -1,0 +1,147 @@
+{
+  "controllers": [
+    "BootFlow.needsBootScreen",
+    "BootFlow.shouldAutoOpenBoot",
+    "BootFlow.maybeAutoOpenBootFlow",
+    "BootFlow.prepareBootstrapResume",
+    "BootFlow.dismissBootstrap",
+    "BootFlow.completeBootstrapTransition",
+    "SetupStateService.evaluateReady",
+    "SetupStateDom.needsBootFlow",
+    "SetupStateDom.applyDomVisibility",
+    "BootstrapCoordinator.effectiveStepIndex"
+  ],
+  "markers": {
+    "bootstrapCompletedAt": {
+      "authority": "evidence",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": false
+    },
+    "setupCompletedAt": {
+      "authority": "derived",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": false
+    },
+    "wizardCompletedSteps": {
+      "authority": "legacy_only",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": true
+    },
+    "wizardCurrentStep": {
+      "authority": "hint_only",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": false
+    },
+    "wizardSyncDone": {
+      "authority": "legacy_only",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": true
+    },
+    "bootDoneFlag": {
+      "authority": "cache",
+      "canInvalidateReady": true,
+      "cache": true,
+      "legacy": false
+    },
+    "firstRunWizardCompleted": {
+      "authority": "legacy_only",
+      "canInvalidateReady": false,
+      "cache": true,
+      "legacy": true
+    },
+    "initialSyncCompletion": {
+      "authority": "derived",
+      "canInvalidateReady": false,
+      "cache": false,
+      "legacy": false
+    }
+  },
+  "entryPoints": [
+    {
+      "id": "A",
+      "name": "Fresh install startup",
+      "trigger": "maybeAutoOpenBootFlow"
+    },
+    {
+      "id": "B",
+      "name": "Partial setup startup",
+      "trigger": "needsBootFlow + coordinator resume"
+    },
+    {
+      "id": "C",
+      "name": "READY startup",
+      "trigger": "evaluateReady.ready === true → skip boot"
+    },
+    {
+      "id": "D",
+      "name": "Restart during setup",
+      "trigger": "prepareBootstrapResume"
+    },
+    {
+      "id": "E",
+      "name": "Logout then startup",
+      "trigger": "login gate + needsBootFlow"
+    },
+    {
+      "id": "F",
+      "name": "Failed login",
+      "trigger": "stay on login, no bootstrap unless needsBoot"
+    },
+    {
+      "id": "G",
+      "name": "App relaunch",
+      "trigger": "onAppStartupAfterRelaunch"
+    },
+    {
+      "id": "H",
+      "name": "Restore-triggered relaunch",
+      "trigger": "restart marker consume"
+    },
+    {
+      "id": "I",
+      "name": "Setup completion",
+      "trigger": "completeBootstrapTransition"
+    },
+    {
+      "id": "J",
+      "name": "Manual Bootstrap open",
+      "trigger": "BootFlow.forceOpen"
+    },
+    {
+      "id": "K",
+      "name": "Developer/support paths",
+      "trigger": "support mode only"
+    }
+  ],
+  "exitPoints": [
+    {
+      "id": "close_button",
+      "policy": "dismissBootstrap → login shell, no operational app"
+    },
+    {
+      "id": "escape",
+      "policy": "same as close unless in-flight"
+    },
+    {
+      "id": "app_shutdown",
+      "policy": "allowed anytime"
+    },
+    {
+      "id": "successful_completion",
+      "policy": "READY evaluate → relaunch/login once"
+    },
+    {
+      "id": "cancel_step",
+      "policy": "CANCELLED outcome, gate stays unresolved"
+    },
+    {
+      "id": "logout",
+      "policy": "login only; READY device no bootstrap"
+    }
+  ]
+}

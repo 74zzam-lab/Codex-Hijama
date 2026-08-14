@@ -1090,8 +1090,13 @@
       global.notify?.('⚠️ حلقة إعادة تشغيل مكتشفة — راجع Diagnostic في أدوات الدعم', 'danger');
     }
     if (consumed?.consumed && isBootComplete()) {
+      clearTransientBootstrapState();
       close({ showLogin: true });
       applyLoginGate();
+      applyOperationalGuard();
+    } else if (needsBootScreen()) {
+      prepareBootstrapResume({ showResumeHint: false });
+      applyOperationalGuard();
     }
     return consumed;
   }
@@ -1115,6 +1120,7 @@
   function maybeAutoOpenBootFlow() {
     __stage3BootTrace.loginInitCalls += 1;
     ensureLoginAccessible();
+    prepareBootstrapResume({ showResumeHint: false });
     if (shouldAutoOpenBoot()) {
       __stage3BootTrace.autoBootOpenCalls += 1;
       __stage3BootTrace.bootVisibilityEvents += 1;
@@ -1494,7 +1500,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     document.body.appendChild(el);
     el.querySelector('#bf-new-customer').onclick = () => startPath(PATHS.NEW);
     el.querySelector('#bf-existing-customer').onclick = () => startPath(PATHS.EXISTING);
-    el.querySelector('#bf-close-btn')?.addEventListener('click', () => closeToLogin());
+    el.querySelector('#bf-close-btn')?.addEventListener('click', () => dismissBootstrap());
     el.addEventListener('keydown', onDialogKeydown);
   }
 
@@ -1506,7 +1512,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         ev.preventDefault();
         return;
       }
-      closeToLogin();
+      dismissBootstrap();
       return;
     }
     if (ev.key !== 'Tab') return;
@@ -1547,6 +1553,145 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const effectiveStep = global.BootstrapCoordinator?.effectiveStepIndex?.(w);
     const stepIndex = Number.isFinite(effectiveStep) ? effectiveStep : w.currentStep;
     return { ...w, completedSteps: derivedDone, currentStep: stepIndex };
+  }
+
+  function sanitizeWizardForResume(w) {
+    w = w || loadWizard();
+    if (!w || typeof w !== 'object' || Array.isArray(w)) {
+      return saveWizard({
+        path: null, currentStep: 0, completedSteps: [], startedAt: null,
+        lang: global.UxI18n?.getLang?.() || 'ar', restoreChoice: null, syncDone: false,
+        oauthLockAt: null, wizardFlowVersion: WIZARD_FLOW_VERSION,
+      });
+    }
+    let changed = false;
+    const steps = w.path ? stepsFor(w.path) : [];
+    if (w.path && steps.length) {
+      const resumeIdx = global.BootstrapCoordinator?.effectiveStepIndex?.(w);
+      if (Number.isFinite(resumeIdx) && resumeIdx !== w.currentStep) {
+        w.currentStep = resumeIdx;
+        changed = true;
+      }
+      if (!Number.isFinite(w.currentStep) || w.currentStep < 0 || w.currentStep >= steps.length) {
+        w.currentStep = Number.isFinite(resumeIdx) ? resumeIdx : 0;
+        changed = true;
+      }
+    }
+    if (!Number.isFinite(w.wizardFlowVersion) || w.wizardFlowVersion < 0) {
+      w.wizardFlowVersion = WIZARD_FLOW_VERSION;
+      changed = true;
+    }
+    if (!Array.isArray(w.completedSteps)) {
+      w.completedSteps = global.BootstrapCoordinator?.deriveCompletedSteps?.(w.path) || [];
+      changed = true;
+    }
+    if (changed) saveWizard(w);
+    return w;
+  }
+
+  function clearTransientBootstrapState(options) {
+    options = options || {};
+    if (options.clearStepError !== false) {
+      checklistStepError = null;
+      lastGateRetryHandler = null;
+    }
+    if (options.clearStatus !== false) {
+      const el = document.getElementById('bf-wizard-status');
+      if (el && el.classList.contains('bf-status-error')) {
+        el.textContent = '';
+        el.classList.remove('bf-status-error');
+      }
+    }
+  }
+
+  function prepareBootstrapResume(options) {
+    options = options || {};
+    const w = sanitizeWizardForResume(loadWizard());
+    if (global.BootstrapLifecycleContract?.shouldClearTransientErrorOnResume?.() !== false) {
+      clearTransientBootstrapState({ clearStepError: true, clearStatus: true });
+    }
+    if (w.path && options.showResumeHint !== false) {
+      const steps = stepsFor(w.path);
+      const stepId = steps[w.currentStep];
+      if (stepId && stepId !== 'ready' && !validateStep(stepId)) {
+        const msg = global.BootstrapLifecycleContract?.buildDismissPolicy?.()?.resumeMessage
+          || 'سنكمل الإعداد من حيث توقفت.';
+        const hint = document.getElementById('bf-step-hint');
+        if (hint && !hint.dataset.resumeHint) {
+          hint.dataset.resumeHint = '1';
+          hint.textContent = msg;
+        }
+      }
+    }
+    updateBootstrapCloseButton();
+    return getDisplayWizard(w);
+  }
+
+  function updateBootstrapCloseButton() {
+    const btn = document.getElementById('bf-close-btn');
+    if (!btn) return;
+    const incomplete = needsBootScreen();
+    btn.title = incomplete ? 'إغلاق والعودة' : 'إغلاق';
+    btn.setAttribute('aria-label', incomplete ? 'إغلاق والعودة إلى شاشة الدخول' : 'إغلاق');
+  }
+
+  function isOperationalAppAllowed() {
+    const BLC = global.BootstrapLifecycleContract;
+    const readyEval = traceEvaluateReady();
+    const needsBoot = needsBootScreen();
+    if (BLC?.isOperationalAppAllowed) return BLC.isOperationalAppAllowed(readyEval, needsBoot);
+    return readyEval?.ready === true && !needsBoot;
+  }
+
+  function applyOperationalGuard() {
+    try { global.SetupStateDom?.applyDomVisibility?.({ reason: 'bootstrap-lifecycle-guard' }); } catch { /* empty */ }
+    if (!isOperationalAppAllowed()) {
+      try { global.setAppAuthed?.(false); } catch { /* empty */ }
+      const shell = document.getElementById('app-shell');
+      if (shell) shell.classList.add('app-shell--locked');
+      document.body?.classList.add('app-locked');
+    }
+  }
+
+  async function completeBootstrapTransition(opts) {
+    opts = opts || {};
+    if (!isBootComplete()) {
+      return { ok: false, error: 'ready_not_satisfied', ready: false };
+    }
+    clearTransientBootstrapState();
+    const marked = await markBootComplete();
+    if (!marked) {
+      return { ok: false, error: 'boot_completion_failed', ready: false };
+    }
+    if (opts.close !== false) {
+      close({ showLogin: true });
+      applyOperationalGuard();
+    }
+    return { ok: true, ready: true };
+  }
+
+  function dismissBootstrap() {
+    if (isCriticalOpInFlight()) {
+      setStatus('⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق', true);
+      return { ok: false, error: 'operation_in_flight' };
+    }
+    document.getElementById('bootFlowOverlay')?.classList.remove('open');
+    setBootActive(false);
+    clearTransientBootstrapState({ clearStepError: true, clearStatus: false });
+    if (!isOperationalAppAllowed()) {
+      const login = document.getElementById('loginScreen');
+      if (login) {
+        login.classList.remove('hidden');
+        login.style.display = '';
+        login.style.pointerEvents = '';
+      }
+      applyOperationalGuard();
+      global.notify?.('ℹ️ يمكنك إعادة فتح الإعداد من «🚀 بدء الإعداد»', 'info');
+      applyLoginGate();
+      return { ok: true, dismissed: true, operationalApp: false };
+    }
+    close({ showLogin: true });
+    return { ok: true, dismissed: true, operationalApp: true };
   }
 
   function renderChecklist(w) {
@@ -3408,11 +3553,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return;
     }
     if (w.currentStep >= steps.length - 1) {
-      if (!await markBootComplete()) {
+      const completed = await completeBootstrapTransition({ close: true });
+      if (!completed?.ok) {
         setStatus('⚠️ لم تكتمل جميع متطلبات الإعداد', true);
-        return;
       }
-      close({ showLogin: true });
       return;
     }
     w = completeCurrentStep(w);
@@ -3430,7 +3574,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     lastFocusEl = document.activeElement;
     hideBlockingScreens();
     ensureDOM();
-    const w = loadWizard();
+    prepareBootstrapResume({ showResumeHint: true });
+    const w = getDisplayWizard(loadWizard());
     if (w.path) {
       showStep('bf-step-wizard');
       renderProgress(w);
@@ -3502,6 +3647,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       login.style.pointerEvents = '';
     }
     applyLoginGate();
+    applyOperationalGuard();
     try { lastFocusEl?.focus?.(); } catch { /* empty */ }
     if (forceLogin && typeof global.ensureUserLoginScreenVisible === 'function') {
       global.ensureUserLoginScreenVisible();
@@ -3509,8 +3655,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   function closeToLogin() {
-    close({ showLogin: true });
-    global.notify?.('ℹ️ يمكنك إعادة فتح الإعداد من «🚀 بدء الإعداد»', 'info');
+    return dismissBootstrap();
   }
 
   async function refreshBootState() {
@@ -3582,6 +3727,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     ensureOwnerBootstrapWizard,
     close,
     closeToLogin,
+    dismissBootstrap,
+    prepareBootstrapResume,
+    completeBootstrapTransition,
+    isOperationalAppAllowed,
+    sanitizeWizardForResume,
+    clearTransientBootstrapState,
+    applyOperationalGuard,
     needsBootScreen,
     shouldAutoOpenBoot,
     maybeAutoOpenBootFlow,

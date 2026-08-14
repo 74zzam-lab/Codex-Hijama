@@ -105,12 +105,23 @@
     // 8) Close BootFlow overlay if READY (unless forced support)
     const overlay = qs('#bootFlowOverlay');
     if (overlay && ready && !options.keepBootOpen && !support) {
-      if (overlay.classList.contains('open') && global.BootFlow?.closeToLogin) {
+      if (overlay.classList.contains('open') && global.BootFlow?.dismissBootstrap) {
+        try { global.BootFlow.dismissBootstrap(); } catch { /* empty */ }
+      } else if (overlay.classList.contains('open') && global.BootFlow?.closeToLogin) {
         try { global.BootFlow.closeToLogin(); } catch { /* empty */ }
       }
     }
 
-    return { ok: true, state: state.state, ready, support };
+    // 9) Operational app guard — incomplete setup must not expose dashboard
+    const shell = qs('#app-shell');
+    const needsBoot = !!state.needsBootFlow;
+    if (shell && needsBoot && !ready) {
+      shell.classList.add('app-shell--locked');
+      document.body?.classList.add('app-locked');
+      try { global.setAppAuthed?.(false); } catch { /* empty */ }
+    }
+
+    return { ok: true, state: state.state, ready, support, needsBootFlow: needsBoot };
   }
 
   function needsBootFlow() {
