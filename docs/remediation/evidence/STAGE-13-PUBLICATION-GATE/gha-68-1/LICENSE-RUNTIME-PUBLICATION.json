@@ -1,0 +1,5 @@
+{
+  "publish": "LicenseCloud.pushToDrive",
+  "existingPath": "read-back only skippedPublish",
+  "noActivationReconsume": true
+}

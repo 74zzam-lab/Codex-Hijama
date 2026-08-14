@@ -1,0 +1,4560 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "scenarios": [
+    {
+      "name": "forged-dev-bind-denied",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "dev": {
+          "ok": false,
+          "error": "authentication_proof_required"
+        },
+        "owner": {
+          "ok": false,
+          "error": "authentication_proof_required"
+        },
+        "session": {
+          "ok": false,
+          "error": "no_session"
+        }
+      }
+    },
+    {
+      "name": "forged-owner-bind-denied",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "ok": false,
+        "error": "authentication_proof_required"
+      }
+    },
+    {
+      "name": "preauth-generic-cloud-upload-denied",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "threw": false,
+        "value": {
+          "ok": false,
+          "error": "rbac_session_required",
+          "message": "rbac_session_required",
+          "rbac": {
+            "ok": false,
+            "error": "rbac_session_required"
+          }
+        }
+      }
+    },
+    {
+      "name": "preauth-constrained-activation-rejects-invalid-path-payload",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "threw": false,
+        "value": {
+          "ok": false,
+          "error": "IPC_FORMAT",
+          "message": "activation_remote_path_invalid",
+          "rbac": null
+        }
+      }
+    },
+    {
+      "name": "runtime-permissions-deny-camera-microphone-geolocation",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "geolocation": {
+          "state": "denied"
+        },
+        "camera": {
+          "state": "denied"
+        },
+        "microphone": {
+          "state": "denied"
+        },
+        "media": {
+          "granted": false,
+          "error": "NotAllowedError"
+        }
+      }
+    },
+    {
+      "name": "low-role-protected-kv-denied",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "authenticated": {
+          "ok": true,
+          "proof": "QjbQPAsPnhH1FEdir6Eh2OSZCpIzpKidvx10fRnj5MQ",
+          "expiresAt": 1785937254569,
+          "userId": "p0a-reception",
+          "role": "reception",
+          "sessionEpoch": 0,
+          "passwordHash": "pbkdf2v2:210000:Gc-_6wHTtuYkxcTDFcsufA:bXpYGeRxFvxYml6IutW1GTmq8RCUgkOKUO5b7wlktZ0"
+        },
+        "bound": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-reception",
+            "role": "reception",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.571Z"
+          }
+        },
+        "users": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_kv_key_denied",
+            "message": "rbac_kv_key_denied",
+            "rbac": {
+              "key": "users",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "settings": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_kv_key_denied",
+            "message": "rbac_kv_key_denied",
+            "rbac": {
+              "key": "settings",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "license": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_rank_denied",
+            "message": "rbac_rank_denied",
+            "rbac": {
+              "ok": false,
+              "error": "rbac_rank_denied",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "branchPack": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_rank_denied",
+            "message": "rbac_rank_denied",
+            "rbac": {
+              "ok": false,
+              "error": "rbac_rank_denied",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "unknownSurface": true,
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-reception",
+            "role": "reception",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.571Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "low-role-license-and-branch-cache-denied",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "authenticated": {
+          "ok": true,
+          "proof": "QjbQPAsPnhH1FEdir6Eh2OSZCpIzpKidvx10fRnj5MQ",
+          "expiresAt": 1785937254569,
+          "userId": "p0a-reception",
+          "role": "reception",
+          "sessionEpoch": 0,
+          "passwordHash": "pbkdf2v2:210000:Gc-_6wHTtuYkxcTDFcsufA:bXpYGeRxFvxYml6IutW1GTmq8RCUgkOKUO5b7wlktZ0"
+        },
+        "bound": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-reception",
+            "role": "reception",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.571Z"
+          }
+        },
+        "users": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_kv_key_denied",
+            "message": "rbac_kv_key_denied",
+            "rbac": {
+              "key": "users",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "settings": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_kv_key_denied",
+            "message": "rbac_kv_key_denied",
+            "rbac": {
+              "key": "settings",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "license": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_rank_denied",
+            "message": "rbac_rank_denied",
+            "rbac": {
+              "ok": false,
+              "error": "rbac_rank_denied",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "branchPack": {
+          "threw": false,
+          "value": {
+            "ok": false,
+            "error": "rbac_rank_denied",
+            "message": "rbac_rank_denied",
+            "rbac": {
+              "ok": false,
+              "error": "rbac_rank_denied",
+              "minRank": 4,
+              "rank": 2
+            }
+          }
+        },
+        "unknownSurface": true,
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-reception",
+            "role": "reception",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.571Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "ipc-protected-channels-unauthenticated-denied-100-percent",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "channelCount": 61,
+        "bindings": [
+          {
+            "channel": "attachments:existsLocal",
+            "path": [
+              "attachments",
+              "existsLocal"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "attachments:hashBuffer",
+            "path": [
+              "attachments",
+              "hashBuffer"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "attachments:readLocal",
+            "path": [
+              "attachments",
+              "readLocal"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "attachments:validate",
+            "path": [
+              "attachments",
+              "validate"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "attachments:writeLocal",
+            "path": [
+              "attachments",
+              "writeLocal"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "backup:deleteCloudBackup",
+            "path": [
+              "backup",
+              "deleteCloudBackup"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:downloadSyncFile",
+            "path": [
+              "backup",
+              "downloadSyncFile"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "backup:restoreDbBackup",
+            "path": [
+              "backup",
+              "restoreDbBackup"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:saveLocal",
+            "path": [
+              "backup",
+              "saveLocal"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:syncDbBackup",
+            "path": [
+              "backup",
+              "syncDbBackup"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:uploadCloud",
+            "path": [
+              "backup",
+              "uploadCloud"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "backup:uploadDbBackup",
+            "path": [
+              "backup",
+              "uploadDbBackup"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:uploadSyncFile",
+            "path": [
+              "backup",
+              "uploadSyncFile"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "backup:v2:create",
+            "path": [
+              "backup",
+              "v2Create"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:downloadAndRestore",
+            "path": [
+              "backup",
+              "v2DownloadAndRestore"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:prune",
+            "path": [
+              "backup",
+              "v2Prune"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:restore",
+            "path": [
+              "backup",
+              "v2Restore"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:restoreLatest",
+            "path": [
+              "backup",
+              "v2RestoreLatest"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:scheduleConfigure",
+            "path": [
+              "backup",
+              "v2ScheduleConfigure"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "backup:v2:scheduleStatus",
+            "path": [
+              "backup",
+              "v2ScheduleStatus"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "cache:writeBranchConfig",
+            "path": [
+              "cache",
+              "writeBranchConfig"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "cache:writeLicense",
+            "path": [
+              "cache",
+              "writeLicense"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "cache:writeVersions",
+            "path": [
+              "cache",
+              "writeVersions"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "cloudOAuth:restoreDefaults",
+            "path": [
+              "cloudOAuth",
+              "restoreDefaults"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "cloudOAuth:saveSettings",
+            "path": [
+              "cloudOAuth",
+              "saveSettings"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:clearQueue",
+            "path": [
+              "communication",
+              "clearQueue"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:deleteCredentials",
+            "path": [
+              "communication",
+              "deleteCredentials"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:getCredentialStatus",
+            "path": [
+              "communication",
+              "getCredentialStatus"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:getQueue",
+            "path": [
+              "communication",
+              "getQueue"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:getStatus",
+            "path": [
+              "communication",
+              "getStatus"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.view",
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:init",
+            "path": [
+              "communication",
+              "init"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:listProviders",
+            "path": [
+              "communication",
+              "listProviders"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.view",
+                "settings.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:processQueue",
+            "path": [
+              "communication",
+              "processQueue"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:saveCredentials",
+            "path": [
+              "communication",
+              "saveCredentials"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:send",
+            "path": [
+              "communication",
+              "send"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "communication:testProvider",
+            "path": [
+              "communication",
+              "testProvider"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "database:exportSnapshot",
+            "path": [
+              "database",
+              "exportSnapshot"
+            ],
+            "policy": {
+              "minRank": 3
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "database:migrateFromBackup",
+            "path": [
+              "database",
+              "migrateFromBackup"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "database:persistKv",
+            "path": [
+              "database",
+              "persistKv"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "database:persistTable",
+            "path": [
+              "database",
+              "persistTable"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "database:querySafe",
+            "path": [
+              "database",
+              "querySafe"
+            ],
+            "policy": {
+              "minRank": 1
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "database:seedUsersIfEmpty",
+            "path": [
+              "database",
+              "seedUsersIfEmpty"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "database:syncOp",
+            "path": [
+              "database",
+              "syncOp"
+            ],
+            "policy": {
+              "minRank": 2
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": true
+          },
+          {
+            "channel": "devices:exportA4Pdf",
+            "path": [
+              "devices",
+              "exportA4Pdf"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "reports.print"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:getStatus",
+            "path": [
+              "devices",
+              "getStatus"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "settings.view",
+                "reports.print"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:listPrinters",
+            "path": [
+              "devices",
+              "listPrinters"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "reports.print",
+                "settings.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:openCashDrawer",
+            "path": [
+              "devices",
+              "openCashDrawer"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "cash.edit",
+                "cash.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:openCashDrawerDirect",
+            "path": [
+              "devices",
+              "openCashDrawerDirect"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "cash.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:printA4",
+            "path": [
+              "devices",
+              "printA4"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "reports.print"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:printThermal",
+            "path": [
+              "devices",
+              "printThermal"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "reports.print",
+                "cases.view"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:printWithDialog",
+            "path": [
+              "devices",
+              "printWithDialog"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "reports.print"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "devices:writeRaw",
+            "path": [
+              "devices",
+              "writeRaw"
+            ],
+            "policy": {
+              "minRank": 4,
+              "permissions": [
+                "settings.edit"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "license:appendPackageToRegistry",
+            "path": [
+              "license",
+              "appendPackageToRegistry"
+            ],
+            "policy": {
+              "minRank": 6,
+              "roles": [
+                "owner"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "license:updateLicenseIndex",
+            "path": [
+              "license",
+              "updateLicenseIndex"
+            ],
+            "policy": {
+              "minRank": 6,
+              "roles": [
+                "owner"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "license:writeActivationBundle",
+            "path": [
+              "license",
+              "writeActivationBundle"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "license:writeCustomPackage",
+            "path": [
+              "license",
+              "writeCustomPackage"
+            ],
+            "policy": {
+              "minRank": 6,
+              "roles": [
+                "owner"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "license:writeLicenseShard",
+            "path": [
+              "license",
+              "writeLicenseShard"
+            ],
+            "policy": {
+              "minRank": 4
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "messaging:getStatus",
+            "path": [
+              "messaging",
+              "getStatus"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.view",
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "messaging:sendSMS",
+            "path": [
+              "messaging",
+              "sendSMS"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "messaging:sendWhatsApp",
+            "path": [
+              "messaging",
+              "sendWhatsApp"
+            ],
+            "policy": {
+              "minRank": 2,
+              "permissions": [
+                "messages.send"
+              ]
+            },
+            "timeoutMs": 10000,
+            "lowRoleExpected": false
+          },
+          {
+            "channel": "app:wipePersistentLicenseData",
+            "path": [
+              "app",
+              "wipePersistentLicenseData"
+            ],
+            "policy": {
+              "minRank": 6,
+              "roles": [
+                "owner"
+              ]
+            },
+            "timeoutMs": 120000,
+            "lowRoleExpected": false
+          }
+        ],
+        "unauthenticatedPass": true,
+        "lowRolePass": true,
+        "authorizedPass": true,
+        "unauthenticated": {
+          "label": "unauthenticated",
+          "rows": [
+            {
+              "channel": "attachments:existsLocal",
+              "path": "attachments.existsLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "attachments:hashBuffer",
+              "path": "attachments.hashBuffer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "attachments:readLocal",
+              "path": "attachments.readLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "attachments:validate",
+              "path": "attachments.validate",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "attachments:writeLocal",
+              "path": "attachments.writeLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:deleteCloudBackup",
+              "path": "backup.deleteCloudBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:downloadSyncFile",
+              "path": "backup.downloadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:restoreDbBackup",
+              "path": "backup.restoreDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:saveLocal",
+              "path": "backup.saveLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:syncDbBackup",
+              "path": "backup.syncDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:uploadCloud",
+              "path": "backup.uploadCloud",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:uploadDbBackup",
+              "path": "backup.uploadDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:uploadSyncFile",
+              "path": "backup.uploadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:create",
+              "path": "backup.v2Create",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:downloadAndRestore",
+              "path": "backup.v2DownloadAndRestore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:prune",
+              "path": "backup.v2Prune",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:restore",
+              "path": "backup.v2Restore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:restoreLatest",
+              "path": "backup.v2RestoreLatest",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:scheduleConfigure",
+              "path": "backup.v2ScheduleConfigure",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:scheduleStatus",
+              "path": "backup.v2ScheduleStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeBranchConfig",
+              "path": "cache.writeBranchConfig",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeLicense",
+              "path": "cache.writeLicense",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeVersions",
+              "path": "cache.writeVersions",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cloudOAuth:restoreDefaults",
+              "path": "cloudOAuth.restoreDefaults",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cloudOAuth:saveSettings",
+              "path": "cloudOAuth.saveSettings",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:clearQueue",
+              "path": "communication.clearQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:deleteCredentials",
+              "path": "communication.deleteCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getCredentialStatus",
+              "path": "communication.getCredentialStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getQueue",
+              "path": "communication.getQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getStatus",
+              "path": "communication.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:init",
+              "path": "communication.init",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:listProviders",
+              "path": "communication.listProviders",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:processQueue",
+              "path": "communication.processQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:saveCredentials",
+              "path": "communication.saveCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:send",
+              "path": "communication.send",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:testProvider",
+              "path": "communication.testProvider",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:exportSnapshot",
+              "path": "database.exportSnapshot",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:migrateFromBackup",
+              "path": "database.migrateFromBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:persistKv",
+              "path": "database.persistKv",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:persistTable",
+              "path": "database.persistTable",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:querySafe",
+              "path": "database.querySafe",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:seedUsersIfEmpty",
+              "path": "database.seedUsersIfEmpty",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:syncOp",
+              "path": "database.syncOp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:exportA4Pdf",
+              "path": "devices.exportA4Pdf",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:getStatus",
+              "path": "devices.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:listPrinters",
+              "path": "devices.listPrinters",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:openCashDrawer",
+              "path": "devices.openCashDrawer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:openCashDrawerDirect",
+              "path": "devices.openCashDrawerDirect",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printA4",
+              "path": "devices.printA4",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printThermal",
+              "path": "devices.printThermal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printWithDialog",
+              "path": "devices.printWithDialog",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:writeRaw",
+              "path": "devices.writeRaw",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:appendPackageToRegistry",
+              "path": "license.appendPackageToRegistry",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:updateLicenseIndex",
+              "path": "license.updateLicenseIndex",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeActivationBundle",
+              "path": "license.writeActivationBundle",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeCustomPackage",
+              "path": "license.writeCustomPackage",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeLicenseShard",
+              "path": "license.writeLicenseShard",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:getStatus",
+              "path": "messaging.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:sendSMS",
+              "path": "messaging.sendSMS",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:sendWhatsApp",
+              "path": "messaging.sendWhatsApp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "app:wipePersistentLicenseData",
+              "path": "app.wipePersistentLicenseData",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_session_required",
+                  "message": "rbac_session_required",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_session_required"
+                  }
+                }
+              },
+              "rbacDenied": true
+            }
+          ]
+        },
+        "lowRole": {
+          "label": "low-role",
+          "rows": [
+            {
+              "channel": "attachments:existsLocal",
+              "path": "attachments.existsLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:hashBuffer",
+              "path": "attachments.hashBuffer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "buffer_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:readLocal",
+              "path": "attachments.readLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:validate",
+              "path": "attachments.validate",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "errors": [
+                    "zero_byte"
+                  ],
+                  "filename": "file",
+                  "ext": "",
+                  "size": 0,
+                  "sha256": "",
+                  "mime": "application/octet-stream"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:writeLocal",
+              "path": "attachments.writeLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:deleteCloudBackup",
+              "path": "backup.deleteCloudBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:downloadSyncFile",
+              "path": "backup.downloadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "filename_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:restoreDbBackup",
+              "path": "backup.restoreDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:saveLocal",
+              "path": "backup.saveLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:syncDbBackup",
+              "path": "backup.syncDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:uploadCloud",
+              "path": "backup.uploadCloud",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:uploadDbBackup",
+              "path": "backup.uploadDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:uploadSyncFile",
+              "path": "backup.uploadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:create",
+              "path": "backup.v2Create",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:downloadAndRestore",
+              "path": "backup.v2DownloadAndRestore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:prune",
+              "path": "backup.v2Prune",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:restore",
+              "path": "backup.v2Restore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:restoreLatest",
+              "path": "backup.v2RestoreLatest",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:scheduleConfigure",
+              "path": "backup.v2ScheduleConfigure",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "backup:v2:scheduleStatus",
+              "path": "backup.v2ScheduleStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeBranchConfig",
+              "path": "cache.writeBranchConfig",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeLicense",
+              "path": "cache.writeLicense",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cache:writeVersions",
+              "path": "cache.writeVersions",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "centerId_invalid",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cloudOAuth:restoreDefaults",
+              "path": "cloudOAuth.restoreDefaults",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "cloudOAuth:saveSettings",
+              "path": "cloudOAuth.saveSettings",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:clearQueue",
+              "path": "communication.clearQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:deleteCredentials",
+              "path": "communication.deleteCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getCredentialStatus",
+              "path": "communication.getCredentialStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getQueue",
+              "path": "communication.getQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.view"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:getStatus",
+              "path": "communication.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.view",
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:init",
+              "path": "communication.init",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:listProviders",
+              "path": "communication.listProviders",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.view",
+                      "settings.view"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:processQueue",
+              "path": "communication.processQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:saveCredentials",
+              "path": "communication.saveCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:send",
+              "path": "communication.send",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "communication:testProvider",
+              "path": "communication.testProvider",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:exportSnapshot",
+              "path": "database.exportSnapshot",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 3,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:migrateFromBackup",
+              "path": "database.migrateFromBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:persistKv",
+              "path": "database.persistKv",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "key_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:persistTable",
+              "path": "database.persistTable",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "tableKey_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:querySafe",
+              "path": "database.querySafe",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "op_not_allowed"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:seedUsersIfEmpty",
+              "path": "database.seedUsersIfEmpty",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "database:syncOp",
+              "path": "database.syncOp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "op_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:exportA4Pdf",
+              "path": "devices.exportA4Pdf",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "reports.print"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:getStatus",
+              "path": "devices.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "settings.view",
+                      "reports.print"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:listPrinters",
+              "path": "devices.listPrinters",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "reports.print",
+                      "settings.view"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:openCashDrawer",
+              "path": "devices.openCashDrawer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "cash.edit",
+                      "cash.view"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:openCashDrawerDirect",
+              "path": "devices.openCashDrawerDirect",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "cash.edit"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printA4",
+              "path": "devices.printA4",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "reports.print"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printThermal",
+              "path": "devices.printThermal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "reports.print",
+                      "cases.view"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:printWithDialog",
+              "path": "devices.printWithDialog",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "reports.print"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "devices:writeRaw",
+              "path": "devices.writeRaw",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:appendPackageToRegistry",
+              "path": "license.appendPackageToRegistry",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_role_denied",
+                  "message": "rbac_role_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_role_denied",
+                    "required": [
+                      "owner"
+                    ],
+                    "role": "reception"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:updateLicenseIndex",
+              "path": "license.updateLicenseIndex",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_role_denied",
+                  "message": "rbac_role_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_role_denied",
+                    "required": [
+                      "owner"
+                    ],
+                    "role": "reception"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeActivationBundle",
+              "path": "license.writeActivationBundle",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeCustomPackage",
+              "path": "license.writeCustomPackage",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_role_denied",
+                  "message": "rbac_role_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_role_denied",
+                    "required": [
+                      "owner"
+                    ],
+                    "role": "reception"
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "license:writeLicenseShard",
+              "path": "license.writeLicenseShard",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_rank_denied",
+                  "message": "rbac_rank_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_rank_denied",
+                    "minRank": 4,
+                    "rank": 2
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:getStatus",
+              "path": "messaging.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.view",
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:sendSMS",
+              "path": "messaging.sendSMS",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "messaging:sendWhatsApp",
+              "path": "messaging.sendWhatsApp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_permission_denied",
+                  "message": "rbac_permission_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_permission_denied",
+                    "permissions": [
+                      "messages.send"
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": true
+            },
+            {
+              "channel": "app:wipePersistentLicenseData",
+              "path": "app.wipePersistentLicenseData",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "rbac_role_denied",
+                  "message": "rbac_role_denied",
+                  "rbac": {
+                    "ok": false,
+                    "error": "rbac_role_denied",
+                    "required": [
+                      "owner"
+                    ],
+                    "role": "reception"
+                  }
+                }
+              },
+              "rbacDenied": true
+            }
+          ]
+        },
+        "authorized": {
+          "label": "authorized-owner",
+          "rows": [
+            {
+              "channel": "attachments:existsLocal",
+              "path": "attachments.existsLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:hashBuffer",
+              "path": "attachments.hashBuffer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "buffer_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:readLocal",
+              "path": "attachments.readLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:validate",
+              "path": "attachments.validate",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "errors": [
+                    "zero_byte"
+                  ],
+                  "filename": "file",
+                  "ext": "",
+                  "size": 0,
+                  "sha256": "",
+                  "mime": "application/octet-stream"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "attachments:writeLocal",
+              "path": "attachments.writeLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "sha256_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:deleteCloudBackup",
+              "path": "backup.deleteCloudBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "remotePath_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:downloadSyncFile",
+              "path": "backup.downloadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "filename_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:restoreDbBackup",
+              "path": "backup.restoreDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "remotePath_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:saveLocal",
+              "path": "backup.saveLocal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:syncDbBackup",
+              "path": "backup.syncDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "password_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:uploadCloud",
+              "path": "backup.uploadCloud",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:uploadDbBackup",
+              "path": "backup.uploadDbBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "password_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:uploadSyncFile",
+              "path": "backup.uploadSyncFile",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:create",
+              "path": "backup.v2Create",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "password_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:downloadAndRestore",
+              "path": "backup.v2DownloadAndRestore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "options_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:prune",
+              "path": "backup.v2Prune",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "pruned": 0,
+                  "kept": 0,
+                  "files": []
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:restore",
+              "path": "backup.v2Restore",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "options_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:restoreLatest",
+              "path": "backup.v2RestoreLatest",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "options_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:scheduleConfigure",
+              "path": "backup.v2ScheduleConfigure",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "version": 2,
+                  "enabled": false,
+                  "intervalMinutes": 60,
+                  "retentionCount": 20,
+                  "localPath": "",
+                  "cloudEnabled": false,
+                  "provider": "google",
+                  "centerName": "",
+                  "deviceName": "",
+                  "centerId": "",
+                  "organizationId": "",
+                  "branchId": "",
+                  "authorizedBranchIds": [],
+                  "deviceId": "",
+                  "lastAttemptAt": null,
+                  "lastSuccessAt": null,
+                  "lastStatus": "idle",
+                  "lastError": null,
+                  "passwordAvailable": false,
+                  "running": false,
+                  "nextRunAt": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "backup:v2:scheduleStatus",
+              "path": "backup.v2ScheduleStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "version": 2,
+                  "enabled": false,
+                  "intervalMinutes": 60,
+                  "retentionCount": 20,
+                  "localPath": "",
+                  "cloudEnabled": false,
+                  "provider": "google",
+                  "centerName": "",
+                  "deviceName": "",
+                  "centerId": "",
+                  "organizationId": "",
+                  "branchId": "",
+                  "authorizedBranchIds": [],
+                  "deviceId": "",
+                  "lastAttemptAt": null,
+                  "lastSuccessAt": null,
+                  "lastStatus": "idle",
+                  "lastError": null,
+                  "passwordAvailable": false,
+                  "running": false,
+                  "nextRunAt": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cache:writeBranchConfig",
+              "path": "cache.writeBranchConfig",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "centerId_invalid",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cache:writeLicense",
+              "path": "cache.writeLicense",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "centerId_invalid",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cache:writeVersions",
+              "path": "cache.writeVersions",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "centerId_invalid",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cloudOAuth:restoreDefaults",
+              "path": "cloudOAuth.restoreDefaults",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "settings": {
+                    "enabled": true,
+                    "clientId": "393099979986-nbt694pvof6bs7nslnug3ndh1k75mvfo.apps.googleusercontent.com",
+                    "projectId": "najjartech-hijama-management",
+                    "scopes": [
+                      "https://www.googleapis.com/auth/drive.file"
+                    ],
+                    "redirectUri": "http://127.0.0.1:42813/oauth/callback",
+                    "redirectPort": 42813,
+                    "source": "bundled-config",
+                    "hasDeveloperOverride": false,
+                    "hasSecret": true,
+                    "secretMasked": "••••••••U6yk"
+                  }
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "cloudOAuth:saveSettings",
+              "path": "cloudOAuth.saveSettings",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "settings": {
+                    "enabled": true,
+                    "clientId": "393099979986-nbt694pvof6bs7nslnug3ndh1k75mvfo.apps.googleusercontent.com",
+                    "projectId": "najjartech-hijama-management",
+                    "scopes": [
+                      "https://www.googleapis.com/auth/drive.file"
+                    ],
+                    "redirectUri": "http://127.0.0.1:42813/oauth/callback",
+                    "redirectPort": 42813,
+                    "source": "bundled-config",
+                    "hasDeveloperOverride": false,
+                    "hasSecret": true,
+                    "secretMasked": "••••••••U6yk"
+                  }
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:clearQueue",
+              "path": "communication.clearQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:deleteCredentials",
+              "path": "communication.deleteCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:getCredentialStatus",
+              "path": "communication.getCredentialStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "providers": {},
+                  "webhookSecret": false
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:getQueue",
+              "path": "communication.getQueue",
+              "result": {
+                "outcome": "returned",
+                "value": []
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:getStatus",
+              "path": "communication.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "whatsapp": {
+                    "available": true,
+                    "mode": "deeplink",
+                    "provider": null
+                  },
+                  "sms": {
+                    "available": true,
+                    "mode": "deeplink",
+                    "provider": null
+                  },
+                  "queue": {
+                    "pending": 0,
+                    "failed": 0,
+                    "sent": 0,
+                    "total": 0,
+                    "processing": false,
+                    "persistenceMode": "encrypted"
+                  },
+                  "webhookUrl": "http://127.0.0.1:17890/webhook",
+                  "providers": 0
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:init",
+              "path": "communication.init",
+              "result": {
+                "outcome": "returned"
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:listProviders",
+              "path": "communication.listProviders",
+              "result": {
+                "outcome": "returned",
+                "value": [
+                  {
+                    "id": "custom",
+                    "name": "Custom REST API",
+                    "nameAr": "API مخصص",
+                    "channels": [
+                      "whatsapp",
+                      "sms",
+                      "otp",
+                      "email"
+                    ],
+                    "defaultBaseUrl": "",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "secret",
+                      "senderId",
+                      "sendPath",
+                      "authHeader"
+                    ]
+                  },
+                  {
+                    "id": "4jawaly",
+                    "name": "4jawaly",
+                    "nameAr": "فورجوالي",
+                    "channels": [
+                      "sms",
+                      "whatsapp",
+                      "otp"
+                    ],
+                    "defaultBaseUrl": "https://api.4jawaly.com",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "secret",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "taqnyat",
+                    "name": "Taqnyat",
+                    "nameAr": "تقنيات",
+                    "channels": [
+                      "sms",
+                      "whatsapp",
+                      "otp"
+                    ],
+                    "defaultBaseUrl": "https://api.taqnyat.sa",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "urwhats",
+                    "name": "urWhats",
+                    "nameAr": "urWhats",
+                    "channels": [
+                      "whatsapp"
+                    ],
+                    "defaultBaseUrl": "https://api.urwhats.com",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "imissive",
+                    "name": "iMissive",
+                    "nameAr": "iMissive",
+                    "channels": [
+                      "sms",
+                      "otp"
+                    ],
+                    "defaultBaseUrl": "https://api.imissive.com",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "deewan",
+                    "name": "Deewan",
+                    "nameAr": "ديوان",
+                    "channels": [
+                      "sms"
+                    ],
+                    "defaultBaseUrl": "https://apis.deewan.sa",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "unifonic",
+                    "name": "Unifonic",
+                    "nameAr": "يونيفونيك",
+                    "channels": [
+                      "sms",
+                      "whatsapp"
+                    ],
+                    "defaultBaseUrl": "https://el.cloud.unifonic.com",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "qalaama",
+                    "name": "Qalaama",
+                    "nameAr": "قلامة",
+                    "channels": [
+                      "sms",
+                      "whatsapp"
+                    ],
+                    "defaultBaseUrl": "https://api.qalaama.com",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  },
+                  {
+                    "id": "zajel",
+                    "name": "Zajel AI",
+                    "nameAr": "زاجل",
+                    "channels": [
+                      "sms",
+                      "whatsapp",
+                      "email"
+                    ],
+                    "defaultBaseUrl": "https://api.zajel.ai",
+                    "fields": [
+                      "baseUrl",
+                      "apiKey",
+                      "senderId"
+                    ]
+                  }
+                ]
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:processQueue",
+              "path": "communication.processQueue",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "processed": 0
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:saveCredentials",
+              "path": "communication.saveCredentials",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:send",
+              "path": "communication.send",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "communication:testProvider",
+              "path": "communication.testProvider",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:exportSnapshot",
+              "path": "database.exportSnapshot",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true,
+                  "data": {
+                    "_meta": {
+                      "version": 3,
+                      "date": "2026-08-05T13:39:54.875Z",
+                      "app": "Hijama Management System",
+                      "source": "sqlite",
+                      "schemaVersion": 5
+                    },
+                    "clientsRegistry": [
+                      {
+                        "id": "p0a-xss-client",
+                        "name": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "phone": "0500000000",
+                        "nationality": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>"
+                      }
+                    ],
+                    "cases": [
+                      {
+                        "id": "p0a-xss-case",
+                        "name": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "doctorName": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "date": "2026-08-05",
+                        "total": 1
+                      }
+                    ],
+                    "bookings": [],
+                    "doctors": [
+                      {
+                        "id": "p0a-xss-doctor",
+                        "name": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "specialty": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "active": true
+                      }
+                    ],
+                    "attendance": [],
+                    "expenses": [],
+                    "users": [
+                      {
+                        "id": "p0a-owner",
+                        "fullName": "P0A Owner",
+                        "username": "p0a-owner",
+                        "password": "pbkdf2v2:210000:eqpA0YHlCaCMQecRZrIYpw:RKXzR9nrPh6EaAd2wu8XfL7VGW7Isaa_ae7iWhQq3mU",
+                        "role": "owner",
+                        "active": true,
+                        "sessionEpoch": 0
+                      },
+                      {
+                        "id": "p0a-reception",
+                        "fullName": "P0A Reception",
+                        "username": "reception",
+                        "password": "pbkdf2v2:210000:Gc-_6wHTtuYkxcTDFcsufA:bXpYGeRxFvxYml6IutW1GTmq8RCUgkOKUO5b7wlktZ0",
+                        "role": "reception",
+                        "active": true,
+                        "sessionEpoch": 0,
+                        "passwordKdfVersion": 2
+                      },
+                      {
+                        "id": "p0a-xss-user",
+                        "fullName": "<img src=x onerror=\"parent.__p0aXss=(parent.__p0aXss||0)+1\"><script>parent.__p0aXss=(parent.__p0aXss||0)+10</script><svg onload=\"parent.__p0aXss=(parent.__p0aXss||0)+100\"></svg>",
+                        "username": "p0a-xss-user",
+                        "password": "pbkdf2:reception:54f155e640fc70b9fb5959af0459ccba1bba552c11afe44540236f3c92d43bf3",
+                        "role": "reception",
+                        "active": true,
+                        "sessionEpoch": 0
+                      }
+                    ]
+                  }
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:migrateFromBackup",
+              "path": "database.migrateFromBackup",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "snapshot_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:persistKv",
+              "path": "database.persistKv",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "key_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:persistTable",
+              "path": "database.persistTable",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "tableKey_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:querySafe",
+              "path": "database.querySafe",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "op_not_allowed"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:seedUsersIfEmpty",
+              "path": "database.seedUsersIfEmpty",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_TYPE",
+                  "message": "users_must_be_array",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "database:syncOp",
+              "path": "database.syncOp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "op_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:exportA4Pdf",
+              "path": "devices.exportA4Pdf",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "html_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:getStatus",
+              "path": "devices.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "thermal": {
+                    "connected": false,
+                    "name": "غير محدد"
+                  },
+                  "drawer": {
+                    "connected": false,
+                    "linkedPrinter": "غير محدد"
+                  },
+                  "report": {
+                    "connected": false,
+                    "name": "غير محدد"
+                  },
+                  "backup": {
+                    "connected": true,
+                    "name": "مفعّل"
+                  },
+                  "printersAvailable": 6
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:listPrinters",
+              "path": "devices.listPrinters",
+              "result": {
+                "outcome": "returned",
+                "value": [
+                  {
+                    "name": "OneNote (Desktop)",
+                    "displayName": "OneNote (Desktop)",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  },
+                  {
+                    "name": "OneNote for Windows 10",
+                    "displayName": "OneNote for Windows 10",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  },
+                  {
+                    "name": "PRO-V 80mm Series Printer",
+                    "displayName": "PRO-V 80mm Series Printer",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  },
+                  {
+                    "name": "Microsoft XPS Document Writer",
+                    "displayName": "Microsoft XPS Document Writer",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  },
+                  {
+                    "name": "Microsoft Print to PDF",
+                    "displayName": "Microsoft Print to PDF",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  },
+                  {
+                    "name": "Fax",
+                    "displayName": "Fax",
+                    "description": "",
+                    "isDefault": false,
+                    "status": 0,
+                    "options": {}
+                  }
+                ]
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:openCashDrawer",
+              "path": "devices.openCashDrawer",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "no_printer",
+                  "message": "اختر الطابعة الحرارية أولاً"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:openCashDrawerDirect",
+              "path": "devices.openCashDrawerDirect",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "no_printer",
+                  "message": "اختر الطابعة الحرارية أولاً"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:printA4",
+              "path": "devices.printA4",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "html_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:printThermal",
+              "path": "devices.printThermal",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "html_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:printWithDialog",
+              "path": "devices.printWithDialog",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "html_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "devices:writeRaw",
+              "path": "devices.writeRaw",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "printerName_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "license:appendPackageToRegistry",
+              "path": "license.appendPackageToRegistry",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "payload_required"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "license:updateLicenseIndex",
+              "path": "license.updateLicenseIndex",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "payload_required"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "license:writeActivationBundle",
+              "path": "license.writeActivationBundle",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "licenseId_invalid"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "license:writeCustomPackage",
+              "path": "license.writeCustomPackage",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "payload_required"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "license:writeLicenseShard",
+              "path": "license.writeLicenseShard",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "PATH_TRAVERSAL",
+                  "message": "licenseId_invalid"
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "messaging:getStatus",
+              "path": "messaging.getStatus",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "whatsapp": {
+                    "available": true,
+                    "mode": "deeplink",
+                    "provider": null
+                  },
+                  "sms": {
+                    "available": true,
+                    "mode": "deeplink",
+                    "provider": null
+                  },
+                  "queue": {
+                    "pending": 0,
+                    "failed": 0,
+                    "sent": 0,
+                    "total": 0,
+                    "processing": false,
+                    "persistenceMode": "encrypted"
+                  },
+                  "webhookUrl": "http://127.0.0.1:17890/webhook",
+                  "providers": 0
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "messaging:sendSMS",
+              "path": "messaging.sendSMS",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "phone_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "messaging:sendWhatsApp",
+              "path": "messaging.sendWhatsApp",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": false,
+                  "error": "IPC_REQUIRED",
+                  "message": "phone_required",
+                  "rbac": null
+                }
+              },
+              "rbacDenied": false
+            },
+            {
+              "channel": "app:wipePersistentLicenseData",
+              "path": "app.wipePersistentLicenseData",
+              "result": {
+                "outcome": "returned",
+                "value": {
+                  "ok": true
+                }
+              },
+              "rbacDenied": false
+            }
+          ]
+        },
+        "lowAuth": {
+          "ok": true,
+          "proof": "lhHxbHhzEVJQ3JXRUM2jqTw_5x_NGEXRSW7gvP-pQNM",
+          "expiresAt": 1785937254642,
+          "userId": "p0a-reception",
+          "role": "reception",
+          "sessionEpoch": 0,
+          "passwordHash": null
+        },
+        "lowBind": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-reception",
+            "role": "reception",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.643Z"
+          }
+        },
+        "ownerAuth": {
+          "ok": true,
+          "proof": "JI-249iNE8mclH30EKwrgVVK7ySLaQ8-yk196-w3-2M",
+          "expiresAt": 1785937254697,
+          "userId": "p0a-owner",
+          "role": "owner",
+          "sessionEpoch": 0,
+          "passwordHash": null
+        },
+        "ownerBind": {
+          "ok": true,
+          "session": {
+            "userId": "p0a-owner",
+            "role": "owner",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-05T13:39:54.699Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "print-payload-execution-zero",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "thermal": {
+          "threw": true,
+          "error": "Error invoking remote method 'devices:printThermal': Error: Invalid deviceName provided"
+        },
+        "a4": {
+          "threw": true,
+          "error": "Error invoking remote method 'devices:printA4': Error: Invalid deviceName provided"
+        }
+      }
+    },
+    {
+      "name": "authentication-failure-threshold-reached",
+      "pass": true,
+      "stage": "first-run",
+      "detail": [
+        {
+          "ok": false,
+          "error": "invalid_credentials"
+        },
+        {
+          "ok": false,
+          "error": "invalid_credentials"
+        },
+        {
+          "ok": false,
+          "error": "invalid_credentials"
+        },
+        {
+          "ok": false,
+          "error": "invalid_credentials"
+        },
+        {
+          "ok": false,
+          "error": "invalid_credentials"
+        }
+      ]
+    },
+    {
+      "name": "csp-blocks-inline-script-and-handler",
+      "pass": true,
+      "stage": "first-run",
+      "detail": {
+        "csp": {
+          "executed": 0
+        },
+        "cspMessages": [
+          {
+            "type": "error",
+            "text": "Executing inline script violates the following Content Security Policy directive 'script-src-elem 'self' 'sha256-/39ciMfIEWfzURUri2ml+9SoxCKZiJzXq54C1StG940=' 'sha256-3UE6ekcexRiJEAz61Q8DEIItNu7LP1wBPEef32RErko=' 'sha256-8B86VWWyUXUa7KlkA2mAyLnQ6RuM35BVikFignlfJP8=' 'sha256-KaXh2lO/cPTG/s1Z8O2mPPxsu5uWi5TdxgZpT34QUWQ=' 'sha256-MMWh5H+b/5HgWM2FRuiD4Z8MOxCFttlhaKCyUY0Ucwo=' 'sha256-ctNVp+unc3gjymQ++JTHqWC3/MDtSNJ2tCBoE6RRcZY=' 'sha256-x1RmqG0FTRabWE+EuM3wa7Z7Xrfju/p+gAkJSPwXMwU=''. Either the 'unsafe-inline' keyword, a hash ('sha256-xGszcdQRLkSWgRzByrUcO/Ac01jrsnLtKsFN98Vk7Bc='), or a nonce ('nonce-...') is required to enable inline execution. The action has been blocked.",
+            "url": "",
+            "lineNumber": 4
+          },
+          {
+            "type": "error",
+            "text": "Executing inline event handler violates the following Content Security Policy directive 'script-src-attr 'unsafe-hashes' 'sha256-+5CPQnbik0RUmmwagY5HjUMXtcTp4Md1Lb3HLTXWxng=' 'sha256-+ZJKovOC7P0+WOSXfqo3NZ9YutbvyYHxCgJI7PiR6vY=' 'sha256-+ftSxoVqZJq9YG9QdEK9w5veTGw/zS6mFzW9vcBHW2Y=' 'sha256-+kUXK2r4YAztVW8eUBxkbyLzLWP/BrGTBbfBakvbuIM=' 'sha256-+u+Ca8Z5fTcbjW4jJtTHPr8jedn0ejfc8j6JFJ+yYaM=' 'sha256-/6/hATFAN/OsRZN0RgUy78i3ukMYx3shLxD+afYySOU=' 'sha256-/EweuReponTbbm5AjBadu+phajliFPS1cerYiQub2Gs=' 'sha256-/IA1TzHNLqiEIBo8pPYGznbDjtceM1gB4romY9ESlAI=' 'sha256-/RyghJBfhBgb/eyb7UeiTWlplwjtZkYL+sM+jNg1ilU=' 'sha256-0FqivtRO45HYkQm2ihcvzq5ptchOQVNBefdLxNX3jwA=' 'sha256-0JbmutifoYkinbcszw+S4ndZd7sC6x5nNm6AEh1WXBI=' 'sha256-0OpJ9RkXThhNneTeYBgUQGr8uTiD0Cn/1aqpR0bhLec=' 'sha256-0UtHc3husHdpmGSHTpOzEIQ7ZwYphZFDx5LEDUVnWYs=' 'sha256-0Xjd9TwKIpaQ4FuB+cJKFpU2O0EETiwjdQl0EoAnyxg=' 'sha256-0fBi/eRR50HF2iBRdQBFKfj7VqO+HO1r1lAcSoLE+ec=' 'sha256-0gOl+mL9OfJqcom4p4253Gl8B0gmxDXT/yFCA8Aklto=' 'sha256-0tt0nfh",
+            "url": "",
+            "lineNumber": 8
+          }
+        ]
+      }
+    },
+    {
+      "name": "restart-forged-dev-still-denied",
+      "pass": true,
+      "stage": "restart-retest",
+      "detail": {
+        "ok": false,
+        "error": "authentication_proof_required"
+      }
+    }
+  ]
+}

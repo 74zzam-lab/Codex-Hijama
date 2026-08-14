@@ -1,0 +1,7 @@
+{
+  "uploadOkReadbackFail": "PUBLICATION_RESOLVED false",
+  "missingRemote": "PUBLICATION_RESOLVED false",
+  "network": "PUBLICATION_PENDING/FAILED local SoT preserved",
+  "token": "oauth_unauthorized → failed",
+  "identityMismatch": "cloud_identity_mismatch"
+}

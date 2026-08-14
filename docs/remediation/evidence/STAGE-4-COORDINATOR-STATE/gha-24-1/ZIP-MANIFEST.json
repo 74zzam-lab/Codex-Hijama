@@ -1,0 +1,32 @@
+{
+  "zipName": "Tadawi-Stage-4-COORDINATOR-STATE-PASS-4974ebd.zip",
+  "commit": "4974ebda7760e7fd487723bf08ef1a8be9571b89",
+  "commitShort": "4974ebd",
+  "createdAt": "2026-08-13T11:29:45.128Z",
+  "fileCount": 1431,
+  "excludedDirectories": [
+    "node_modules",
+    "dist",
+    ".git",
+    "ci-artifacts",
+    "review-work",
+    "01-ORIGINAL",
+    "02-CURRENT",
+    "03-REPORTS",
+    "stage-1-uat",
+    "stage-2-uat",
+    "stage-3-uat",
+    "stage-4-uat",
+    "app-source"
+  ],
+  "totalBytes": 21006396,
+  "zipSizeBytes": 12925724,
+  "sha256": "dc9ffe2ced8fe5ec5264eff11d47e02f7ee8788d965f86816397c26cb9b35725",
+  "validation": {
+    "extractedTo": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\stage-zip-validate-0kw3gj",
+    "requiredPresent": true,
+    "missing": [],
+    "tarExit": 0,
+    "tarExtractStderr": ""
+  }
+}

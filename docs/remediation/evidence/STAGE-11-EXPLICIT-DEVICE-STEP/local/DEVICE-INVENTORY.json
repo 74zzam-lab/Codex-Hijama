@@ -1,0 +1,14 @@
+{
+  "branchCreation": "createFirstBranchFromForm → commitSetupOrganizationDevice(branchOnly:true)",
+  "branchSelect": "selectExistingBranchOnly → pendingBranchId",
+  "deviceId": "commitSetupOrganizationDevice → device registry",
+  "fingerprint": "licGetFingerprint",
+  "deviceName": "registerDeviceFromForm → bf-device-name",
+  "branchLink": "DeviceConfig.lockedBranchId + pendingBranchId",
+  "localCommit": "setupCommitOrganizationDevice IPC",
+  "publish": "publishFirstSetupBranch (branch) + device registry publication",
+  "deviceLimit": "service.js device limit check on commit",
+  "lockedBranchId": "DeviceConfig.lockedBranchId",
+  "readyCheck": "hasDeviceBranch + deviceStepResolved",
+  "existingPath": "selectExistingBranchOnly + registerDeviceFromForm"
+}

@@ -1,0 +1,14 @@
+{
+  "at": "2026-08-13T15:13:05.823Z",
+  "ok": true,
+  "phase": "V2-5.7",
+  "errors": [],
+  "checks": {
+    "artifacts": true,
+    "migration": true,
+    "lifecycle": true,
+    "icons": true,
+    "secrets": true,
+    "portableUnsupported": true
+  }
+}

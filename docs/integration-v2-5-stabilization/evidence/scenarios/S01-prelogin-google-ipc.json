@@ -1,0 +1,20 @@
+{
+  "id": "S01-prelogin-google-ipc",
+  "title": "Pre-login Google OAuth/Drive IPC is public; restore gated",
+  "result": "PASS",
+  "ms": 38,
+  "evidence": {
+    "publicChannels": [
+      "backup:startOAuth",
+      "backup:connectGoogle",
+      "backup:listCloudBackups",
+      "backup:downloadCloudBackup",
+      "backup:disconnectCloud",
+      "backup:getCloudStatus",
+      "license:readActivationBundle",
+      "cloudOAuth:getSettings",
+      "cache:readLicense"
+    ],
+    "pkce": true
+  }
+}

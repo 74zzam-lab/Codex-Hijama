@@ -1,0 +1,8 @@
+{
+  "phase": "P0-C",
+  "newBuildInstalled": false,
+  "previousInstalledBuild": "P0-B",
+  "previousBuildSha256": "2BA138A5E21E5246C6844F95D59614E419BDABD23B7353AF4533CB5709EA7926",
+  "p0cInstallTest": "UNVERIFIED"
+}
+

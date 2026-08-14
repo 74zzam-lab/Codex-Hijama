@@ -1,0 +1,6 @@
+{
+  "via": "publishUsers owner.json projection",
+  "noPlaintextPassword": true,
+  "seedExcluded": true,
+  "retiredSeedNotAuthoritative": true
+}

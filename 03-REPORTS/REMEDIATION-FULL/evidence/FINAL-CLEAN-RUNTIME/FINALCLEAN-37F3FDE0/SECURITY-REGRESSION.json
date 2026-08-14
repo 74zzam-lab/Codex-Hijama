@@ -1,0 +1,14 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "runtimeReport": "P0-A-SECURITY-RUNTIME.json",
+  "checks": 41,
+  "passed": 41,
+  "forgedDeveloperBind": "DENIED",
+  "intentionalDeveloperLogin": "PASS",
+  "protectedIpcChannels": 73,
+  "storedXssExecutions": 0,
+  "printPayloadExecutions": 0,
+  "packagedLegacyV5SigningMaterial": "FAIL_OPEN_BY_PRODUCT_OWNER_DECISION",
+  "authenticode": "NotSigned",
+  "result": "FAIL"
+}

@@ -1,0 +1,13 @@
+{
+  "finding": "AUD-LIC-013",
+  "preFixInstalledBuild": "51C8FC0E",
+  "preFixUnauthenticatedBundleReturned": true,
+  "preFixMockFeatureSignature": true,
+  "finalBuild": "37F3FDE0",
+  "packagedLicenseDataEntries": 0,
+  "finalUnauthenticatedMissingBundleReturned": false,
+  "finalUnauthenticatedMissingBundleValue": "null",
+  "exactInstalledV5GenerationPersistenceRestart": "PASS",
+  "consoleErrors": 0,
+  "result": "PASS"
+}

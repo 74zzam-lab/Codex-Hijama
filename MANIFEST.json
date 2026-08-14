@@ -1,0 +1,48 @@
+{
+  "bundleId": "CURSOR-COMPLETE-HANDOFF-20260813",
+  "created": "2026-08-13",
+  "purpose": "Independent original-versus-current comparison, complete review, testing and regression audit",
+  "original": {
+    "pathInBundle": "01-ORIGINAL/ORIGINAL-V2-5-9-SOURCE.zip",
+    "sizeBytes": 13475780,
+    "sha256": "01e89d6fc161530ae03690865062827bbdecbb7ca58b3e0fe331909a9536b0cc",
+    "version": "2.0.1",
+    "date": "2026-08-01"
+  },
+  "current": {
+    "pathInBundle": "02-CURRENT/CURRENT-FINAL-RESTORE-SOURCE.zip",
+    "sizeBytes": 10950662,
+    "sha256": "9c0339cc9cb6a039e859c61a32dd1b586517950103eceac70634a2c8a146ad9d",
+    "version": "2.0.1",
+    "buildId": "FINAL-RESTORE-20260813",
+    "sourceArchiveInventory": {
+      "entries": 1469,
+      "forbiddenLocalProfileEntries": 0
+    }
+  },
+  "instructions": {
+    "readFirst": "README-FIRST-AR.md",
+    "cursorPrompt": "04-PROMPT/CURSOR-PROMPT.md",
+    "primaryComparisonReport": "03-REPORTS/ORIGINAL-TO-CURRENT-COMPLETE-COMPARISON-20260813.md",
+    "traceability": "03-REPORTS/AUDIT-TRACEABILITY.md"
+  },
+  "knownCurrentResult": {
+    "lint": "PASS",
+    "focusedRestoreGroups": "13 PASS",
+    "fullSuite": "126/132",
+    "currentSourceInstalledExe": "UNVERIFIED",
+    "commercialRelease": "NO-GO",
+    "intentionalOpenConflict": "AUD-LIC-002 embedded Legacy V5 signing secret"
+  },
+  "privacyAndPackaging": {
+    "containsNodeModules": false,
+    "containsDistOrExe": false,
+    "containsCodexProfiles": false,
+    "containsUserData": false,
+    "containsLiveOAuthTokens": false,
+    "containsLicenseDataFixturesInCurrentArchive": false,
+    "containsHistoricalDevelopmentPrivateKeyInsideOriginalArchive": true,
+    "containsPrivateKeyInsideCurrentArchive": false,
+    "warning": "The original archive is retained byte-for-byte for comparison and must not be distributed as a production/customer package."
+  }
+}

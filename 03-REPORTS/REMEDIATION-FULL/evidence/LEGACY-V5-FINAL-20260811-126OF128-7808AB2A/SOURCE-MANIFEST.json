@@ -1,0 +1,24 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "algorithm": "SHA-256",
+  "files": [
+    { "path": "license/core/license-crypto.js", "bytes": 2872, "sha256": "77DDBDA655BC69BE80C1A5DD49FDBA42865BF1A583FA0DCAA152902E76BAFD2A" },
+    { "path": "license/core/license-codec-v5.js", "bytes": 7053, "sha256": "13F177ED49D5E5EAF4F3B583D676E42C3809CBA554EB101DFAC3AE9359C62152" },
+    { "path": "license/engine/license-generator-v2.js", "bytes": 7666, "sha256": "B8DCE9191F03C6AAC069055722FFFD91403733290D25E35473390201F1370E4F" },
+    { "path": "license/engine/license-validator-v2.js", "bytes": 4487, "sha256": "93CD3F1B1977630C9058D03D21D344B66B1E3E9A3EDD37ED557D518528BA7C23" },
+    { "path": "license/ui/license-v2-drawer.js", "bytes": 33934, "sha256": "A6CCCA28D20D9FCE4E7799A4F73A38F72D5317F05C4E5030A7F09457112460B9" },
+    { "path": "electron/legacy-license-crypto.js", "bytes": 1513, "sha256": "B0AC84ECB365D3913CC7BA9C0EF8D83559B557F24B3B1C3A44D560CADC238C2B" },
+    { "path": "electron/license-vault-proxy.js", "bytes": 2210, "sha256": "3BF07DEAD9C611D2ED28C7E742B471121EDA3F53856A7616F9188920144336BA" },
+    { "path": "electron/license-data.js", "bytes": 5932, "sha256": "11888027F07D3E85FFC63340D21E84B5E52A404E6039661AEB9D64ED4B4EDF8C" },
+    { "path": "electron/main.js", "bytes": 56089, "sha256": "1573821877921F7489221EDDDAE69B341AAEBD247D3EFAF10D5A0DFBB08DBB44" },
+    { "path": "electron/setup-activation.js", "bytes": 11128, "sha256": "789A6FCAB2AE3A84FF694F1110BB1454865864938BA86EED04232B9951FCF698" },
+    { "path": "cloud/license-vault-client.js", "bytes": 6623, "sha256": "3B00EF4B1FF9EEDADFA18045E0BF5495B6245E8EACEF5725C0167841C697EBBD" },
+    { "path": "cloud/license-activation-gate.js", "bytes": 15237, "sha256": "F55776B2C6948A54BE33EE400930EFDFA512A683A64278612D591A0641DCA003" },
+    { "path": "cloud/branch-enrollment.js", "bytes": 7934, "sha256": "AAA6B2A3E029E1A06037D7A6FFD81B999A779678C7F0B1840099C4006B42616D" },
+    { "path": "cloud/owner-hub.js", "bytes": 70734, "sha256": "F1DE9D3A36CF1F61B79109C8437B61C0DFD5C856F6C865AE9AFD01D666E0F76A" },
+    { "path": "cloud/boot-flow-ui.js", "bytes": 92008, "sha256": "798A45EAB45EDB12941B2CA88BAC6F6940D0EB94E74EEE815C9E6C59581ECA50" },
+    { "path": "cupping-sqlite-bridge.js", "bytes": 22474, "sha256": "0119C13D983F42E50E109FE4FE9A9AD1EE19FC7603E478B2932E4F1EADAADCFD" },
+    { "path": "database/entity-catalog.js", "bytes": 3631, "sha256": "76659E78F649D94B8240318DE51478C51EEA5D6592E8B79D7A09741C35B686CA" },
+    { "path": "tests/baseline/test-legacy-v5-license-runtime.js", "bytes": 7519, "sha256": "3369AFD4FBD3E14DFDD25D2597DBDA7F30D487456FE3537C1FED5B153A6F6361" }
+  ]
+}

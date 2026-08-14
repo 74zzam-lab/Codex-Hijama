@@ -1,0 +1,6 @@
+{
+  "seedAfterSetup": "DENIED",
+  "realOwner": "PASS",
+  "renderer": "doLogin + filterLoginUsers",
+  "main": "password-auth.hasAuthoritativeOwner"
+}

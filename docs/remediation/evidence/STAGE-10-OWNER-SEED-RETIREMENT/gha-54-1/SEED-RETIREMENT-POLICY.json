@@ -1,0 +1,9 @@
+{
+  "method": "disable + ownerSeedRetired marker + supersededByOwnerId (no hard delete)",
+  "triggers": [
+    "OwnerManagement.createOwner",
+    "migrateOwnerSeedStateIfNeeded",
+    "startup migration",
+    "commitSetupOwner"
+  ]
+}

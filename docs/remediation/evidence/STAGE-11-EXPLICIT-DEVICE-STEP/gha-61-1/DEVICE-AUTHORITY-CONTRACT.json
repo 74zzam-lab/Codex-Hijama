@@ -1,0 +1,8 @@
+{
+  "gate": "DEVICE_RESOLVED",
+  "sourceOfTruth": "DeviceConfig + device registry via hasDeviceBranch/deviceStepResolved",
+  "notBasedOn": [
+    "completedSteps alone",
+    "wizard boolean only"
+  ]
+}

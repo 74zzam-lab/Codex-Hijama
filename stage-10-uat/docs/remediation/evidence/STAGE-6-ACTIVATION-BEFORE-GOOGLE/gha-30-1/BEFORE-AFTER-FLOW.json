@@ -1,0 +1,35 @@
+{
+  "beforeNEW": [
+    "language",
+    "google",
+    "license",
+    "organization",
+    "branch",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "afterNEW": [
+    "language",
+    "license",
+    "google",
+    "organization",
+    "branch",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "existingUNCHANGED": [
+    "language",
+    "google",
+    "license",
+    "organization",
+    "branch_select",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ]
+}

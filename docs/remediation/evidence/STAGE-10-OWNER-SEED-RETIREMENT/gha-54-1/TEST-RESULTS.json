@@ -1,0 +1,5 @@
+{
+  "stage10Focused": "PASS",
+  "scenarios": 35,
+  "file": "tests/baseline/test-stage-10-owner-seed-retirement.js"
+}

@@ -1,0 +1,13 @@
+{
+  "nodeHarness": "PASS",
+  "windowsRunner": "windows-2022",
+  "windowsBuild": {
+    "filename": "HijamaManagement-Setup-2.0.1.exe",
+    "sizeBytes": 106996947,
+    "sha256": "d001f3a17caf3940aeb65b28f955a11511a9382865f88facf09cf1919677f417",
+    "buildDurationMs": 128166
+  },
+  "installedExeSmoke": "PASS",
+  "fullInteractiveGui": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED"
+}

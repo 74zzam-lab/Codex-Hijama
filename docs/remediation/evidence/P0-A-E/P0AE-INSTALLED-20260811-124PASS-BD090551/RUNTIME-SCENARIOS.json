@@ -1,0 +1,5 @@
+{
+  "p0a":{"result":"PASS","checks":"41/41","firstRunPageErrors":0,"restartPageErrors":0,"storedXssExecution":0,"printPayloadExecution":0,"developerLogin":"PASS","forgedDeveloperBind":"DENIED"},
+  "p0b":{"result":"PASS","checks":"7/7","sqliteIntegrity":"ok","branchScopedReplace":"PASS","rawOperationalKv":"DENIED"},
+  "googleRealReconnect":{"result":"UNVERIFIED","reason":"The production profile has no recoverable refresh token and no controlled Google consent was performed"}
+}

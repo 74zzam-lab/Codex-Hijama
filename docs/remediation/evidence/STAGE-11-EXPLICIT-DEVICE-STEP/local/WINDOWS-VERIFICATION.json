@@ -1,0 +1,9 @@
+{
+  "newPath": "Owner→Branch→Device→restart stable",
+  "existingPath": "Branch Select→Device→restart stable",
+  "nodeHarness": "PASS",
+  "windowsRunner": "windows-2022",
+  "installedExeSmoke": "GHA post-build",
+  "fullInteractiveGui": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED"
+}

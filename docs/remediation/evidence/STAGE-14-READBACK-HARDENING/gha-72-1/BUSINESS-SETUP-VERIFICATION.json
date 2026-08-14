@@ -1,0 +1,6 @@
+{
+  "required": [
+    "centerName",
+    "phone"
+  ]
+}
