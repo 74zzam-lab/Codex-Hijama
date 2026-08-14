@@ -63,6 +63,7 @@ jobs:
       - name: npm ci
         continue-on-error: true
         id: npm_ci
+        run: npm ci
 
       - name: Generate packaging inputs
         if: steps.npm_ci.outcome == 'success'
