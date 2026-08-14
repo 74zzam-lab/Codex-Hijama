@@ -1,0 +1,52 @@
+{
+  "generatedAt": "2026-08-14T12:57:15.657Z",
+  "buildId": "gha-98-1",
+  "profiles": [
+    "uat-stage20-new",
+    "uat-stage20-existing",
+    "uat-stage20-use-existing",
+    "uat-stage20-restore",
+    "uat-stage20-sync",
+    "uat-stage20-failure"
+  ],
+  "journeys": {
+    "JOURNEY-A-NEW": "PASS",
+    "JOURNEY-B-EXISTING": "PASS",
+    "JOURNEY-C-USE-EXISTING": "PASS",
+    "JOURNEY-D-BACKUP-RESTORE": "PASS",
+    "JOURNEY-E-SYNC-PULL": "PASS",
+    "JOURNEY-F-FAILURE-RESTART": "PASS"
+  },
+  "details": {
+    "JOURNEY-A-NEW": {
+      "status": "PASS",
+      "reason": "NEW full gate chain + activation-first + PUSH_ONLY sync"
+    },
+    "JOURNEY-B-EXISTING": {
+      "status": "PASS",
+      "reason": "Existing short path: no org/owner/branch create, PULL_ONLY"
+    },
+    "JOURNEY-C-USE-EXISTING": {
+      "status": "PASS",
+      "reason": "Explicit fork converges to EXISTING short path"
+    },
+    "JOURNEY-D-BACKUP-RESTORE": {
+      "status": "PASS",
+      "reason": "Backup V2 create/verify/wrong-password/corrupt/restore"
+    },
+    "JOURNEY-E-SYNC-PULL": {
+      "status": "PASS",
+      "reason": "Sync checkpoint pull without .tdw"
+    },
+    "JOURNEY-F-FAILURE-RESTART": {
+      "status": "PASS",
+      "reason": "Failure policy + dismiss/resume matrix"
+    }
+  },
+  "deviceAbSimulation": "PASS",
+  "liveDeviceAb": "UNVERIFIED",
+  "guiUat": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED",
+  "operationalErrors": 0,
+  "unhandledRejections": 0
+}

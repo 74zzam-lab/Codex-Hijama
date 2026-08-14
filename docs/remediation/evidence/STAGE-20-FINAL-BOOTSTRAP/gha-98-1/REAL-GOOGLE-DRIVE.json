@@ -1,0 +1,5 @@
+{
+  "available": false,
+  "status": "UNVERIFIED",
+  "reason": "no test tenant credentials in runner"
+}

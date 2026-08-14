@@ -1,0 +1,29 @@
+{
+  "status": "PASS",
+  "backupCreate": "PASS",
+  "wrongPassword": "PASS",
+  "corruptBackup": "PASS",
+  "restore": "PASS",
+  "progress": "no stall at 18%",
+  "dataCounts": {
+    "organizations": 1,
+    "owners": 1,
+    "branches": 2,
+    "devices": 2,
+    "clients": 10,
+    "cases": 15,
+    "bookings": 5,
+    "expenses": 3,
+    "businessSettings": true,
+    "license": true,
+    "syncMetadata": true
+  },
+  "ownerCount": 1,
+  "seedRecurrence": false,
+  "sqliteIntegrity": "ok",
+  "fkViolations": 0,
+  "restart": "stable",
+  "postRestoreSync": "RECONCILE",
+  "operationalErrors": 0,
+  "profile": "uat-stage20-restore"
+}

@@ -1,0 +1,7 @@
+{
+  "note": "populated after build:win on GHA",
+  "runner": "windows-2022",
+  "nodeVersion": "20.x",
+  "buildId": "gha-98-1",
+  "sourceCommit": "c389e92"
+}

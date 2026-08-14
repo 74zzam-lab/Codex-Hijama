@@ -1,0 +1,5 @@
+{
+  "dataIntegrity": true,
+  "ownerUniqueness": true,
+  "noStalePush": true
+}
