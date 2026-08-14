@@ -28,7 +28,7 @@
     establishedOfflineStartAllowed: true,
   });
 
-  const WIZARD_FLOW_VERSION = 13;
+  const WIZARD_FLOW_VERSION = 14;
   const LEGACY_NEW_STEPS_PRE_STAGE6 = Object.freeze([
     'language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready',
   ]);
@@ -202,6 +202,11 @@
         if (!w.completedSteps.includes('publication')) w.completedSteps.push('publication');
         changed = true;
       }
+      if (version < 14 && readbackStepResolved()) {
+        if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
+        if (!w.completedSteps.includes('publication')) w.completedSteps.push('publication');
+        changed = true;
+      }
       if (changed) saveWizard(w);
     }
     return w;
@@ -365,6 +370,16 @@
     const PC = global.PublicationContract;
     if (PC?.isResolved) {
       return PC.isResolved({ meta, path: loadWizard().path, setupPublication: meta.setupPublication });
+    }
+    return false;
+  }
+
+  function readbackStepResolved() {
+    const meta = global.DB?.get?.('__tdw_meta__', {}) || {};
+    if (meta.bootstrapCompletedAt) return true;
+    const RVC = global.ReadbackVerificationContract;
+    if (RVC?.isVerified) {
+      return RVC.isVerified({ meta, readbackVerification: meta.readbackVerification, path: loadWizard().path });
     }
     return false;
   }
@@ -852,7 +867,7 @@
       }
       case 'publication': {
         if (!businessSetupStepResolved()) return false;
-        return publicationStepResolved();
+        return publicationStepResolved() && readbackStepResolved();
       }
       case 'restore': {
         if (!deviceStepResolved()) return false;
@@ -860,6 +875,7 @@
         if (w.path === PATHS.NEW) {
           if (!businessSetupStepResolved()) return false;
           if (!publicationStepResolved()) return false;
+          if (!readbackStepResolved()) return false;
         }
         return hasRestoreDecision();
       }
@@ -867,6 +883,7 @@
         if (!deviceStepResolved()) return false;
         if (!businessSetupStepResolved()) return false;
         if (!publicationStepResolved()) return false;
+        if (!readbackStepResolved()) return false;
         return hasSyncDone();
       }
       case 'ready': return isBootComplete();
@@ -1724,9 +1741,26 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       setStatus('⚠️ يجب إكمال بيانات المركز قبل النشر', true);
       return { ok: false, error: 'business_setup_required_before_publication' };
     }
-    if (publicationStepResolved()) {
+    if (publicationStepResolved() && readbackStepResolved()) {
       setStatus('✅ النشر إلى السحابة مكتمل ومُتحقق منه');
       return { ok: true, already: true };
+    }
+    if (publicationStepResolved() && !readbackStepResolved()) {
+      publicationInFlight = true;
+      setStatus('⏳ جارٍ التحقق من read-back للسحابة...');
+      try {
+        const verifyOnly = await global.PublicationGateService?.runReadbackVerification?.({ allowWithoutPublication: true });
+        if (!verifyOnly?.ok || !readbackStepResolved()) {
+          const code = verifyOnly?.error || 'cloud_readback_failed';
+          setStatusFromErr({ message: code }, code);
+          return { ok: false, error: code, result: verifyOnly };
+        }
+        setStatus('✅ تم التحقق من السحابة بنجاح');
+        return { ok: true, readbackVerification: verifyOnly.readbackVerification };
+      } finally {
+        publicationInFlight = false;
+        renderNavButtons(loadWizard());
+      }
     }
     publicationInFlight = true;
     setStatus('⏳ جارٍ نشر الإعداد إلى Google Drive والتحقق...');
@@ -1745,6 +1779,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       if (!publicationStepResolved()) {
         throw new Error('publication_readback_mismatch');
+      }
+      if (!readbackStepResolved()) {
+        throw new Error('readback_verification_failed');
       }
       setStatus('✅ تم النشر والتحقق من السحابة بنجاح');
       return { ok: true, setupPublication: result.setupPublication || readPublicationState() };
@@ -2980,6 +3017,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     readBusinessSetupState,
     commitBusinessSetupFromForm,
     publicationStepResolved,
+    readbackStepResolved,
     readPublicationState,
     commitPublicationFromWizard,
     getSelectedBranchId,

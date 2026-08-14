@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14 Windows Verification
 
 on:
   push:
@@ -15,6 +15,7 @@ on:
       - cursor/stage-11-explicit-device-step-beb8
       - cursor/stage-12-business-setup-gate-beb8
       - cursor/stage-13-publication-gate-beb8
+      - cursor/stage-14-readback-hardening-beb8
       - main
   pull_request:
     branches:
@@ -42,7 +43,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -59,6 +60,7 @@ jobs:
       STAGE11_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE12_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE13_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE14_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -307,6 +309,17 @@ jobs:
         working-directory: ${{ env.SRC }}
         run: node tests/baseline/test-stage-13-publication-gate.js
 
+      - name: Stage 14 readback-hardening UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE14_BUILD_ID: ${{ env.STAGE14_BUILD_ID }}
+        run: node scripts/windows-uat/stage-14-readback-hardening-uat.cjs
+
+      - name: Stage 14 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-14-readback-hardening.js
+
       - name: Generate packaging inputs
         working-directory: ${{ env.SRC }}
         shell: pwsh
@@ -353,6 +366,16 @@ jobs:
             -RepoRoot $PWD `
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
+
+      - name: Package Stage 14 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE14_BUILD_ID: ${{ env.STAGE14_BUILD_ID }}
+          STAGE_NUMBER: '14'
+          STAGE_ZIP_LABEL: READBACK-HARDENING-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package Stage 13 source ZIP (artifact only)
         if: success()
@@ -405,6 +428,7 @@ jobs:
           name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
           path: |
             ${{ env.SRC }}/ci-artifacts/stage1-evidence-*/
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-14-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-13-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-12-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-11-*.zip
@@ -417,6 +441,7 @@ jobs:
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-14-READBACK-HARDENING/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-13-PUBLICATION-GATE/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-12-BUSINESS-SETUP/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-11-EXPLICIT-DEVICE-STEP/**/*

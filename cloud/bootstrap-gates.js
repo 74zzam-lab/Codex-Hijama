@@ -241,20 +241,44 @@
   }
 
   function evaluateReadbackVerified() {
+    const RVC = global.ReadbackVerificationContract;
     const PC = global.PublicationContract;
-    if (PC?.isResolved?.()) {
-      const rec = PC.readPublicationRecord?.();
+    if (RVC?.isVerified?.()) {
+      const rec = RVC.readVerificationRecord?.();
+      const summary = RVC.summarize?.(rec) || {};
       return gateResult('READBACK_VERIFIED', GATE_STATUS.RESOLVED,
-        'publication remote read-back verified', '__tdw_meta__.setupPublication',
-        { artifacts: rec?.artifacts });
+        'authoritative remote read-back verified', '__tdw_meta__.readbackVerification',
+        { binding: rec?.binding, verifiedArtifacts: summary.verifiedArtifacts });
     }
-    const rec = PC?.readPublicationRecord?.();
-    if (rec?.lastError?.readBack === false || rec?.lastError?.error === 'cloud_readback_failed') {
+    if (!PC?.isResolved?.()) {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.MISSING,
+        'publication required before read-back verification', 'PublicationContract');
+    }
+    const rec = RVC?.readVerificationRecord?.();
+    const summary = RVC?.summarize?.(rec) || {};
+    if (summary.staleArtifacts?.length) {
       return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
-        'upload without matching read-back', 'PublicationContract', { lastError: rec.lastError });
+        'stale remote read detected', 'ReadbackVerificationContract', { stale: summary.staleArtifacts });
+    }
+    if (summary.conflictingArtifacts?.length || summary.revisionConflicts?.length) {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
+        'remote revision conflict', 'ReadbackVerificationContract', { conflicts: summary.revisionConflicts });
+    }
+    if (summary.duplicateArtifacts?.length) {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
+        'duplicate remote artifact ambiguity', 'ReadbackVerificationContract');
+    }
+    if (summary.identityMismatch || rec?.identityMismatch) {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
+        'cloud identity mismatch', 'ReadbackVerificationContract');
+    }
+    const pubRec = PC?.readPublicationRecord?.();
+    if (pubRec?.lastError?.readBack === false || pubRec?.lastError?.error === 'cloud_readback_failed') {
+      return gateResult('READBACK_VERIFIED', GATE_STATUS.INVALID,
+        'upload without matching read-back', 'PublicationContract', { lastError: pubRec.lastError });
     }
     return gateResult('READBACK_VERIFIED', GATE_STATUS.MISSING,
-      'publication read-back pending', 'PublicationContract');
+      'read-back verification pending', 'ReadbackVerificationContract', { state: RVC?.getState?.() });
   }
 
   function evaluateInitialSyncResolved() {

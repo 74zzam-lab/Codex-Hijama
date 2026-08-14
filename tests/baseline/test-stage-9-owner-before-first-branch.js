@@ -246,7 +246,7 @@ await (async () => {
   });
   ctx._setOwnerState('OWNER_EXISTS');
   const w = ctx.BootFlow.loadWizard();
-  check(w.wizardFlowVersion === 13, 'legacy v8 migrates to v13');
+  check(w.wizardFlowVersion === 14, 'legacy v8 migrates to v14');
   const resume = ctx.BootstrapCoordinator.resolveResumeStepIndex('new', w.currentStep);
   check(ctx.BootFlow.NEW_STEPS[resume] === 'branch', `restart after owner resumes branch (got ${ctx.BootFlow.NEW_STEPS[resume]})`);
 })();

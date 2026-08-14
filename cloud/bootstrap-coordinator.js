@@ -29,8 +29,8 @@
     setupCompletedAt: 'DERIVED',
   });
 
-  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'restore', 'sync', 'ready'];
-  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'owner', 'sync', 'ready'];
+  const NEW_STEPS = ['language', 'license', 'google', 'discovery', 'path_decision', 'organization', 'owner', 'branch', 'device', 'business_setup', 'publication', 'restore', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'discovery', 'license', 'organization', 'branch_select', 'device', 'restore', 'business_setup', 'publication', 'owner', 'sync', 'ready'];
 
   function stepsFor(path) {
     return path === 'existing' ? EXISTING_STEPS : NEW_STEPS;
@@ -135,7 +135,7 @@
         return !!(BF?.businessSetupStepResolved?.() || BF?.validateStep?.('business_setup'));
       case 'publication':
         if (!BF?.businessSetupStepResolved?.()) return false;
-        return !!(BF?.publicationStepResolved?.() || BF?.validateStep?.('publication'));
+        return !!(BF?.publicationStepResolved?.() && BF?.readbackStepResolved?.());
       case 'owner':
         return !!(BF?.ownerStepResolved?.() || BF?.ownerSetupRequirementMet?.() || SS?.hasOwnerCredential?.());
       case 'restore':
@@ -143,12 +143,14 @@
         if (coord?.userPathChoice === 'new') {
           if (!BF?.businessSetupStepResolved?.()) return false;
           if (!BF?.publicationStepResolved?.()) return false;
+          if (!BF?.readbackStepResolved?.()) return false;
         }
         return !!(BF?.hasRestoreDecision?.() || SS?.hasDataSource?.());
       case 'sync':
         if (!BF?.deviceStepResolved?.()) return false;
         if (!BF?.businessSetupStepResolved?.()) return false;
         if (!BF?.publicationStepResolved?.()) return false;
+        if (!BF?.readbackStepResolved?.()) return false;
         return !!(BF?.hasSyncDone?.() || metaBootstrapCommitted());
       case 'ready':
         return !!(BF?.isBootComplete?.() || SS?.evaluateReady?.({ ignoreRestart: true })?.ready);

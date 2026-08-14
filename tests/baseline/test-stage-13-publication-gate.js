@@ -46,6 +46,7 @@ function loadModules(ctx) {
   const files = [
     'cloud/business-setup-contract.js',
     'cloud/publication-contract.js',
+    'cloud/readback-verification-contract.js',
     'cloud/publication-gate-service.js',
     'cloud/ready-pure-evaluator.js',
     'cloud/setup-state-service.js',
@@ -79,7 +80,7 @@ function verifiedPublication(path = 'new') {
 function baseEnv(overrides = {}) {
   const wizardDefaults = {
     path: 'new', currentStep: 0, lang: 'ar', restoreChoice: null, syncDone: false,
-    completedSteps: [], wizardFlowVersion: 13,
+    completedSteps: [], wizardFlowVersion: 14,
     discoveryCompletedAt: new Date().toISOString(),
     licenseDiscoveryAttempted: true,
     cloudDiscovery: { result: { ok: true, status: 'no_existing_business' }, googleAccountKey: 't@test.com' },
@@ -253,7 +254,12 @@ async function run() {
   check(pub?.ok, '8-16 publication run success');
   check(baseEnv({ meta: { setupPublication: pub.setupPublication } }).PublicationContract.isResolved(), '8 organization+artifacts verified');
 
-  const cRead = baseEnv({ meta: { setupPublication: pub.setupPublication } });
+  const cRead = baseEnv({
+    meta: {
+      setupPublication: pub.setupPublication,
+      readbackVerification: pub.readbackVerification,
+    },
+  });
   const gate = cRead.BootstrapGates.evaluateGate('PUBLICATION_RESOLVED', 'new');
   check(gate.status === 'resolved', 'PUBLICATION_RESOLVED gate');
   check(cRead.BootstrapGates.evaluateGate('READBACK_VERIFIED', 'new').status === 'resolved', 'read-back gate');
@@ -388,7 +394,7 @@ async function run() {
     wizard: { path: 'new', currentStep: 10, wizardFlowVersion: 12, completedSteps: ['business_setup'] },
   });
   mig.BootFlow.loadWizard();
-  check(mig._snap.wizard.wizardFlowVersion === 13, 'v12 migrates to v13');
+  check(mig._snap.wizard.wizardFlowVersion === 14, 'v12 migrates to v14');
   check(mig._snap.wizard.completedSteps.includes('publication'), 'legacy publication skip migration');
 
   const devSrc = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
@@ -397,7 +403,7 @@ async function run() {
   const gates = fs.readFileSync(path.join(root, 'cloud/bootstrap-gates.js'), 'utf8');
   check(/PublicationContract/.test(gates), 'PUBLICATION_RESOLVED uses contract');
 
-  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION === 13, 'wizard flow version 13');
+  check(baseEnv().BootFlow.WIZARD_FLOW_VERSION >= 14, 'wizard flow version >= 14');
 
   if (errors.length) {
     console.error('FAIL stage-13-publication-gate');

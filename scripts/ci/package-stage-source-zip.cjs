@@ -113,8 +113,9 @@ const zipStat = fs.statSync(zipPath);
 manifest.zipSizeBytes = zipStat.size;
 manifest.sha256 = sha256;
 
-const buildId = process.env.STAGE13_BUILD_ID || process.env.STAGE12_BUILD_ID || process.env.STAGE11_BUILD_ID || process.env.STAGE10_BUILD_ID || process.env.STAGE9_BUILD_ID || 'local';
+const buildId = process.env.STAGE14_BUILD_ID || process.env.STAGE13_BUILD_ID || process.env.STAGE12_BUILD_ID || process.env.STAGE11_BUILD_ID || process.env.STAGE10_BUILD_ID || process.env.STAGE9_BUILD_ID || 'local';
 const evidenceMap = {
+  14: 'STAGE-14-READBACK-HARDENING',
   13: 'STAGE-13-PUBLICATION-GATE',
   12: 'STAGE-12-BUSINESS-SETUP',
   11: 'STAGE-11-EXPLICIT-DEVICE-STEP',
@@ -139,6 +140,10 @@ const requiredCore = [
   'cloud/bootstrap-gates.js',
   'cloud/owner-seed-retirement.js',
 ];
+if (stage === '14') {
+  requiredCore.push('tests/baseline/test-stage-14-readback-hardening.js');
+  requiredCore.push('cloud/readback-verification-contract.js');
+}
 if (stage === '13') {
   requiredCore.push('tests/baseline/test-stage-13-publication-gate.js');
   requiredCore.push('cloud/publication-contract.js');

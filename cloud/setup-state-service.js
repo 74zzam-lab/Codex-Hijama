@@ -79,6 +79,7 @@
       device: hasDevice(),
       businessSetup: hasBusinessSetup(),
       publication: hasPublication(),
+      readback: hasReadback(),
       dataSource: hasDataSource(),
       ownerCredential: hasOwnerCredential(),
       syncDone: hasSyncDone(),
@@ -88,7 +89,8 @@
     const RPE = getReadyPureEvaluator();
     if (!RPE?.evaluateReadyPure) {
       const legacyReady = checks.google && checks.license && checks.center && checks.branch
-        && checks.device && checks.businessSetup && checks.publication && checks.dataSource && checks.ownerCredential && checks.syncDone;
+        && checks.device && checks.businessSetup && checks.publication && checks.readback
+        && checks.dataSource && checks.ownerCredential && checks.syncDone;
       return {
         ready: legacyReady,
         isReady: legacyReady,
@@ -144,6 +146,12 @@
 
   function hasBusinessSetup() {
     if (global.BootFlow?.businessSetupStepResolved) return !!global.BootFlow.businessSetupStepResolved();
+    return false;
+  }
+
+  function hasReadback() {
+    if (global.BootFlow?.readbackStepResolved) return !!global.BootFlow.readbackStepResolved();
+    if (global.ReadbackVerificationContract?.isVerified) return !!global.ReadbackVerificationContract.isVerified();
     return false;
   }
 

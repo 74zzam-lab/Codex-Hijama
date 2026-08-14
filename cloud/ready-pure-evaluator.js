@@ -14,6 +14,7 @@
     'device',
     'businessSetup',
     'publication',
+    'readback',
     'dataSource',
     'initialSync',
     'google',
@@ -93,6 +94,19 @@
     return false;
   }
 
+  function readbackVerified(snapshot) {
+    if (snapshot.meta?.bootstrapCompletedAt) return true;
+    const RVC = typeof global !== 'undefined' ? global.ReadbackVerificationContract : null;
+    if (RVC?.isVerified) {
+      return RVC.isVerified({
+        meta: snapshot.meta,
+        readbackVerification: snapshot.meta?.readbackVerification,
+        path: snapshot.wizard?.path,
+      });
+    }
+    return false;
+  }
+
   function organizationResolved(snapshot) {
     const centerId = String(
       snapshot.license?.centerId
@@ -152,6 +166,7 @@
     if (missing.includes('device')) return STATES.DEVICE_REQUIRED;
     if (missing.includes('businessSetup')) return STATES.CENTER_REQUIRED;
     if (missing.includes('publication')) return STATES.SYNC_INITIALIZING;
+    if (missing.includes('readback')) return STATES.SYNC_INITIALIZING;
     if (missing.includes('dataSource')) return STATES.DATA_SOURCE_REQUIRED;
     if (missing.includes('owner')) return STATES.OWNER_REQUIRED;
     if (missing.includes('initialSync')) return STATES.SYNC_INITIALIZING;
@@ -252,6 +267,17 @@
       };
     } else {
       missing.push('publication');
+    }
+
+    if (readbackVerified(snapshot)) {
+      resolved.push('readback');
+      source.readback = {
+        state: snapshot.meta?.readbackVerification?.state || 'VERIFIED',
+        verifiedAt: snapshot.meta?.readbackVerification?.verifiedAt || null,
+        binding: snapshot.meta?.readbackVerification?.binding || null,
+      };
+    } else {
+      missing.push('readback');
     }
 
     if (dataSourceResolved(snapshot)) {
