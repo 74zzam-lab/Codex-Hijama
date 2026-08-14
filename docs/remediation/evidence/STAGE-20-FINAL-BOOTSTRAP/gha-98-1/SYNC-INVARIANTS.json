@@ -1,0 +1,32 @@
+{
+  "existingNoEmptyPush": true,
+  "pullOnlyUploadCount": 0,
+  "contract": {
+    "modes": [
+      "PULL_ONLY",
+      "PUSH_ONLY",
+      "RECONCILE",
+      "NO_SYNC",
+      "RESUME_PENDING"
+    ],
+    "sourceAuthority": [
+      "local",
+      "remote",
+      "restored",
+      "none"
+    ],
+    "evaluator": "resolveInitialSyncPlan",
+    "zeroWrite": true,
+    "completionAuthority": "__tdw_meta__.initialSyncCompletion",
+    "notBasedOn": [
+      "wizard.syncDone alone",
+      "SyncEngine.getReadiness alone without plan execution"
+    ],
+    "pullOnlyProhibits": [
+      "upload",
+      "outbox_drain",
+      "full_table_push"
+    ],
+    "emptyLocalGuard": "existing/restore/replacement + remote data + bootstrap-only local"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "status": "NOT_EXECUTED",
+  "verdict": "BLOCKED",
+  "reason": "requires interactive GUI error injection"
+}

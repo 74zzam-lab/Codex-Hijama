@@ -1,0 +1,21 @@
+{
+  "device": "A",
+  "role": "owner-identity-uat",
+  "startedAt": "2026-08-13T15:12:40.422Z",
+  "finishedAt": "2026-08-13T15:12:40.557Z",
+  "host": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "6.12.94+"
+  },
+  "scenariosExit": 0,
+  "unitExit": 0,
+  "ownerRbacExit": 0,
+  "build": {
+    "platform": "linux",
+    "arch": "x64",
+    "winUnpacked": null,
+    "installer": null
+  },
+  "result": "PASS"
+}

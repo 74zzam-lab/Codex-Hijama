@@ -1,0 +1,9 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "p0aSuite": "47/47 PASS",
+  "fullSuite": "109/109 PASS",
+  "developerLoginBehaviorChanged": false,
+  "unknownIpcDefaultAllowIntroduced": false,
+  "protectedOperationalKvWrite": "DENIED"
+}

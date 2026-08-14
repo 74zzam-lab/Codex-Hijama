@@ -1,0 +1,36 @@
+{
+  "new": [
+    "ACTIVATION_RESOLVED",
+    "GOOGLE_CONNECTED",
+    "DISCOVERY_RESOLVED",
+    "ORGANIZATION_RESOLVED",
+    "OWNER_RESOLVED",
+    "BRANCH_RESOLVED",
+    "DEVICE_RESOLVED",
+    "BUSINESS_SETUP_RESOLVED",
+    "RESTORE_DECISION_RESOLVED",
+    "PUBLICATION_RESOLVED",
+    "READBACK_VERIFIED",
+    "INITIAL_SYNC_RESOLVED",
+    "READY"
+  ],
+  "existing": [
+    "GOOGLE_CONNECTED",
+    "DISCOVERY_RESOLVED",
+    "LICENSE_ORG_RECOVERY_RESOLVED",
+    "BRANCH_RESOLVED",
+    "DEVICE_RESOLVED",
+    "RESTORE_DECISION_RESOLVED",
+    "INITIAL_SYNC_RESOLVED",
+    "READY"
+  ],
+  "statusEnum": {
+    "RESOLVED": "resolved",
+    "MISSING": "missing",
+    "BLOCKED": "blocked",
+    "INVALID": "invalid",
+    "UNKNOWN": "unknown",
+    "NOT_APPLICABLE": "not_applicable"
+  },
+  "module": "cloud/bootstrap-gates.js"
+}

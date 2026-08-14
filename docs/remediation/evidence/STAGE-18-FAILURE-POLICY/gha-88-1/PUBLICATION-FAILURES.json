@@ -1,0 +1,7 @@
+{
+  "publication_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-PUB-FAIL"
+  }
+}

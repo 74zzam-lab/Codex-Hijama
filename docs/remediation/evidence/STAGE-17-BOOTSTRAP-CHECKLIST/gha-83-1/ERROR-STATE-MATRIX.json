@@ -1,0 +1,19 @@
+{
+  "messages": {
+    "google_not_connected": "تعذر ربط حساب Google. حاول مرة أخرى.",
+    "discovery_failed": "تعذر إكمال البحث عن البيانات السابقة.",
+    "existing_business_not_found": "لم يتم العثور على بيانات سابقة لهذا الحساب.",
+    "existing_license_recovery_failed": "تعذر استرداد الترخيص أو المؤسسة.",
+    "existing_candidate_ambiguous": "وُجد أكثر من مؤسسة — اختر المؤسسة الصحيحة.",
+    "candidate_selection_required": "يلزم اختيار مؤسسة قبل المتابعة.",
+    "activation_invalid": "رمز التفعيل غير صالح أو منتهٍ.",
+    "owner_credential_required": "يلزم التحقق من حساب المالك.",
+    "device_limit_exceeded": "تم بلوغ الحد الأقصى للأجهزة.",
+    "publication_failed": "تعذر حفظ البيانات على السحابة.",
+    "readback_failed": "تعذر التحقق من الحفظ السحابي.",
+    "restore_failed": "تعذر استرجاع البيانات.",
+    "initial_sync_failed": "تعذر إكمال المزامنة الأولية.",
+    "sync_not_ready": "المزامنة غير جاهزة بعد.",
+    "business_setup_invalid": "أكمل البيانات الأساسية المطلوبة."
+  }
+}

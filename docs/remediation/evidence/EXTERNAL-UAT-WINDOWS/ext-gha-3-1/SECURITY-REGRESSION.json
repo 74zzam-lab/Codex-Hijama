@@ -1,0 +1,8 @@
+{
+  "unitSecurityBoundary": "FAIL",
+  "stage20Invariants": "PASS",
+  "unknownIpcDenied": "FAIL-unit",
+  "forgedPrivilegedBindDenied": "FAIL-unit",
+  "devUnchanged": true,
+  "secretsRedacted": true
+}

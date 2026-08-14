@@ -1,0 +1,12 @@
+{
+  "id": "LIFE-257-011",
+  "title": "Interrupted update rollback",
+  "ok": true,
+  "result": "PASS",
+  "at": "2026-08-13T15:13:05.818Z",
+  "evidence": {
+    "policy": "NSIS upgrade preserves userData on ${isUpdated}; app binaries replaced under INSTDIR only; DB untouched on interrupt",
+    "updatePreservesUserData": true,
+    "migrationCorruptRefuse": true
+  }
+}

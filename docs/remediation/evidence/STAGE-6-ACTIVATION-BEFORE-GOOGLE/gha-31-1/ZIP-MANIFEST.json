@@ -1,0 +1,8 @@
+{
+  "zipName": "Tadawi-Stage-6-ACTIVATION-FIRST-PASS-1da9d70.zip",
+  "commit": "1da9d7034505d30c2e81f7f500b7b9368bd8b378",
+  "commitShort": "1da9d70",
+  "fileCount": 1471,
+  "sha256": "e439a53ab0f7e6198b56bec704ad3e7ad2e9873ba430b1709206fe7a405e5340",
+  "validation": { "requiredPresent": true, "cleanExtractOnGHA": true }
+}

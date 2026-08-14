@@ -1,0 +1,12 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "atomicDataAndOutbox": true,
+  "lockedDbPartialWrite": false,
+  "lockedDbPartialOutbox": false,
+  "restartResurrection": false,
+  "crossBranchDeletion": false,
+  "migrationRerunIdempotent": true,
+  "ambiguousLegacyAssignmentToBrMain": false,
+  "ambiguousLegacyPolicy": "quarantine"
+}

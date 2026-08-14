@@ -1,0 +1,13 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "result": "PASS",
+  "persistedLicenseCount": 2,
+  "lifetimePersisted": true,
+  "customFarFuturePersisted": true,
+  "developerSessionPersisted": false,
+  "prooflessDeveloperBind": "DENIED",
+  "pageErrors": 0,
+  "consoleErrors": 0,
+  "sqliteIntegrity": "ok",
+  "migrationCount": 6
+}

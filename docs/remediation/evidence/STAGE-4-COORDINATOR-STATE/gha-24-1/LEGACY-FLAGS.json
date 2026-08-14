@@ -1,0 +1,44 @@
+{
+  "path": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "currentStep": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "completedSteps": {
+    "classification": "NO_LONGER_AUTHORITATIVE"
+  },
+  "startedAt": {
+    "classification": "UI_ONLY"
+  },
+  "lang": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "restoreChoice": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "syncDone": {
+    "classification": "NO_LONGER_AUTHORITATIVE"
+  },
+  "oauthLockAt": {
+    "classification": "UI_ONLY"
+  },
+  "restoreVerifiedDatabase": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "selectedCandidateId": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "pendingBranchId": {
+    "classification": "KEEP_TEMPORARILY"
+  },
+  "lastError": {
+    "classification": "UI_ONLY"
+  },
+  "lastDiagnostic": {
+    "classification": "UI_ONLY"
+  },
+  "setupCompletedAt": {
+    "classification": "DERIVED"
+  }
+}

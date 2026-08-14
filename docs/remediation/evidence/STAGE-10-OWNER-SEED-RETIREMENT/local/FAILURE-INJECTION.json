@@ -1,0 +1,4 @@
+{
+  "afterOwnerCommit": "migrate on restart",
+  "duringRetirement": "idempotent"
+}

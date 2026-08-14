@@ -1,0 +1,8 @@
+{
+  "unknownIpcDenied": "PASS-unit",
+  "forgedPrivilegedBindDenied": "PASS-unit",
+  "developerFlowUnchanged": true,
+  "safeRendering": "PASS-unit",
+  "secretsInEvidence": false,
+  "note": "unit harness only; installed runtime not re-run"
+}

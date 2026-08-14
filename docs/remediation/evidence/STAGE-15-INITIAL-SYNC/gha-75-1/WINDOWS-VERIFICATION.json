@@ -1,0 +1,7 @@
+{
+  "setupExe": "HijamaManagement-Setup-2.0.1.exe",
+  "setupExeSha256": "54a922eab3a36d6c7d7eadfb4b645feaa8049ae2bc32f24cc0cbbbbaf5fd47cb",
+  "setupExeSizeBytes": 107015340,
+  "installedSmoke": "PASS",
+  "buildId": "gha-75-1"
+}

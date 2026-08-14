@@ -1,0 +1,88 @@
+{
+  "fields": [
+    {
+      "field": "path",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": true
+    },
+    {
+      "field": "currentStep",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": true
+    },
+    {
+      "field": "completedSteps",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "NO_LONGER_AUTHORITATIVE",
+      "authoritative": false
+    },
+    {
+      "field": "startedAt",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "UI_ONLY",
+      "authoritative": false
+    },
+    {
+      "field": "lang",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": true
+    },
+    {
+      "field": "restoreChoice",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": true
+    },
+    {
+      "field": "syncDone",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "NO_LONGER_AUTHORITATIVE",
+      "authoritative": false
+    },
+    {
+      "field": "oauthLockAt",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "UI_ONLY",
+      "authoritative": false
+    },
+    {
+      "field": "restoreVerifiedDatabase",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": false
+    },
+    {
+      "field": "selectedCandidateId",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": false
+    },
+    {
+      "field": "pendingBranchId",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "KEEP_TEMPORARILY",
+      "authoritative": false
+    },
+    {
+      "field": "lastError",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "UI_ONLY",
+      "authoritative": false
+    },
+    {
+      "field": "lastDiagnostic",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "UI_ONLY",
+      "authoritative": false
+    },
+    {
+      "field": "setupCompletedAt",
+      "storage": "__tdw_boot_wizard__",
+      "classification": "DERIVED",
+      "authoritative": false
+    }
+  ]
+}

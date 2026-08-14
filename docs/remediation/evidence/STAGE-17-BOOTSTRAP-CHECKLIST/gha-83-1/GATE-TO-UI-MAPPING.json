@@ -1,0 +1,19 @@
+{
+  "language": null,
+  "license": "licenseActivate",
+  "google": "oauth",
+  "discovery": "discovery",
+  "path_decision": null,
+  "organization": "branchBind",
+  "owner": "ownerCreate",
+  "branch": "branchCreate",
+  "branch_select": "branchBind",
+  "device": "deviceRegister",
+  "business_setup": "businessSetup",
+  "publication": "publication",
+  "restore": "restore",
+  "sync": "sync",
+  "license_org_recovery": "licenseActivate",
+  "owner_auth": "ownerLogin",
+  "ready": null
+}

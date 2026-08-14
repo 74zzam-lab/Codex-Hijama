@@ -1,0 +1,15 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "boundary": "exact installed EXE",
+  "lifecycleReport": "FINAL-CLEAN-RUNTIME.json",
+  "checks": 28,
+  "passed": 28,
+  "developerLogin": "PASS",
+  "v5GenerationAndPersistence": "PASS",
+  "ownerSessionAndCredentialReuse": "PASS",
+  "setupIdempotency": "PASS",
+  "singleActivationPublication": "PASS",
+  "pageErrors": 0,
+  "consoleErrors": 0,
+  "result": "PASS"
+}

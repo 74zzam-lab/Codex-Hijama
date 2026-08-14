@@ -1,0 +1,5 @@
+{
+  "commitFail": "no advance, gate unresolved",
+  "readbackMismatch": "throws business_setup_readback_mismatch",
+  "entitiesUnchanged": "owner/branch/device counts preserved"
+}

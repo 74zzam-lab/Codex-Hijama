@@ -1,0 +1,5 @@
+{
+  "guard": "needsBootFlow locks app-shell",
+  "loginBlocked": true,
+  "showPageBlocked": true
+}

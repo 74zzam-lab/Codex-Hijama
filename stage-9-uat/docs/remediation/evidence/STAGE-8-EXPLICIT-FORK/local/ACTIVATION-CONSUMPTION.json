@@ -1,0 +1,5 @@
+{
+  "afterUseExisting": "retained-until-existing-license-recovery",
+  "duplicateConsume": false,
+  "observation": "NEW activation consumed before fork remains local; EXISTING license step may recover Drive license without re-consume"
+}

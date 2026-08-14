@@ -1,0 +1,8 @@
+{
+  "platform": "win32",
+  "timezone": "Asia/Riyadh",
+  "currentSourceInstalled": false,
+  "cleanInstall": "UNVERIFIED",
+  "upgradeInstall": "UNVERIFIED",
+  "note": "No current-source Setup EXE was produced."
+}

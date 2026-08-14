@@ -1,0 +1,20 @@
+{
+  "statuses": {
+    "DONE": "DONE",
+    "REQUIRED": "REQUIRED",
+    "IN_PROGRESS": "IN_PROGRESS",
+    "ERROR": "ERROR",
+    "USER_ACTION": "USER_ACTION",
+    "FATAL": "FATAL",
+    "CANCELLED": "CANCELLED",
+    "FUTURE": "FUTURE",
+    "SKIPPED": "SKIPPED"
+  },
+  "outcomeMap": {
+    "SUCCESS": "DONE",
+    "RETRYABLE": "ERROR",
+    "USER_ACTION_REQUIRED": "USER_ACTION",
+    "FATAL": "FATAL",
+    "CANCELLED": "CANCELLED"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "status": "PASS",
+  "activationConsume": 1,
+  "organizationCount": 1,
+  "authoritativeOwnerCount": 1,
+  "branchCount": 1,
+  "deviceCount": 1,
+  "businessSetup": "PASS",
+  "publication": "PASS",
+  "readback": "PASS",
+  "restoreDecision": "empty/no-restore",
+  "initialSync": "PUSH_ONLY",
+  "ready": true,
+  "loginOpensOnce": "harness",
+  "fiveRestarts": {
+    "bootFlowOpens": 0
+  },
+  "operationalErrors": 0,
+  "profile": "uat-stage20-new"
+}

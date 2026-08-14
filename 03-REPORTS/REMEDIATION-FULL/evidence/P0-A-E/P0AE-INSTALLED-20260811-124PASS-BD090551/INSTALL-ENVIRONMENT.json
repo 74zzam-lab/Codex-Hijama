@@ -1,0 +1,7 @@
+{
+  "os":"Microsoft Windows 10 Pro 10.0.19045 x64",
+  "node":"v22.23.1",
+  "npm":"12.0.1",
+  "profileIsolation":"Explicit --user-data-dir under .codex-p0a; production Cupping Center profile was not used",
+  "installerMode":"silent isolated-path install"
+}

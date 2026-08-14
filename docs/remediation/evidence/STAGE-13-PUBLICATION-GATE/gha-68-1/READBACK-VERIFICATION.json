@@ -1,0 +1,6 @@
+{
+  "authority": "DriveAdapter.downloadJsonFirst / remoteDownload",
+  "notCache": "must not use in-memory object as read-back",
+  "mismatchBehavior": "PUBLICATION_FAILED / gate unresolved",
+  "perArtifact": true
+}

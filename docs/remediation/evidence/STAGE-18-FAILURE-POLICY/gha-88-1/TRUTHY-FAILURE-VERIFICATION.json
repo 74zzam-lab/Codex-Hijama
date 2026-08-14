@@ -1,0 +1,4 @@
+{
+  "rule": "ok===true only; {ok:false} is never success",
+  "isTruthySuccess": true
+}

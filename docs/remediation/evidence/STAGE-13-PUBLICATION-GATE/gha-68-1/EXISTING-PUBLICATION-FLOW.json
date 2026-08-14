@@ -1,0 +1,21 @@
+{
+  "steps": [
+    "language",
+    "google",
+    "discovery",
+    "license",
+    "organization",
+    "branch_select",
+    "device",
+    "restore",
+    "business_setup",
+    "publication",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "publicationAfter": "business_setup",
+  "publicationBefore": "owner",
+  "scope": "license read-back + outbox only",
+  "noFullRepublish": true
+}

@@ -1,0 +1,6 @@
+{
+  "currentGateOnly": true,
+  "idempotent": true,
+  "boundedAutomatic": true,
+  "handler": "retryCurrentGate"
+}
