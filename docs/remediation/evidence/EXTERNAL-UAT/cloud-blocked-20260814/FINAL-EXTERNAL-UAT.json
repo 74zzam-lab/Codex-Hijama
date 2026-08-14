@@ -1,0 +1,37 @@
+{
+  "verdict": "FAIL",
+  "bootstrapExternalGate": "FAIL",
+  "buildId": "cloud-blocked-20260814",
+  "generatedAt": "2026-08-14T13:25:00.000Z",
+  "baseline": {
+    "sourceCommit": "c389e92",
+    "evidenceCommit": "49f6047",
+    "githubRun": "31801984620",
+    "setupExeSha256": "058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0",
+    "sourceZipSha256": "bb8ae4bc104ae8ac6210a883eefa82709860224afdaec5d29a1c54bab11baf92"
+  },
+  "executedInEnvironment": "linux-cloud-agent",
+  "criticalBlockers": [
+    "No Windows host — cloud agent is Linux x86_64; Stage 20 Setup EXE not present and cannot be installed interactively",
+    "No Google OAuth test tenant credentials available in agent environment (GOOGLE_OAUTH_* unset; GitHub secrets API 403)",
+    "No second Windows device/VM for live Device A/B matrix",
+    "No Stage 19 isolated profile on Windows for upgrade install test",
+    "Full interactive GUI bootstrap walkthrough requires Windows desktop + installed EXE"
+  ],
+  "journeys": {
+    "realGoogleOAuth": "NOT_EXECUTED",
+    "realDrivePublicationReadback": "NOT_EXECUTED",
+    "realDriveBackupRestore": "NOT_EXECUTED",
+    "liveDeviceAb": "NOT_EXECUTED",
+    "fullGuiNew": "NOT_EXECUTED",
+    "fullGuiExisting": "NOT_EXECUTED",
+    "upgradeStage19ToFinal": "NOT_EXECUTED"
+  },
+  "localRegressionOnly": {
+    "lint": "PASS",
+    "securityBoundaryUnit": "PASS",
+    "stage20Gate": "PASS",
+    "devUnchanged": true
+  },
+  "rule": "Per POST-STAGE-20 §31–32: critical external journeys not executed => EXTERNAL GATE FAIL (not downgradeable to warning)"
+}
