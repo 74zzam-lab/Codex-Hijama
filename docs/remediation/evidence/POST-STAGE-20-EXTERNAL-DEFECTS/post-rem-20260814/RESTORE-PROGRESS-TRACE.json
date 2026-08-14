@@ -1,0 +1,5 @@
+{
+  "stallPercentObserved": 21,
+  "stageMapping": "download_db @ stageRatio 0.3 ≈ 21% of BACKUP_V2_RESTORE_STAGES weight",
+  "instrumentationAdded": ["heartbeat emit every 5s", "RESTORE_OPERATION_TIMEOUT_MS 600000", "backup_password_required pre-prompt"]
+}

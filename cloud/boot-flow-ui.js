@@ -387,8 +387,12 @@
     options = options || {};
     const w = getDisplayWizard(loadWizard());
     invalidateStaleChecklistErrors(w);
-    const step = options.stepId || stepsFor(w.path)[w.currentStep];
+    let step = options.stepId || stepsFor(w.path)[w.currentStep];
     const normalized = normalizeBootstrapFailure(err, code, step);
+    if (!options.stepId && step === 'google' && hasGoogle()) {
+      const discoveryCodes = ['discovery_failed', 'license_discovery_failed', 'data_discovery_failed', 'existing_license_recovery_failed', 'no_activation_on_drive'];
+      if (discoveryCodes.includes(normalized.code)) step = 'discovery';
+    }
     if (options.retryHandler) lastGateRetryHandler = options.retryHandler;
     const isOperationalError = !normalized.cancelled;
     setStatus(formatFailureForStatus(normalized), isOperationalError);
@@ -507,9 +511,7 @@
   }
 
   function hasBranch() {
-    const lic = global.LicenseCloud?.loadLocal?.();
-    const branches = (lic?.branches || []).filter((b) => b && b.active !== false);
-    return branches.length > 0;
+    return authoritativeBootstrapBranches().length > 0;
   }
 
   function hasDeviceBranch() {
@@ -522,9 +524,51 @@
     const pending = String(w.pendingBranchId || w.selectedBranchId || '').trim();
     if (pending) return pending;
     const lic = global.LicenseCloud?.loadLocal?.() || {};
-    const branches = (lic.branches || []).filter((b) => b && b.active !== false);
+    const branches = authoritativeBootstrapBranches(lic);
     if (branches.length === 1) return String(branches[0].id || '');
     return '';
+  }
+
+  function authoritativeBootstrapBranches(license) {
+    license = license || global.LicenseCloud?.loadLocal?.() || {};
+    const branchMap = new Map();
+    for (const b of (license.branches || []).filter((item) => item && item.active !== false)) {
+      const id = String(b.id || '').trim();
+      if (!id) continue;
+      branchMap.set(id, { id, name: b.name || b.id, source: 'license' });
+    }
+    const discovery = getCachedDiscoveryResult();
+    for (const b of (discovery?.branchCandidates || [])) {
+      const id = String(b?.id || b?.branchId || '').trim();
+      if (!id) continue;
+      if (!branchMap.has(id)) {
+        branchMap.set(id, {
+          id,
+          name: b.name || b.branchName || id,
+          source: b.source || 'discovery',
+        });
+      }
+    }
+    return Array.from(branchMap.values());
+  }
+
+  function populateBootstrapBranchSelect(prefix = 'bf') {
+    const lic = global.LicenseCloud?.loadLocal?.() || {};
+    const branches = authoritativeBootstrapBranches(lic);
+    if (typeof global.populateDriveBootstrapBranchFields === 'function') {
+      return global.populateDriveBootstrapBranchFields(lic, prefix, branches);
+    }
+    const sel = document.getElementById(`${prefix}-branch-id`);
+    if (!sel) return branches[0]?.id || '';
+    if (!branches.length) {
+      sel.innerHTML = '<option value="">— لا فروع —</option>';
+      return '';
+    }
+    sel.innerHTML = branches.map((b) => {
+      const id = String(b.id).replace(/"/g, '&quot;');
+      return `<option value="${id}">${b.name || b.id}</option>`;
+    }).join('');
+    return sel.value;
   }
 
   function readDeviceCommitState() {
@@ -1304,6 +1348,7 @@
     const steps = stepsFor(w.path);
     const step = steps[w.currentStep];
     if (!w.completedSteps.includes(step)) w.completedSteps.push(step);
+    delete w.reviewStepIndex;
     if (w.currentStep < steps.length - 1) w.currentStep += 1;
     return saveWizard(w);
   }
@@ -1326,11 +1371,11 @@
       });
     }
     s.textContent = `
-.bf-overlay{position:fixed;inset:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:hidden}
-.bf-overlay.open{display:grid}
-.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,100%);max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box}
-.bf-card-header{flex:0 0 auto;padding:14px 20px 8px;position:relative;min-height:0;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card,#fff)}
-.bf-card-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 12px;-webkit-overflow-scrolling:touch}
+.bf-overlay{position:fixed;inset:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:auto;overscroll-behavior:contain}
+.bf-overlay.open{display:grid;align-items:flex-start;justify-items:center}
+.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,calc(100vw - 2 * clamp(16px,3vw,32px)));max-width:100%;max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box;margin-inline:auto}
+.bf-card-header{flex:0 0 auto;padding:14px clamp(12px,3vw,20px) 8px;position:relative;min-height:0;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card,#fff)}
+.bf-card-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 clamp(12px,3vw,20px) 12px;-webkit-overflow-scrolling:touch;max-width:100%}
 .bf-card-footer{flex-shrink:0;padding:10px 20px 14px;border-top:1px solid var(--border,#e5e7eb);background:var(--card,#fff);display:grid;gap:8px;position:sticky;bottom:0;z-index:3}
 .bf-card h1{margin:0 0 6px;font-size:clamp(1.05rem,2.2vw,1.35rem);font-weight:900;color:var(--primary,#3D5A80);text-align:center}
 .bf-card>p,.bf-lead{margin:0 0 10px;font-size:13px;color:var(--text-muted,#666);text-align:center;line-height:1.6}
@@ -1344,8 +1389,9 @@
 .tdw-stepper.bf-stepper>li[data-state="done"]{border-color:#2d7a5f;color:#2d7a5f}
 .tdw-stepper.bf-stepper>li[data-state="failed"]{border-color:var(--tdw-color-danger-600);color:var(--tdw-color-danger-600)}
 .tdw-stepper.bf-stepper>li[aria-current="step"]{border-color:var(--tdw-color-accent-500,#2f8f83);color:var(--tdw-color-primary-700)}
-.bf-checklist-layout{display:grid;grid-template-columns:minmax(11rem,13.5rem) minmax(0,1fr);gap:14px;align-items:start}
-.bf-checklist-panel{border:1px solid var(--border,#e5e7eb);border-radius:12px;background:var(--surface,#f8fafc);padding:10px;max-height:min(52vh,420px);overflow:auto}
+.bf-checklist-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;width:100%;max-width:100%}
+@media (min-width:641px){.bf-checklist-layout{grid-template-columns:minmax(11rem,13.5rem) minmax(0,1fr)}}
+.bf-checklist-panel{border:1px solid var(--border,#e5e7eb);border-radius:12px;background:var(--surface,#f8fafc);padding:10px;max-height:min(52vh,420px);overflow:auto;min-width:0}
 .bf-checklist-progress{display:grid;gap:6px;margin-bottom:10px}
 .bf-checklist-bar{height:6px;border-radius:999px;background:var(--border,#e5e7eb);overflow:hidden}
 .bf-checklist-bar>i{display:block;height:100%;width:0;background:var(--tdw-color-accent-500,#2f8f83);transition:width .2s}
@@ -1376,10 +1422,11 @@
 .bf-checklist-item[data-status="cancelled"] .bf-checklist-error{color:#64748b}
 .bf-checklist-code{opacity:.75;font-size:10px}
 .bf-checklist-retry{grid-column:1/-1;margin-top:4px}
-.bf-checklist-main{min-width:0}
+.bf-checklist-main{min-width:0;max-width:100%;overflow-x:hidden}
+.bf-step-content{min-height:60px;max-width:100%;overflow-x:hidden}
+.bf-step-content .form-control,.bf-step-content select,.bf-step-content input{max-width:100%;box-sizing:border-box}
 .bf-step-meta{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px}
 .bf-step-hint{font-size:12px;color:var(--primary);background:var(--surface,#f4f6f8);border:1px solid var(--border,#ddd);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7}
-.bf-step-content{min-height:60px}
 .bf-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:0;width:100%}
 .bf-actions:empty{display:none}
 .bf-actions .btn{width:100%;min-width:0;min-height:44px;white-space:normal;text-align:center}
@@ -1423,9 +1470,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 .bf-restore-progress .bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
 .bf-restore-progress .bar>i{display:block;height:100%;width:0;background:#3D5A80;transition:width .2s}
 @media (max-height:720px){.bf-card-header{padding-top:10px}.bf-card h1{font-size:1.05rem}}
-@media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}.bf-checklist-layout{grid-template-columns:1fr}.bf-checklist-panel{max-height:none}}
-@media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
-@media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}}
+@media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}.bf-checklist-panel{max-height:none}}
+@media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%;max-width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
+@media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}.bf-card{width:min(720px,calc(100vw - 24px))}}
 `;
   }
 
@@ -1842,9 +1889,12 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
     } else if (typeof global.syncCloudStatusFromElectron === 'function') {
       try {
-        await global.syncCloudStatusFromElectron({
+        const synced = await global.syncCloudStatusFromElectron({
           acceptLiveReconnect: options.acceptLiveReconnect === true,
         });
+        if (synced?.ok === false && synced?.error) {
+          refreshError = synced.error;
+        }
       } catch (error) {
         refreshError = error?.code || error?.message || 'google_status_refresh_failed';
       }
@@ -1852,10 +1902,11 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (typeof global.licCheck === 'function') {
       try { await global.licCheck(); } catch { /* license readiness is checked separately */ }
     }
+    const connected = hasGoogle();
     return {
-      ok: hasGoogle(),
-      connected: hasGoogle(),
-      error: hasGoogle() ? null : (refreshError || 'google_not_connected'),
+      ok: connected,
+      connected,
+      error: connected ? null : (refreshError || 'google_not_connected'),
     };
   }
 
@@ -2046,7 +2097,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       return { ok: true, discovery: result };
     } catch (e) {
-      setStatusFromErr(e, 'discovery_failed', { retryHandler: () => runDiscoveryGate({ forceRefresh: true }) });
+      setStatusFromErr(e, 'discovery_failed', {
+        stepId: 'discovery',
+        retryHandler: () => runDiscoveryGate({ forceRefresh: true }),
+      });
       return { ok: false, error: String(e && e.message || e), retryable: true };
     } finally {
       discoveryInFlight = false;
@@ -2303,7 +2357,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     branchBindInFlight = true;
     try {
       const lic = global.LicenseCloud?.loadLocal?.() || {};
-      const branch = (lic.branches || []).find((b) => b && String(b.id) === branchId);
+      const branch = authoritativeBootstrapBranches(lic).find((b) => b && String(b.id) === branchId)
+        || (lic.branches || []).find((b) => b && String(b.id) === branchId);
       if (!branch) {
         setStatus('⚠️ الفرع غير موجود في الترخيص', true);
         return { ok: false, error: 'branch_not_found' };
@@ -2685,9 +2740,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         const btn = addBtn(actions, oauthInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط Google', 'btn-primary', () => runGoogleConnect(), oauthInFlight || (isNew && !hasValidLicense()));
         btn.id = 'bf-google-connect-btn';
         if (hasGoogle()) {
-          addBtn(actions, 'تبديل حساب Google', 'btn-secondary', async () => {
+          addBtn(actions, 'فصل / تغيير حساب Google', 'btn-secondary', async () => {
+            if (!confirm('فصل حساب Google الحالي؟ لن تُحذف بيانات الترخيص أو SQLite المحلية.')) return;
             const result = await disconnectGoogleDuringSetup();
-            if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed');
+            if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed', { stepId: 'google' });
           });
         }
         if (hasGoogle()) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
@@ -2709,7 +2765,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const branches = result.branchCandidates?.length || 0;
           summaryHost.textContent = `الحالة: ${result.status || '—'} · مؤسسات: ${orgs} · تراخيص: ${lics} · نسخ: ${backups} · فروع: ${branches}`;
         };
-        addBtn(actions, discoveryInFlight ? '⏳ جارٍ الاكتشاف...' : '🔍 تشغيل الاكتشاف', 'btn-primary', async () => {
+        addBtn(actions, discoveryInFlight ? '⏳ جارٍ الاكتشاف...' : '🔍 إعادة الفحص', 'btn-primary', async () => {
+          if (discoveryInFlight) return;
+          if (statusHost) statusHost.textContent = '⏳ جارٍ إعادة الفحص...';
           const r = await runDiscoveryGate({ forceRefresh: true });
           if (statusHost) {
             statusHost.textContent = r.ok
@@ -2718,6 +2776,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           }
           if (r.discovery) renderSummary(r.discovery);
           renderNavButtons(loadWizard());
+          renderChecklist(getDisplayWizard(loadWizard()));
         }, discoveryInFlight || !hasGoogle());
         if (hasDiscoveryResolved()) {
           const cached = global.PostGoogleCloudDiscovery?.getCachedDiscovery?.();
@@ -2922,15 +2981,17 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         content.innerHTML = `
           <p><strong>اختيار فرع موجود</strong> — تسجيل الجهاز في الخطوة التالية.</p>
           <div class="form-group"><label>الفرع الموجود</label><select id="bf-branch-id" class="form-control"></select></div>`;
-        const lic = global.LicenseCloud?.loadLocal?.();
-        if (lic) global.populateDriveBootstrapBranchFields?.(lic, 'bf');
+        populateBootstrapBranchSelect('bf');
         const pending = getSelectedBranchId();
         if (pending) {
           const sel = document.getElementById('bf-branch-id');
           if (sel) sel.value = pending;
         }
+        const branchCount = authoritativeBootstrapBranches().length;
         if (!hasBranch()) {
           content.innerHTML += '<p class="tdw-field-error">لا توجد فروع — ارجع لمسار عميل جديد أو أنشئ فرعاً من Owner Hub بعد الدخول.</p>';
+        } else if (branchCount > 1) {
+          setStatus(`✅ وُجد ${branchCount} فرع — اختر الفرع الصحيح`);
         }
         addBtn(actions, branchBindInFlight ? '⏳ جارٍ التأكيد...' : '✅ تأكيد اختيار الفرع', 'btn-primary', () => selectExistingBranchOnly(), !hasBranch() || branchBindInFlight);
         if (getSelectedBranchId()) setStatus('✅ تم اختيار الفرع');
@@ -3027,6 +3088,23 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       case 'owner': {
         const st = global.OwnerManagement?.getOwnerState?.()?.state;
+        const preferOwnerCreation = isNewFreshStartPath() && !ownerCredentialCommitted();
+        if (preferOwnerCreation) {
+          if (st === 'OWNER_CREATION_IN_PROGRESS') {
+            content.innerHTML = '<p>⏳ إنشاء المالك جارٍ — لا تبدأ عملية ثانية.</p>';
+            setStatus('⏳ OWNER_CREATION_IN_PROGRESS', true);
+          } else {
+            const label = (st === 'OWNER_CORRUPTED' || st === 'OWNER_RECOVERY_REQUIRED')
+              ? 'استرداد / إصلاح حساب المالك — كلمة المرور إلزامية.'
+              : 'أنشئ حساب المالك المستقل — كلمة المرور إلزامية.';
+            content.innerHTML = `<p>${label}</p>`
+              + (global.OwnerCreateForm?.renderFormHtml?.({ idPrefix: 'ocf' }) || '<p>OwnerCreateForm غير محمّل</p>');
+            global.OwnerCreateForm?.bindPasswordToggles?.(content);
+            const creating = ownerCreateInFlight();
+            addBtn(actions, creating ? '⏳ جارٍ الإنشاء...' : '👤 إنشاء حساب المالك', 'btn-primary', () => createOwnerFromWizard(), creating);
+          }
+          break;
+        }
         if (st === 'OWNER_EXISTS' || hasOwnerPasswordAccount()) {
           const owner = getUsableOwnerAccount();
           if (setupOwnerSessionReady()) {
@@ -3144,7 +3222,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           return { card, meta, actions };
         };
 
-        const runDiscovery = async () => {
+        const runDiscovery = async (forceRescan = false) => {
           if (restoreInFlight) {
             setStatus('⚠️ عملية جارية — انتظر', true);
             return;
@@ -3192,7 +3270,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
           let discovery;
           const cachedDiscovery = global.PostGoogleCloudDiscovery?.getCachedDiscovery?.();
-          if (cachedDiscovery?.dataDiscovery) {
+          if (cachedDiscovery?.dataDiscovery && !forceRescan) {
             discovery = cachedDiscovery.dataDiscovery;
             if (statusEl) statusEl.textContent = '✅ استخدام نتائج الاكتشاف المحفوظة — بلا إعادة فحص كامل.';
             renderProgress({
@@ -3307,8 +3385,12 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
               }
             }, !selectedCloudPoint);
           } else {
-            addBtn(cloudCard.actions, 'إعادة فحص السحابة', 'btn-secondary', () => {
-              renderStepUI(loadWizard());
+            addBtn(cloudCard.actions, 'إعادة فحص السحابة', 'btn-secondary', async () => {
+              if (restoreInFlight) return;
+              if (statusEl) statusEl.textContent = '⏳ جارٍ إعادة فحص مصادر البيانات...';
+              choiceHost.innerHTML = '';
+              if (progressHost) progressHost.innerHTML = '';
+              await runDiscovery(true);
             });
           }
 
@@ -3538,6 +3620,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return;
     }
     w.currentStep -= 1;
+    w.reviewStepIndex = w.currentStep;
     saveWizard(w);
     renderProgress(w);
     renderStepUI(w);

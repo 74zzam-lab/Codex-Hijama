@@ -1,0 +1,14 @@
+{
+  "fixes": [
+    { "bugId": "BUG-EXT-001", "files": ["cloud/boot-flow-ui.js"], "commitNote": "Responsive overlay/card/checklist CSS" },
+    { "bugId": "BUG-EXT-002", "files": ["cloud/boot-flow-ui.js"], "commitNote": "Discovery error routing + stepId on discovery gate catch" },
+    { "bugId": "BUG-EXT-003", "files": ["cloud/boot-flow-ui.js"], "commitNote": "Google disconnect/switch UX with confirm" },
+    { "bugId": "BUG-EXT-004", "files": ["cloud/boot-flow-ui.js", "index.html"], "commitNote": "authoritativeBootstrapBranches merge" },
+    { "bugId": "BUG-EXT-005", "files": ["cloud/boot-flow-ui.js"], "commitNote": "runDiscovery(true) for rescan buttons" },
+    { "bugId": "BUG-EXT-006", "files": ["cloud/boot-flow-ui.js"], "commitNote": "preferOwnerCreation on NEW start_new" },
+    { "bugId": "BUG-EXT-007", "files": ["cloud/bootstrap-coordinator.js", "cloud/boot-flow-ui.js"], "commitNote": "reviewStepIndex back navigation" },
+    { "bugId": "BUG-EXT-008", "files": ["cloud/cloud-data-discovery.js"], "commitNote": "Restore heartbeat, timeout, password prompt" },
+    { "bugId": "BUG-EXT-009", "files": ["index.html"], "commitNote": "No transient Google downgrade in syncCloudStatusFromElectron" }
+  ],
+  "testsAdded": ["tests/baseline/test-post-stage-20-external-defects.js"]
+}

@@ -1,0 +1,9 @@
+{
+  "focusedDefectTests": "PASS — tests/baseline/test-post-stage-20-external-defects.js (9/9)",
+  "stage20Gate": "PASS — 135 checks",
+  "stage6": "PASS",
+  "p0RestoreTruth": "PASS — 12/12",
+  "p0GoogleStateRecovery": "PASS",
+  "fullNpmTest": "PENDING_CI — run-all.js long-running in cloud agent; npm ci completed",
+  "recordedAt": "2026-08-14T16:36:00.000Z"
+}

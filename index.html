@@ -18317,8 +18317,21 @@ function driveBootstrapFieldPrefix(opts) {
   return opts?.context === 'license' ? 'lic-drive' : 'login-drive';
 }
 
-function populateDriveBootstrapBranchFields(license, prefix) {
-  const branches = (license?.branches || []).filter(b => b && b.active !== false);
+function populateDriveBootstrapBranchFields(license, prefix, extraBranches) {
+  const branchMap = new Map();
+  for (const b of (license?.branches || []).filter((item) => item && item.active !== false)) {
+    const id = String(b.id || '').trim();
+    if (!id) continue;
+    branchMap.set(id, { id, name: b.name || b.id });
+  }
+  for (const b of (extraBranches || [])) {
+    const id = String(b?.id || b?.branchId || '').trim();
+    if (!id) continue;
+    if (!branchMap.has(id)) {
+      branchMap.set(id, { id, name: b.name || b.branchName || b.id });
+    }
+  }
+  const branches = Array.from(branchMap.values());
   const sel = document.getElementById(prefix + '-branch-id');
   const fields = document.getElementById(prefix + '-branch-fields');
   if (fields) {
@@ -18952,14 +18965,16 @@ async function syncCloudStatusFromElectron(options) {
       settings.backup.cloudEnabled = true;
       const committed = await persistData('settings', settings);
       if (committed?.ok === false) throw new Error(committed.error || 'google_status_commit_failed');
-    } else if (p.connected) {
-      settings.backup.providers[prov] = { ...p, connected: false, email: p.email || '' };
+    } else if (p.connected && st && st.connected === false && (st.needsReauth === true || st.oauth === false)) {
+      // Only downgrade on authoritative auth loss — never on transient status reads.
+      settings.backup.providers[prov] = { ...p, connected: false, email: p.email || '', oauth: false };
       settings.backup.cloudEnabled = false;
       const committed = await persistData('settings', settings);
       if (committed?.ok === false) throw new Error(committed.error || 'google_status_commit_failed');
     }
   } catch (error) {
-    return { ok: false, connected: false, error: error?.message || 'google_status_refresh_failed' };
+    // Preserve renderer-connected state when status reconciliation fails transiently.
+    return { ok: false, connected: !!p.connected, error: error?.message || 'google_status_refresh_failed' };
   }
   return { ok: true, connected: !!settings.backup.providers[prov]?.connected };
 }

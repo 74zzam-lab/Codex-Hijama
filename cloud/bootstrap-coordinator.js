@@ -189,6 +189,12 @@
     const stored = Number.isFinite(w?.currentStep) ? w.currentStep : 0;
     const steps = stepsFor(path);
     if (stored >= steps.length) return resume;
+    const rawWizard = safeWizardRaw();
+    if (Number.isFinite(rawWizard?.reviewStepIndex)
+        && stored === rawWizard.reviewStepIndex
+        && stored < resume) {
+      return stored;
+    }
     const stepId = steps[stored];
     if (isStepResolved(stepId, w || coordinatorSnapshot())) return resume;
     if (!isStepResolved(stepId, w || coordinatorSnapshot()) && stored > resume) return resume;

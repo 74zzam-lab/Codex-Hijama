@@ -8,6 +8,7 @@
 
   const DISCOVERY_TIMEOUT_MS = 180000;
   const NO_PROGRESS_WATCHDOG_MS = 30000;
+  const RESTORE_OPERATION_TIMEOUT_MS = 600000;
 
   const BACKUP_V2_RESTORE_STAGES = [
     { id: 'verify_point', label: 'التحقق من النسخة', weight: 5 },
@@ -495,30 +496,61 @@
         try { b?.onDownloadProgress?.(() => {}); } catch { /* empty */ }
       };
     };
-    // getBackupV2Password is asynchronous. Passing its Promise through
-    // contextBridge makes Electron reject the request with
-    // "An object could not be cloned" before the Main handler can run.
     let password = options.password
       || (typeof global.getBackupV2Password === 'function' ? await global.getBackupV2Password() : '');
 
-    if (b?.v2SetupCloudRestore && point?.path) {
-      let nativeResult;
+    async function invokeNativeRestore(restorePassword) {
+      attachDownloadProgress(point.path);
+      let heartbeat = null;
+      let heartbeatRatio = 0.2;
       try {
-        attachDownloadProgress(point.path);
-        nativeResult = await b.v2SetupCloudRestore({
+        heartbeat = setInterval(() => {
+          heartbeatRatio = Math.min(0.92, heartbeatRatio + 0.03);
+          emit('download_db', {
+            stageRatio: heartbeatRatio,
+            lastActivity: 'تنزيل/استعادة Backup V2 — العملية مستمرة',
+          });
+        }, 5000);
+        const restorePromise = b.v2SetupCloudRestore({
           remotePath: point.path,
-          password,
+          password: restorePassword,
           setupMode: true,
           relaunch: false,
           expectedSizeBytes: point.sizeBytes || null,
           ...(typeof global.getBackupV2IdentityMeta === 'function'
             ? global.getBackupV2IdentityMeta()
-            : { centerId: identity.centerId, branchId: identity.branchId })
+            : { centerId: identity.centerId, branchId: identity.branchId }),
         });
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => {
+            const err = new Error('cloud_restore_timeout');
+            err.code = 'cloud_restore_timeout';
+            reject(err);
+          }, RESTORE_OPERATION_TIMEOUT_MS);
+        });
+        return await Promise.race([restorePromise, timeoutPromise]);
+      } finally {
+        if (heartbeat) clearInterval(heartbeat);
+        if (detachDownloadProgress) detachDownloadProgress();
+        detachDownloadProgress = null;
+      }
+    }
+
+    if (b?.v2SetupCloudRestore && point?.path) {
+      let nativeResult;
+      try {
+        nativeResult = await invokeNativeRestore(password);
       } catch (error) {
         nativeResult = { ok: false, error: restoreErrorCode(error), detail: error };
-      } finally {
-        if (detachDownloadProgress) detachDownloadProgress();
+      }
+      if (nativeResult?.ok !== true && /backup_password_required|password_too_short/i.test(restoreErrorCode(nativeResult))) {
+        password = await requestRestorePassword('أدخل كلمة مرور Backup V2 للاستعادة من السحابة:');
+        if (!password) return { ok: false, canceled: true, error: 'backup_password_required' };
+        try {
+          nativeResult = await invokeNativeRestore(password);
+        } catch (error) {
+          nativeResult = { ok: false, error: restoreErrorCode(error), detail: error };
+        }
       }
       if (nativeResult?.ok === true) {
         const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
@@ -531,19 +563,9 @@
         password = await requestRestorePassword('كلمة مرور النسخة غير صحيحة. أدخل كلمة مرور Backup V2:');
         if (!password) return { ok: false, canceled: true, error: 'backup_password_required' };
         try {
-          attachDownloadProgress(point.path);
-          nativeResult = await b.v2SetupCloudRestore({
-            remotePath: point.path,
-            password,
-            setupMode: true,
-            relaunch: false,
-            expectedSizeBytes: point.sizeBytes || null,
-            ...(typeof global.getBackupV2IdentityMeta === 'function' ? global.getBackupV2IdentityMeta() : {})
-          });
+          nativeResult = await invokeNativeRestore(password);
         } catch (error) {
           nativeResult = { ok: false, error: restoreErrorCode(error), detail: error };
-        } finally {
-          if (detachDownloadProgress) detachDownloadProgress();
         }
         if (nativeResult?.ok === true) {
           const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();

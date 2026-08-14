@@ -65,6 +65,7 @@ const baseline = [
   ['tests/baseline/test-stage-18-bootstrap-failure-policy.js', 'stage-18:bootstrap-failure-policy'],
   ['tests/baseline/test-stage-19-bootstrap-dismiss-resume.js', 'stage-19:bootstrap-dismiss-resume'],
   ['tests/baseline/test-stage-20-final-bootstrap-gate.js', 'stage-20:final-bootstrap-gate'],
+  ['tests/baseline/test-post-stage-20-external-defects.js', 'post-stage-20:external-defect-remediation'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],
   ['tests/baseline/test-p0-c-credential-publication.js', 'p0-c:credential-publication'],
   ['tests/baseline/test-p0-c-setup-owner-session.js', 'p0-c:setup-owner-session'],

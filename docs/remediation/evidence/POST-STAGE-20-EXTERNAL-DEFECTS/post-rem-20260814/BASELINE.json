@@ -1,0 +1,10 @@
+{
+  "baselineSourceCommit": "c389e92",
+  "baselineStage20ExeSha256": "058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0",
+  "remediationBranch": "cursor/post-stage-20-external-defects-beb8",
+  "recordedAt": "2026-08-14T14:56:00.000Z",
+  "nodeVersion": "v22.14.0",
+  "npmVersion": "10.9.7",
+  "preFixBranch": "cursor/stage-20-final-bootstrap-gate-beb8",
+  "preFixCommit": "e50d813e66616f7c4e703b678bfafcb11f2e4842"
+}

@@ -1,0 +1,8 @@
+{
+  "googleConnected": "Main token store + DriveAdapter.isConnected + settings.backup.providers.google (non-userDisconnected)",
+  "discoveryCandidates": "PostGoogleCloudDiscovery wizard cache keyed by google account email",
+  "branches": "Merged license.branches + discovery.branchCandidates at branch_select UI",
+  "wizardPath": "wizard.path + forkDecision (start_new | use_existing)",
+  "ownerGate": "NEW fresh: owner creation; EXISTING/use_existing: owner_auth",
+  "restoreProgress": "CloudDataDiscovery.confirmedCloudRestore emit stages"
+}
