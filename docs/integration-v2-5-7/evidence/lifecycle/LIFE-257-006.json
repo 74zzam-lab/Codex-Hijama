@@ -1,0 +1,12 @@
+{
+  "id": "LIFE-257-006",
+  "title": "App-only uninstall preserves license",
+  "ok": true,
+  "result": "PASS",
+  "at": "2026-08-13T15:13:05.817Z",
+  "evidence": {
+    "uninstallPrepStdout": "uninstall-prep smoke test PASS (app-only keeps license; full wipe explicit)\n",
+    "appOnlyKeepsLicense": true,
+    "uninstallOk": true
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "resolvedSkipsForm": true,
+  "businessSetupInFlightGuard": true,
+  "migrationV12AutoComplete": "when SoT already resolved"
+}

@@ -1,0 +1,7 @@
+{
+  "node": "PASS",
+  "electronIpcHarness": "via stage-1/2 UAT scripts",
+  "installedExeSmoke": "GHA post-build (startup auto-boot not visually verified)",
+  "fullInteractiveGui": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED"
+}

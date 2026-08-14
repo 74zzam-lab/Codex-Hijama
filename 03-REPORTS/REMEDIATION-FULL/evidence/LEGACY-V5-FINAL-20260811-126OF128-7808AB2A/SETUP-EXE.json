@@ -1,0 +1,9 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "path": "dist/HijamaManagement-Setup-2.0.1.exe",
+  "bytes": 106968132,
+  "sha256": "7808AB2AF59DF425B1AAA1C056F87EF53E8A8136908F0133541CA4EB51D9C7D3",
+  "build": "PASS",
+  "silentInstallExitCode": 0,
+  "authenticode": "NOT_SIGNED"
+}

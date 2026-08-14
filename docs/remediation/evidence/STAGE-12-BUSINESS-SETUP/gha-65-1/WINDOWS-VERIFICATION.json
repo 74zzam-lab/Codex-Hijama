@@ -1,0 +1,10 @@
+{
+  "newJourney": "Activation→Google→Discovery→Org→Owner→Branch→Device→BusinessSetup→restart stable",
+  "existingJourney": "Existing→Branch→Device→Restore→BusinessSetup detection",
+  "failureInjection": "commit fail blocks advance",
+  "nodeHarness": "PASS",
+  "windowsRunner": "windows-2022",
+  "installedExeSmoke": "GHA post-build",
+  "fullInteractiveGui": "UNVERIFIED",
+  "realGoogleDrive": "UNVERIFIED"
+}

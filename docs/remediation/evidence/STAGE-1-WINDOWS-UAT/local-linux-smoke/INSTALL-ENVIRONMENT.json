@@ -1,0 +1,8 @@
+{
+  "userDataPath": "/tmp/uat-stage1-local-linux-smoke",
+  "isolatedProfileName": "uat-stage1-local-linux-smoke",
+  "noProductionTokens": true,
+  "noCustomerData": true,
+  "platform": "linux",
+  "at": "2026-08-13T08:21:45.047Z"
+}

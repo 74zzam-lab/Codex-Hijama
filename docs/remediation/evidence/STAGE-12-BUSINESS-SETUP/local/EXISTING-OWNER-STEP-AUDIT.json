@@ -1,0 +1,8 @@
+{
+  "stepPurpose": "credential/session verification for existing owner — NOT owner creation",
+  "function": "authenticateExistingOwnerFromWizard",
+  "ownerCreationOnExisting": false,
+  "duplicateOwnerRisk": "low — uses getUsableOwnerAccount + password verify only",
+  "stage16Dependency": null,
+  "note": "owner step remains after business_setup on EXISTING path; no new owner entity created when OWNER_EXISTS"
+}

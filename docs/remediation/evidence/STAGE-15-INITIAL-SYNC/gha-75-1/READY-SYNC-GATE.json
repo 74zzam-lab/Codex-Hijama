@@ -1,0 +1,4 @@
+{
+  "gate": "INITIAL_SYNC_RESOLVED",
+  "evaluator": "InitialSyncDirectionContract.isInitialSyncResolved"
+}

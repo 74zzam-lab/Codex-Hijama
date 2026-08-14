@@ -1,0 +1,22 @@
+{
+  "cycles": [
+    {
+      "id": "centerId_discovery",
+      "cycle": "Need centerId for cloud discovery ↔ Need discovery to recover centerId",
+      "currentMitigation": "Google OAuth first; manual key path; Drive license pull",
+      "riskOnReorder": "medium"
+    },
+    {
+      "id": "branch_owner",
+      "cycle": "Branch step creates device before owner credential ↔ Target wants owner before branch",
+      "currentMitigation": "Owner seed not used for gate; branch uses license not owner RBAC",
+      "riskOnReorder": "high for Stage 9"
+    },
+    {
+      "id": "restore_owner",
+      "cycle": "Restore may import owner ↔ Owner step after restore for session",
+      "currentMitigation": "Owner step handles both create and authenticate",
+      "riskOnReorder": "low"
+    }
+  ]
+}

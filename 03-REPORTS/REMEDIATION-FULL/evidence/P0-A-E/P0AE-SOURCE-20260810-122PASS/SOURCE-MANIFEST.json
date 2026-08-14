@@ -1,0 +1,36 @@
+{
+  "buildId": "P0AE-SOURCE-20260810-122PASS",
+  "generatedAt": "2026-08-10T00:00:00+03:00",
+  "sourceControl": { "type": "none", "gitRepository": false, "dirtyState": "UNAVAILABLE" },
+  "requirements": [
+    "AUD-SEC-001..016", "AUD-DAT-001..012", "AUD-BRN-001..010",
+    "AUD-SET-001..002", "AUD-BOOT-001..003", "AUD-RST-001..006",
+    "AUD-SYN-001..011", "AUD-FIN-001..006", "AUD-RPT-001..002",
+    "AUD-LIC-001..004", "AUD-BKP-001"
+  ],
+  "keyFiles": {
+    "index.html": "b512e19ac43864556948893643531c24d4349a43a16dedde1b8551e5893f03a3",
+    "electron/main.js": "4e881c15c166872a572acdaf5c6ed70c9ff72cda30346f2cd93b8e66b32fb30c",
+    "electron/rbac-session.js": "85cf55aa2f823e293b872dff9abedcc61369f5e03aac559ab50fbb22f2328ac8",
+    "electron/database/service.js": "8755053f4da7d50fc5028cef9473df65bfd5b923acb29a21c158a578f7df4513",
+    "electron/license-verifier.js": "c113b9ab994d14204aeea0cdc3b7b044a4a40e1bf70ec416b6321469ae33987a",
+    "electron/license-entitlements.js": "749026bc67a83ac41d652250c74486186fad0600d6610b548ea173dedaa4dcbe",
+    "electron/setup-activation.js": "e25265d0d192f0da75867d5fb5b70b7c2eb5b17a7bcd313f16fbcd1a12f2ae70",
+    "cloud/sync-engine.js": "f60d3957c4360f787a90af2514f03f27eb59157b3143921b7a9514a599a17cde",
+    "cloud/config-layer.js": "9205eede8a606fb53eb270b957aefd3c993ca8b95e708a34872befac38c0879a",
+    "cloud/license-cloud.js": "39f284f8d407786f44731185e8e4d5111ffaad93964e724dc63496a55f6633fc",
+    "cloud/license-identity.js": "d8e41863a19959710adb28dd673f2a7b7d4cb46b91cf38a4cf19e00441dd1cbe",
+    "cloud/license-activation-gate.js": "444a30c478aa3357bb9c647fc2c8ad59a95f8c9bce44ad59a0688acf9e201bee",
+    "cloud/license-lifecycle.js": "efaa03b46d4d6deb96b7abd2f1370e7cbdf9997f8d71aff58b8f96f8a94be59c",
+    "cloud/device-registry.js": "32266b701dcdf92f12d71d3ee47f82f68564fd5c69623bb492b404be9b51aa37",
+    "cloud/branch-enrollment.js": "0428c3974288fb20ae45de834fb70ac25979d68ae3883c84e987488c1fa19463",
+    "database/migrations/004_sync_operations.js": "ddad5f9bcffc2dfdb64095c3d0d2bfe68dae9f83b75a14ec403383437fc35329",
+    "database/migrations/005_financial_integrity.js": "c07862afd264134db4fb282f575c1ea57e408522cb70c311d9830eaae9c13a35",
+    "database/migrations/006_financial_reversals.js": "c1f1b506b0e2584f856bdd37a29b46d52d4d68ae53268f79ab77b39ba5a9a56c",
+    "license/core/license-pubkey-v6.js": "e61b0ee5bf2051c8b1c8039c380837387f2706733fab032654c57bdf0d623955",
+    "license/legacy-license-allowlist.json": "8b279353ef7ee7bbc84bd5d61a07bc198dbdb6979720e42292c3497be7a9e6d5",
+    "tools/license-admin/src/crypto.js": "d00ac12c0c82094af728e64c56b0583d74e805ea991a6395b546503da045b5a3"
+  },
+  "privateKeyIncluded": false,
+  "customerDataIncluded": false
+}

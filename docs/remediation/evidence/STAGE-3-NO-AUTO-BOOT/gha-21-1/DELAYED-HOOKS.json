@@ -1,0 +1,4 @@
+{
+  "tested": "setTimeout 25ms after READY startup — shouldAutoOpenBoot remains false",
+  "result": "PASS"
+}

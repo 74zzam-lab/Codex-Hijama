@@ -1,0 +1,5 @@
+{
+  "v10ToV11": "legacy branch+device auto-completes device step when hasDeviceBranch",
+  "branchOnlyLegacy": "resume to device step",
+  "stage10OwnerBeforeBranch": "resume branch → device → restore"
+}

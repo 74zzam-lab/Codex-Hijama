@@ -1,0 +1,171 @@
+{
+  "at": "2026-08-13T08:32:38.889Z",
+  "counts": {
+    "clients": 10,
+    "visits": 15,
+    "appointments": 5,
+    "expenses": 3
+  },
+  "ids": {
+    "clients": [
+      "UAT-S1-C01",
+      "UAT-S1-C02",
+      "UAT-S1-C03",
+      "UAT-S1-C04",
+      "UAT-S1-C05",
+      "UAT-S1-C06",
+      "UAT-S1-C07",
+      "UAT-S1-C08",
+      "UAT-S1-C09",
+      "UAT-S1-C10"
+    ],
+    "visits": [
+      "UAT-S1-V01",
+      "UAT-S1-V02",
+      "UAT-S1-V03",
+      "UAT-S1-V04",
+      "UAT-S1-V05",
+      "UAT-S1-V06",
+      "UAT-S1-V07",
+      "UAT-S1-V08",
+      "UAT-S1-V09",
+      "UAT-S1-V10",
+      "UAT-S1-V11",
+      "UAT-S1-V12",
+      "UAT-S1-V13",
+      "UAT-S1-V14",
+      "UAT-S1-V15"
+    ],
+    "appointments": [
+      "UAT-S1-A01",
+      "UAT-S1-A02",
+      "UAT-S1-A03",
+      "UAT-S1-A04",
+      "UAT-S1-A05"
+    ],
+    "expenses": [
+      "UAT-S1-E01",
+      "UAT-S1-E02",
+      "UAT-S1-E03"
+    ]
+  },
+  "revisions": {
+    "clients": [
+      {
+        "id": "UAT-S1-C01",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C02",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C03",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C04",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C05",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C06",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C07",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C08",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C09",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-C10",
+        "revision": 1
+      }
+    ],
+    "visits": [
+      {
+        "id": "UAT-S1-V01",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V02",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V03",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V04",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V05",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V06",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V07",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V08",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V09",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V10",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V11",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V12",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V13",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V14",
+        "revision": 1
+      },
+      {
+        "id": "UAT-S1-V15",
+        "revision": 1
+      }
+    ]
+  },
+  "sqlite": {
+    "integrity_check": "ok",
+    "foreign_key_violations": 0,
+    "fk": []
+  },
+  "matchesBeforeBackup": {
+    "clients": true,
+    "visits": true,
+    "appointments": true,
+    "expenses": true,
+    "counts": true
+  },
+  "mutationRolledBack": true
+}
