@@ -282,12 +282,30 @@
   }
 
   function evaluateInitialSyncResolved() {
+    const ISC = global.InitialSyncDirectionContract;
+    if (ISC?.isInitialSyncResolved) {
+      const snap = {
+        meta: global.DB?.get?.('__tdw_meta__') || {},
+        wizard: global.DB?.get?.('__tdw_boot_wizard__') || {},
+        deviceConfig: global.DeviceConfig?.load?.() || {},
+        restoreReconcile: global.RestoreReconciliation?.loadState?.() || null,
+      };
+      const resolved = ISC.isInitialSyncResolved(snap);
+      if (resolved.ok) {
+        return gateResult('INITIAL_SYNC_RESOLVED', GATE_STATUS.RESOLVED,
+          resolved.source || 'initial sync complete', 'InitialSyncDirectionContract', { marker: resolved.marker });
+      }
+      if (resolved.source === 'tampered_completion_marker') {
+        return gateResult('INITIAL_SYNC_RESOLVED', GATE_STATUS.INVALID,
+          'completion marker inconsistent with binding', 'InitialSyncDirectionContract');
+      }
+    }
     const BFm = BF();
     const SSm = SS();
     if (BFm?.hasSyncDone?.() || SSm?.hasSyncDone?.() || BC()?.metaBootstrapCommitted?.()) {
       return gateResult('INITIAL_SYNC_RESOLVED', GATE_STATUS.RESOLVED, 'bootstrapCompletedAt or sync ready', 'meta.bootstrapCompletedAt');
     }
-    return gateResult('INITIAL_SYNC_RESOLVED', GATE_STATUS.MISSING, 'initial sync not complete', 'meta.bootstrapCompletedAt');
+    return gateResult('INITIAL_SYNC_RESOLVED', GATE_STATUS.MISSING, 'initial sync not complete', 'InitialSyncDirectionContract');
   }
 
   function evaluateReadyGate() {

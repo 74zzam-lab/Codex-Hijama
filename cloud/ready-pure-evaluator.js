@@ -138,16 +138,18 @@
    */
   function initialSyncResolved(snapshot) {
     if (snapshot.meta?.bootstrapCompletedAt) return { ok: true, source: 'meta.bootstrapCompletedAt' };
+    const ISC = typeof global !== 'undefined' ? global.InitialSyncDirectionContract : null;
+    if (ISC?.isInitialSyncResolved) {
+      const result = ISC.isInitialSyncResolved(snapshot);
+      if (result.ok) return { ok: true, source: result.source, marker: result.marker };
+      if (result.source === 'tampered_completion_marker') {
+        return { ok: false, source: 'tampered_completion_marker' };
+      }
+    }
     if (snapshot.restoreReconcile?.pullDone === true && snapshot.restoreReconcile?.pushAllowed === true) {
       return { ok: true, source: 'restore_reconcile' };
     }
-    if (snapshot.meta?.setupActivationCommittedAt && snapshot.deviceConfig?.lockedBranchId) {
-      const choice = String(snapshot.wizard?.restoreChoice || '');
-      if (choice === 'skip_existing' || choice === 'empty') {
-        return { ok: true, source: 'activation_committed_local_path' };
-      }
-    }
-  // Legacy derived indicator — UI-only, not authoritative alone.
+    // Legacy derived indicator — UI-only, not authoritative alone.
     if (snapshot.wizard?.syncDone === true && snapshot.legacyAllowWizardSyncDone === true) {
       return { ok: true, source: 'legacy_wizard_syncDone', legacy: true };
     }

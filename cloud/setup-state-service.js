@@ -174,10 +174,17 @@
     const meta = global.DB?.get?.('__tdw_meta__') || {};
     if (meta.bootstrapCompletedAt) return true;
     if (global.BootstrapCoordinator?.metaBootstrapCommitted?.()) return true;
-    try {
-      const ready = global.SyncEngine?.getReadiness?.();
-      if (ready?.ready) return true;
-    } catch { /* read-only */ }
+    const ISC = global.InitialSyncDirectionContract;
+    if (ISC?.isInitialSyncResolved) {
+      const snap = {
+        meta,
+        wizard: global.DB?.get?.('__tdw_boot_wizard__') || {},
+        deviceConfig: global.DeviceConfig?.load?.() || {},
+        restoreReconcile: null,
+      };
+      try { snap.restoreReconcile = global.RestoreReconciliation?.loadState?.(); } catch { /* read-only */ }
+      if (ISC.isInitialSyncResolved(snap).ok) return true;
+    }
     try {
       const reconcile = global.RestoreReconciliation?.loadState?.();
       if (reconcile?.pullDone === true && reconcile?.pushAllowed === true) return true;

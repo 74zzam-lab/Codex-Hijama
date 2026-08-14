@@ -700,7 +700,11 @@
     }
     if (direction !== 'pull') {
       try {
-        push = await flushPending();
+        if (options.bootstrapInitialSync === true && options.allowOutboxDrain === false) {
+          push = { ok: true, skipped: true, reason: 'bootstrap_outbox_drain_blocked' };
+        } else {
+          push = await flushPending();
+        }
       } catch (err) {
         push = { ok: false, error: err.message || String(err) };
       }

@@ -479,10 +479,17 @@
     if (global.BootstrapCoordinator?.metaBootstrapCommitted?.()) return true;
     const meta = global.DB?.get?.('__tdw_meta__') || {};
     if (meta.bootstrapCompletedAt) return true;
-    try {
-      const syncReady = global.SyncEngine?.getReadiness?.();
-      if (syncReady?.ready === true) return true;
-    } catch { /* read-only */ }
+    const ISC = global.InitialSyncDirectionContract;
+    if (ISC?.isInitialSyncResolved) {
+      const snap = {
+        meta,
+        wizard: loadWizard(),
+        deviceConfig: global.DeviceConfig?.load?.() || {},
+        restoreReconcile: null,
+      };
+      try { snap.restoreReconcile = global.RestoreReconciliation?.loadState?.(); } catch { /* read-only */ }
+      if (ISC.isInitialSyncResolved(snap).ok) return true;
+    }
     try {
       const reconcile = global.RestoreReconciliation?.loadState?.();
       if (reconcile?.pullDone === true && reconcile?.pushAllowed === true) return true;
@@ -494,7 +501,45 @@
     return { ...SETUP_CONNECTIVITY_POLICY };
   }
 
+  function buildInitialSyncPlanContext(overrides) {
+    const wizard = loadWizard();
+    const meta = global.DB?.get?.('__tdw_meta__') || {};
+    const deviceConfig = global.DeviceConfig?.load?.() || {};
+    let restoreReconcile = null;
+    try { restoreReconcile = global.RestoreReconciliation?.loadState?.(); } catch { /* read-only */ }
+    let clientsCount = 0;
+    let casesCount = 0;
+    let bookingsCount = 0;
+    try {
+      clientsCount = (global.clientsRegistry || []).length;
+      casesCount = (global.cases || []).length;
+      bookingsCount = (global.bookings || []).length;
+    } catch { /* read-only */ }
+    return {
+      wizard,
+      meta,
+      deviceConfig,
+      path: wizard.path,
+      restoreChoice: wizard.restoreChoice,
+      organizationId: meta.centerId || deviceConfig.centerId,
+      branchId: deviceConfig.lockedBranchId,
+      deviceId: deviceConfig.deviceUuid,
+      restoreReconcile,
+      clientsCount,
+      casesCount,
+      bookingsCount,
+      restoreInProgress: !!(global.CloudDataDiscovery?.isRestoreLocked?.()
+        || global.OwnerManagement?.isSystemBusy?.('restore')),
+      ...(overrides || {}),
+    };
+  }
+
   function initialOperationForChoice(choice) {
+    const ISC = global.InitialSyncDirectionContract;
+    if (ISC?.resolveInitialSyncPlan) {
+      const plan = ISC.resolveInitialSyncPlan(buildInitialSyncPlanContext({ restoreChoice: choice }));
+      return ISC.mapPlanToLegacyOperation?.(plan) || 'invalid';
+    }
     if (choice === 'empty') return 'push';
     if (choice === 'cloud') return 'pull';
     if (['local', 'file', 'skip_existing'].includes(choice)) return 'reconcile_verified_local';
@@ -508,8 +553,68 @@
     return wizard.syncDone;
   }
 
+  function persistInitialSyncPlanProgress(plan) {
+    if (!plan || !plan.mode || plan.mode === 'NO_SYNC') return null;
+    const meta = global.DB?.get?.('__tdw_meta__') || {};
+    meta.initialSyncPlan = {
+      mode: plan.mode,
+      reason: plan.reason,
+      sourceAuthority: plan.sourceAuthority,
+      allowPush: plan.allowPush === true,
+      allowPull: plan.allowPull === true,
+      allowOutboxDrain: plan.allowOutboxDrain === true,
+      syncEngineDirection: plan.syncEngineDirection,
+      operation: plan.operation,
+      binding: plan.binding,
+      bindingFingerprint: plan.bindingFingerprint,
+      startedAt: meta.initialSyncPlan?.startedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    global.DB?.set?.('__tdw_meta__', meta);
+    return meta.initialSyncPlan;
+  }
+
+  function persistInitialSyncCompletion(plan, syncResult) {
+    const meta = global.DB?.get?.('__tdw_meta__') || {};
+    meta.initialSyncCompletion = {
+      completedAt: new Date().toISOString(),
+      mode: plan.mode,
+      reason: plan.reason,
+      sourceAuthority: plan.sourceAuthority,
+      binding: plan.binding,
+      bindingFingerprint: plan.bindingFingerprint,
+      syncResultSummary: {
+        ok: syncResult?.ok === true,
+        direction: plan.syncEngineDirection,
+        at: syncResult?.at || new Date().toISOString(),
+      },
+    };
+    delete meta.initialSyncPlan;
+    global.DB?.set?.('__tdw_meta__', meta);
+    return meta.initialSyncCompletion;
+  }
+
   async function runInitialSyncPipeline() {
     const wizardBeforeSync = loadWizard();
+    const planContext = buildInitialSyncPlanContext();
+    let syncPlan = global.InitialSyncDirectionContract?.resolveInitialSyncPlan?.(planContext)
+      || { mode: 'NO_SYNC', reason: 'sync_plan_invalid', operation: initialOperationForChoice(wizardBeforeSync.restoreChoice) };
+    if (syncPlan.mode === 'NO_SYNC' && syncPlan.reason === 'initial_sync_already_resolved') {
+      persistInitialSyncResult(true);
+      return { ok: true, skipped: true, reason: syncPlan.reason, plan: syncPlan };
+    }
+    if (syncPlan.mode === 'NO_SYNC') {
+      persistInitialSyncResult(false);
+      return { ok: false, error: syncPlan.reason || 'sync_plan_invalid', plan: syncPlan };
+    }
+    if (syncPlan.mode === 'RESUME_PENDING') {
+      syncPlan = {
+        ...syncPlan,
+        mode: syncPlan.resumedMode || (syncPlan.operation === 'push' ? 'PUSH_ONLY' : 'PULL_ONLY'),
+        syncEngineDirection: syncPlan.syncEngineDirection || (syncPlan.operation === 'push' ? 'push' : 'pull'),
+      };
+    }
+    persistInitialSyncPlanProgress(syncPlan);
     const verifiedDatabaseRestore = wizardBeforeSync.restoreVerifiedDatabase === true;
     const googleStepCompleted = hasGoogle()
       || (Array.isArray(wizardBeforeSync.completedSteps) && wizardBeforeSync.completedSteps.includes('google'));
@@ -547,7 +652,8 @@
     }
 
     const restoreChoice = loadWizard().restoreChoice;
-    const operation = initialOperationForChoice(restoreChoice);
+    const operation = global.InitialSyncDirectionContract?.mapPlanToLegacyOperation?.(syncPlan)
+      || initialOperationForChoice(restoreChoice);
     let syncResult;
     if (operation === 'reconcile_verified_local') {
       const reconcileState = global.RestoreReconciliation?.loadState?.();
@@ -558,7 +664,34 @@
       if (!global.SyncEngine.isRunning?.()) {
         global.SyncEngine.start?.({ pollIntervalMs: global.SyncState?.load?.()?.pollIntervalMs });
       }
-      syncResult = await global.SyncEngine.runOnce({ force: true, direction: operation });
+      const direction = syncPlan.syncEngineDirection || operation;
+      if (direction === 'pull' && syncPlan.allowPush === false && syncPlan.allowPull !== true) {
+        syncResult = { ok: false, error: 'sync_plan_invalid', plan: syncPlan };
+      } else if (direction === 'push' && syncPlan.allowPull === false && syncPlan.allowPush !== true) {
+        syncResult = { ok: false, error: 'sync_plan_invalid', plan: syncPlan };
+      } else if (direction === 'push' && syncPlan.emptyLocalPushBlocked === true) {
+        syncResult = { ok: false, error: 'sync_post_restore_blocked', plan: syncPlan };
+      } else {
+        syncResult = await global.SyncEngine.runOnce({
+          force: true,
+          direction,
+          initialSyncPlan: syncPlan,
+          allowOutboxDrain: syncPlan.allowOutboxDrain === true,
+          bootstrapInitialSync: true,
+        });
+        if (direction === 'pull' && syncPlan.allowPush === false && syncResult?.push && syncResult.push.skipped !== true) {
+          const pushAttempted = syncResult.push.ok === true || (syncResult.push.error && syncResult.push.reason !== 'direction_pull_only');
+          if (pushAttempted && syncResult.push.reason !== 'direction_pull_only') {
+            syncResult = { ok: false, error: 'sync_push_blocked_pull_only', plan: syncPlan, pull: syncResult.pull, push: syncResult.push };
+          }
+        }
+        if (direction === 'push' && syncPlan.allowPull === false && syncResult?.pull && syncResult.pull.skipped !== true) {
+          const pullAttempted = syncResult.pull.ok === true || (syncResult.pull.error && syncResult.pull.reason !== 'direction_push_only');
+          if (pullAttempted && syncResult.pull.reason !== 'direction_push_only') {
+            syncResult = { ok: false, error: 'sync_pull_blocked_push_only', plan: syncPlan, pull: syncResult.pull, push: syncResult.push };
+          }
+        }
+      }
     } else if (operation === 'pull' && global.CloudBootstrap?.hydrateFromDrive) {
       syncResult = await global.CloudBootstrap.hydrateFromDrive(null, { allowMissingLicense: true });
     } else {
@@ -608,8 +741,9 @@
       return { ok: false, error: 'owner_credential_required' };
     }
 
+    persistInitialSyncCompletion(syncPlan, syncResult);
     persistInitialSyncResult(true);
-    return { ok: true, defaultsResult, syncResult, bootResult };
+    return { ok: true, defaultsResult, syncResult, bootResult, plan: syncPlan };
   }
 
   const __stage3BootTrace = {
@@ -3045,6 +3179,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     hasSyncDone,
     getSetupConnectivityPolicy,
     initialOperationForChoice,
+    buildInitialSyncPlanContext,
     runInitialSyncPipeline,
     autoDiscoverActivationAfterGoogle,
     runGoogleConnect,

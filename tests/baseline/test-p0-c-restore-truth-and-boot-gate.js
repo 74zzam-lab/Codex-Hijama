@@ -16,7 +16,38 @@ async function check(name, operation) {
   }
 }
 
+function verifiedPubReadbackMeta(centerId = 'CTR-P0C') {
+  const required = ['license', 'settings', 'users', 'outbox'];
+  const artifacts = {};
+  for (const id of required) artifacts[id] = { ok: true, readBack: true, artifact: id, state: 'CONTENT_VERIFIED' };
+  return {
+    centerId,
+    setupPublication: {
+      state: 'PUBLICATION_VERIFIED',
+      path: 'new',
+      requiredArtifacts: required,
+      verifiedAt: new Date().toISOString(),
+      artifacts,
+    },
+    readbackVerification: {
+      state: 'VERIFIED',
+      path: 'new',
+      verifiedAt: new Date().toISOString(),
+      binding: { organizationId: centerId, branchId: 'BR-1', deviceId: 'DEV-1' },
+      artifacts,
+    },
+  };
+}
+
+function loadBootFlowDeps() {
+  const root = path.join(__dirname, '../..');
+  require(path.join(root, 'cloud/publication-contract.js'));
+  require(path.join(root, 'cloud/readback-verification-contract.js'));
+  require(path.join(root, 'cloud/initial-sync-direction-contract.js'));
+}
+
 function loadFresh(relative) {
+  if (relative === 'cloud/boot-flow-ui.js') loadBootFlowDeps();
   const resolved = require.resolve(path.join(__dirname, '../..', relative));
   delete require.cache[resolved];
   return require(resolved);
@@ -40,10 +71,12 @@ function resetDiscoveryGlobals() {
 function resetBootGlobals() {
   const state = new Map();
   state.set('__tdw_boot_wizard__', {
+    path: 'new',
     restoreChoice: 'cloud',
     syncDone: false,
     completedSteps: ['language', 'google', 'license', 'organization', 'branch', 'restore', 'owner'],
   });
+  state.set('__tdw_meta__', verifiedPubReadbackMeta('CTR-P0C'));
   global.DB = {
     get: (key, fallback) => state.has(key) ? state.get(key) : fallback,
     set: (key, value) => { state.set(key, value); return { ok: true }; },
@@ -265,7 +298,8 @@ function resetBootGlobals() {
 
   await check('AUD-BOOT-003 verified local choice never calls initial pull/bootstrap hydrate', async () => {
     resetBootGlobals();
-    global.DB.set('__tdw_boot_wizard__', { restoreChoice: 'local', syncDone: false });
+    global.DB.set('__tdw_boot_wizard__', { path: 'new', restoreChoice: 'local', syncDone: false });
+    global.DB.set('__tdw_meta__', verifiedPubReadbackMeta('CTR-P0C'));
     let runOnceCalls = 0;
     global.SyncEngine.runOnce = async () => { runOnceCalls += 1; return { ok: true }; };
     global.RestoreReconciliation = { loadState: () => ({ pullDone: true, pushAllowed: true }) };
@@ -285,11 +319,13 @@ function resetBootGlobals() {
   await check('AUD-BOOT-008 verified Backup V2 runs operation pull but skips duplicate full-config hydrate', async () => {
     resetBootGlobals();
     global.DB.set('__tdw_boot_wizard__', {
+      path: 'new',
       restoreChoice: 'cloud',
       restoreVerifiedDatabase: true,
       syncDone: false,
       completedSteps: ['google'],
     });
+    global.DB.set('__tdw_meta__', verifiedPubReadbackMeta('CTR-P0C'));
     let pullCalls = 0;
     global.SyncEngine.runOnce = async (options) => {
       pullCalls += 1;

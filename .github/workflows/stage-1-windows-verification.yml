@@ -1,4 +1,4 @@
-name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14 Windows Verification
+name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15 Windows Verification
 
 on:
   push:
@@ -16,6 +16,7 @@ on:
       - cursor/stage-12-business-setup-gate-beb8
       - cursor/stage-13-publication-gate-beb8
       - cursor/stage-14-readback-hardening-beb8
+      - cursor/stage-15-initial-sync-direction-beb8
       - main
   pull_request:
     branches:
@@ -32,6 +33,8 @@ on:
       - cursor/stage-11-explicit-device-step-beb8
       - cursor/stage-12-business-setup-gate-beb8
       - cursor/stage-13-publication-gate-beb8
+      - cursor/stage-14-readback-hardening-beb8
+      - cursor/stage-15-initial-sync-direction-beb8
 
 concurrency:
   group: stage-1-windows-${{ github.ref }}
@@ -43,7 +46,7 @@ permissions:
 
 jobs:
   stage-1-windows-verification:
-    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14 Windows Verification
+    name: Stage 1+2+3+4+5+6+7+8+9+10+11+12+13+14+15 Windows Verification
     runs-on: windows-2022
     timeout-minutes: 180
     env:
@@ -61,6 +64,7 @@ jobs:
       STAGE12_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE13_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
       STAGE14_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE15_BUILD_ID: gha-${{ github.run_number }}-${{ github.run_attempt }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -320,6 +324,17 @@ jobs:
         working-directory: ${{ env.SRC }}
         run: node tests/baseline/test-stage-14-readback-hardening.js
 
+      - name: Stage 15 initial-sync-direction UAT + evidence
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE15_BUILD_ID: ${{ env.STAGE15_BUILD_ID }}
+        run: node scripts/windows-uat/stage-15-initial-sync-direction-uat.cjs
+
+      - name: Stage 15 focused test
+        working-directory: ${{ env.SRC }}
+        run: node tests/baseline/test-stage-15-initial-sync-direction.js
+
       - name: Generate packaging inputs
         working-directory: ${{ env.SRC }}
         shell: pwsh
@@ -366,6 +381,16 @@ jobs:
             -RepoRoot $PWD `
             -BuildId $env:STAGE1_BUILD_ID `
             -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:STAGE1_BUILD_ID")
+
+      - name: Package Stage 15 source ZIP (artifact only)
+        if: success()
+        working-directory: ${{ env.SRC }}
+        shell: pwsh
+        env:
+          STAGE15_BUILD_ID: ${{ env.STAGE15_BUILD_ID }}
+          STAGE_NUMBER: '15'
+          STAGE_ZIP_LABEL: INITIAL-SYNC-PASS
+        run: node scripts/ci/package-stage-source-zip.cjs
 
       - name: Package Stage 14 source ZIP (artifact only)
         if: success()
@@ -428,6 +453,7 @@ jobs:
           name: stage-evidence-${{ github.sha }}-${{ github.run_number }}
           path: |
             ${{ env.SRC }}/ci-artifacts/stage1-evidence-*/
+            ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-15-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-14-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-13-*.zip
             ${{ env.SRC }}/ci-artifacts/Tadawi-Stage-12-*.zip
@@ -441,6 +467,7 @@ jobs:
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-8-EXPLICIT-FORK/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-9-OWNER-BEFORE-BRANCH/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-10-OWNER-SEED-RETIREMENT/**/*
+            ${{ env.SRC }}/docs/remediation/evidence/STAGE-15-INITIAL-SYNC/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-14-READBACK-HARDENING/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-13-PUBLICATION-GATE/**/*
             ${{ env.SRC }}/docs/remediation/evidence/STAGE-12-BUSINESS-SETUP/**/*

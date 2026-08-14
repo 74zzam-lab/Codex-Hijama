@@ -9,6 +9,11 @@ const vm = require('vm');
 const root = path.join(__dirname, '..', '..');
 
 function loadFresh(relative) {
+  if (relative === 'cloud/boot-flow-ui.js') {
+    require(path.join(root, 'cloud/publication-contract.js'));
+    require(path.join(root, 'cloud/readback-verification-contract.js'));
+    require(path.join(root, 'cloud/initial-sync-direction-contract.js'));
+  }
   const resolved = require.resolve(path.join(root, relative));
   delete require.cache[resolved];
   return require(resolved);
