@@ -145,6 +145,7 @@
   let syncInFlight = false;
   let discoveryInFlight = false;
   let lastFocusEl = null;
+  let checklistStepError = null;
 
   function isCriticalOpInFlight() {
     if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight
@@ -289,12 +290,75 @@
     el.textContent = msg || '';
     el.classList.toggle('bf-status-error', !!isError);
     el.setAttribute('role', isError ? 'alert' : 'status');
+    if (!isError && msg && String(msg).includes('✅')) {
+      const w = getDisplayWizard(loadWizard());
+      const step = stepsFor(w.path)[w.currentStep];
+      if (checklistStepError?.stepId === step) checklistStepError = null;
+      renderChecklist(w);
+    }
   }
 
   function setStatusFromErr(err, code) {
     const ue = userError(err, code);
     setStatus(global.ActivationErrors?.formatForUi?.(ue) || `${ue.title} — ${ue.detail}`, true);
+    const w = getDisplayWizard(loadWizard());
+    const step = stepsFor(w.path)[w.currentStep];
+    if (step) {
+      checklistStepError = {
+        stepId: step,
+        code: code || ue.diagnosticCode || 'step_failed',
+        message: ue.detail || ue.title,
+        diagnostic: code || ue.diagnosticCode || null,
+      };
+      renderChecklist(w);
+    }
     return ue;
+  }
+
+  function getChecklistUiContext(w) {
+    w = w || getDisplayWizard(loadWizard());
+    const steps = stepsFor(w.path);
+    const currentStepId = steps[w.currentStep] || steps[0] || null;
+    if (checklistStepError?.stepId && validateStep(checklistStepError.stepId)) {
+      checklistStepError = null;
+    }
+    return {
+      path: w.path,
+      forkDecision: w.forkDecision,
+      currentStepId,
+      validateStep,
+      needsPathFork: needsPathForkDecision(),
+      pathDecisionResolved: hasPathDecisionResolved(),
+      ownerAuthResolved: ownerAuthStepResolved(),
+      ownerAuthRequired: hasOwnerPasswordAccount() && !ownerAuthStepResolved(),
+      stepError: checklistStepError,
+      uiOps: {
+        oauth: oauthInFlight,
+        discovery: discoveryInFlight,
+        licenseActivate: licenseActivateInFlight,
+        branchCreate: branchCreateInFlight,
+        branchBind: branchBindInFlight,
+        deviceRegister: deviceRegisterInFlight,
+        businessSetup: businessSetupInFlight,
+        publication: publicationInFlight,
+        ownerLogin: ownerLoginInFlight,
+        ownerCreate: ownerCreateInFlight(),
+        restore: restoreInFlight,
+        sync: syncInFlight,
+      },
+    };
+  }
+
+  function checklistStatusMeta(status) {
+    const BCC = global.BootstrapChecklistContract;
+    const S = BCC?.STATUS || {};
+    switch (status) {
+      case S.DONE: return { badge: 'تم', icon: '✓', className: 'done' };
+      case S.REQUIRED: return { badge: 'مطلوب', icon: '●', className: 'required' };
+      case S.IN_PROGRESS: return { badge: 'جارٍ', icon: '⟳', className: 'progress' };
+      case S.ERROR: return { badge: 'خطأ', icon: '!', className: 'error' };
+      default: return { badge: 'لاحقاً', icon: '○', className: 'future' };
+    }
   }
 
   function hasValidLicense() {
@@ -1152,6 +1216,30 @@
 .tdw-stepper.bf-stepper>li[data-state="done"]{border-color:#2d7a5f;color:#2d7a5f}
 .tdw-stepper.bf-stepper>li[data-state="failed"]{border-color:var(--tdw-color-danger-600);color:var(--tdw-color-danger-600)}
 .tdw-stepper.bf-stepper>li[aria-current="step"]{border-color:var(--tdw-color-accent-500,#2f8f83);color:var(--tdw-color-primary-700)}
+.bf-checklist-layout{display:grid;grid-template-columns:minmax(11rem,13.5rem) minmax(0,1fr);gap:14px;align-items:start}
+.bf-checklist-panel{border:1px solid var(--border,#e5e7eb);border-radius:12px;background:var(--surface,#f8fafc);padding:10px;max-height:min(52vh,420px);overflow:auto}
+.bf-checklist-progress{display:grid;gap:6px;margin-bottom:10px}
+.bf-checklist-bar{height:6px;border-radius:999px;background:var(--border,#e5e7eb);overflow:hidden}
+.bf-checklist-bar>i{display:block;height:100%;width:0;background:var(--tdw-color-accent-500,#2f8f83);transition:width .2s}
+.bf-checklist-pct{font-size:11px;color:var(--text-muted,#64748b);text-align:center}
+.bf-checklist-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.bf-checklist-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:start;padding:8px;border-radius:10px;border:1px solid transparent}
+.bf-checklist-item[data-status="done"]{background:#f0fdf4;border-color:#bbf7d0}
+.bf-checklist-item[data-status="required"]{background:#eff6ff;border-color:#bfdbfe}
+.bf-checklist-item[data-status="progress"]{background:#fffbeb;border-color:#fde68a}
+.bf-checklist-item[data-status="error"]{background:#fef2f2;border-color:#fecaca}
+.bf-checklist-item[data-status="future"]{opacity:.72}
+.bf-checklist-item[aria-current="step"]{box-shadow:0 0 0 1px var(--tdw-color-accent-500,#2f8f83)}
+.bf-checklist-icon{width:1.25rem;text-align:center;font-weight:900;line-height:1.2}
+.bf-checklist-label{font-size:12px;font-weight:800;line-height:1.5;overflow-wrap:anywhere}
+.bf-checklist-badge{font-size:10px;font-weight:800;padding:2px 6px;border-radius:999px;background:var(--card,#fff);border:1px solid var(--border,#e5e7eb);white-space:nowrap}
+.bf-checklist-item[data-status="done"] .bf-checklist-badge{color:#166534}
+.bf-checklist-item[data-status="required"] .bf-checklist-badge{color:#1d4ed8}
+.bf-checklist-item[data-status="progress"] .bf-checklist-badge{color:#b45309}
+.bf-checklist-item[data-status="error"] .bf-checklist-badge{color:#b91c1c}
+.bf-checklist-error{grid-column:1/-1;font-size:11px;color:var(--tdw-color-danger-600,#a94045);line-height:1.5}
+.bf-checklist-code{opacity:.75;font-size:10px}
+.bf-checklist-main{min-width:0}
 .bf-step-meta{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px}
 .bf-step-hint{font-size:12px;color:var(--primary);background:var(--surface,#f4f6f8);border:1px solid var(--border,#ddd);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7}
 .bf-step-content{min-height:60px}
@@ -1198,7 +1286,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 .bf-restore-progress .bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
 .bf-restore-progress .bar>i{display:block;height:100%;width:0;background:#3D5A80;transition:width .2s}
 @media (max-height:720px){.bf-card-header{padding-top:10px}.bf-card h1{font-size:1.05rem}}
-@media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}}
+@media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}.bf-checklist-layout{grid-template-columns:1fr}.bf-checklist-panel{max-height:none}}
 @media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
 @media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}}
 `;
@@ -1210,7 +1298,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (el) {
       // Upgrade if missing shell parts or actions still inside scroll body
       const actionsInFooter = !!el.querySelector('.bf-card-footer #bf-step-actions');
-      if (!el.querySelector('.bf-card-body') || !actionsInFooter) {
+      if (!el.querySelector('.bf-card-body') || !actionsInFooter || !el.querySelector('#bf-checklist-list')) {
         el.remove();
         el = null;
       }
@@ -1230,9 +1318,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           </div>
           <div id="bf-step-wizard" class="bf-step">
             <h1 id="bf-wizard-title">الإعداد</h1>
-            <ul class="tdw-stepper bf-stepper" id="bf-stepper" aria-label="خطوات الإعداد"></ul>
-            <div class="bf-progress" id="bf-progress" aria-hidden="true"></div>
-            <div class="bf-step-meta" id="bf-step-meta"></div>
+            <ul class="tdw-stepper bf-stepper" id="bf-stepper" aria-label="خطوات الإعداد" hidden></ul>
+            <div class="bf-progress" id="bf-progress" aria-hidden="true" hidden></div>
           </div>
         </header>
         <section class="bf-card-body modal-body">
@@ -1249,10 +1336,22 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
             </div>
           </div>
           <div id="bf-wizard-body" class="bf-step">
-            <p id="bf-step-label" style="font-weight:800;text-align:center"></p>
-            <div class="bf-step-hint" id="bf-step-hint"></div>
-            <div class="bf-step-content" id="bf-step-content"></div>
-            <div class="bf-status" id="bf-wizard-status" role="status"></div>
+            <div class="bf-checklist-layout">
+              <aside class="bf-checklist-panel" id="bf-checklist-panel" aria-label="قائمة خطوات الإعداد">
+                <div class="bf-checklist-progress">
+                  <div class="bf-checklist-bar" aria-hidden="true"><i id="bf-checklist-bar-fill"></i></div>
+                  <div class="bf-checklist-pct" id="bf-checklist-pct" aria-live="polite"></div>
+                </div>
+                <ul class="bf-checklist-list" id="bf-checklist-list" role="list"></ul>
+              </aside>
+              <div class="bf-checklist-main">
+                <div class="bf-step-meta" id="bf-step-meta"></div>
+                <p id="bf-step-label" style="font-weight:800;text-align:center"></p>
+                <div class="bf-step-hint" id="bf-step-hint"></div>
+                <div class="bf-step-content" id="bf-step-content"></div>
+                <div class="bf-status" id="bf-wizard-status" role="status" aria-live="polite"></div>
+              </div>
+            </div>
           </div>
           <div id="bf-support-host"></div>
         </section>
@@ -1319,6 +1418,54 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     return { ...w, completedSteps: derivedDone, currentStep: stepIndex };
   }
 
+  function renderChecklist(w) {
+    w = getDisplayWizard(w);
+    const BCC = global.BootstrapChecklistContract;
+    if (!BCC?.buildChecklistModel) return;
+    const model = BCC.buildChecklistModel(getChecklistUiContext(w));
+    const list = document.getElementById('bf-checklist-list');
+    const barFill = document.getElementById('bf-checklist-bar-fill');
+    const pct = document.getElementById('bf-checklist-pct');
+    if (!list) return;
+    list.textContent = '';
+    model.items.forEach((item) => {
+      const meta = checklistStatusMeta(item.status);
+      const li = document.createElement('li');
+      li.className = 'bf-checklist-item';
+      li.dataset.status = meta.className;
+      li.dataset.stepId = item.id;
+      if (item.active) li.setAttribute('aria-current', 'step');
+      const icon = document.createElement('span');
+      icon.className = 'bf-checklist-icon';
+      icon.textContent = meta.icon;
+      icon.setAttribute('aria-hidden', 'true');
+      const label = document.createElement('span');
+      label.className = 'bf-checklist-label';
+      label.textContent = item.label;
+      const badge = document.createElement('span');
+      badge.className = 'bf-checklist-badge';
+      badge.textContent = meta.badge;
+      li.appendChild(icon);
+      li.appendChild(label);
+      li.appendChild(badge);
+      if (item.error) {
+        const err = document.createElement('div');
+        err.className = 'bf-checklist-error';
+        err.textContent = item.error;
+        if (item.diagnostic) {
+          const code = document.createElement('span');
+          code.className = 'bf-checklist-code';
+          code.textContent = ` (${item.diagnostic})`;
+          err.appendChild(code);
+        }
+        li.appendChild(err);
+      }
+      list.appendChild(li);
+    });
+    if (barFill) barFill.style.width = `${model.progress.percent}%`;
+    if (pct) pct.textContent = `${model.progress.percent}% — ${model.progress.done}/${model.progress.total}`;
+  }
+
   function renderProgress(w) {
     w = getDisplayWizard(w);
     const steps = stepsFor(w.path);
@@ -1343,6 +1490,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         return `<li data-state="${state}" title="${full}" ${cur ? 'aria-current="step"' : ''}>${short}</li>`;
       }).join('');
     }
+    renderChecklist(w);
     const meta = document.getElementById('bf-step-meta');
     if (meta) meta.textContent = `الخطوة ${w.currentStep + 1} من ${steps.length}`;
     const label = document.getElementById('bf-step-label');
@@ -3311,6 +3459,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     loadWizard,
     saveWizard,
     getDisplayWizard,
+    getChecklistUiContext,
+    buildChecklistModel: (ctx) => global.BootstrapChecklistContract?.buildChecklistModel?.(ctx || getChecklistUiContext()),
+    renderChecklist,
     resolveCoordinatorState: () => global.BootstrapCoordinator?.resolveCoordinatorState?.() || null,
     getStepCatalog,
     getStepManifest: getStepCatalog,
