@@ -1,0 +1,21 @@
+{
+  "local": [
+    "settings",
+    "users",
+    "license local",
+    "device config",
+    "wizard local only"
+  ],
+  "cloudAuthority": "__tdw_meta__.setupPublication with per-artifact readBack:true",
+  "states": {
+    "LOCAL_RESOLVED": "LOCAL_RESOLVED",
+    "PUBLICATION_PENDING": "PUBLICATION_PENDING",
+    "PUBLICATION_IN_PROGRESS": "PUBLICATION_IN_PROGRESS",
+    "PUBLICATION_FAILED": "PUBLICATION_FAILED",
+    "PUBLICATION_VERIFIED": "PUBLICATION_VERIFIED"
+  },
+  "notCloudSuccess": [
+    "upload return without read-back",
+    "wizard.completedSteps alone"
+  ]
+}
