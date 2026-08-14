@@ -1,0 +1,22 @@
+{
+  "at": "2026-08-13T15:13:05.478Z",
+  "icons": {
+    "appIcon": "build/Program-Icon.ico",
+    "winIcon": "build/Program-Icon.ico",
+    "installerIcon": "build/Program-Icon.ico",
+    "uninstallerIcon": "build/Program-Icon.ico",
+    "installerHeaderIcon": "build/Program-Icon.ico",
+    "exists": {
+      "appIcon": true,
+      "winIcon": true,
+      "installerIcon": true,
+      "uninstallerIcon": true,
+      "installerHeaderIcon": true
+    }
+  },
+  "iconInspect": {
+    "ok": false,
+    "reason": "exe_missing"
+  },
+  "ok": true
+}

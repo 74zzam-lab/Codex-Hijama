@@ -1,0 +1,4 @@
+{
+  "preRestore": "DB swap replaces outbox",
+  "postRestore": "restored outbox authoritative"
+}

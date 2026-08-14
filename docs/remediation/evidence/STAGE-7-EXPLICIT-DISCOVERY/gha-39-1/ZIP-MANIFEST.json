@@ -1,0 +1,13 @@
+{
+  "zipName": "Tadawi-Stage-7-DISCOVERY-GATE-PASS-e81e855.zip",
+  "commit": "8515df62ea785b5333d34cb475438d4eb834d4a2",
+  "commitShort": "e81e855",
+  "fileCount": 1526,
+  "zipSizeBytes": 13013223,
+  "sha256": "a54431f64822de531d60334d0126b5ac44db41f52ba91b2245aa2973f6d4627f",
+  "validation": {
+    "requiredPresent": true,
+    "missing": [],
+    "cleanExtract": true
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "at": "2026-08-13T15:13:06.060Z",
+  "ok": true,
+  "errors": [],
+  "publicChannels": [
+    "backup:startOAuth",
+    "backup:connectGoogle",
+    "backup:listCloudBackups",
+    "backup:downloadCloudBackup",
+    "backup:disconnectCloud",
+    "backup:getCloudStatus",
+    "license:readActivationBundle",
+    "cloudOAuth:getSettings",
+    "cache:readLicense"
+  ],
+  "sheetsApiInElectron": false,
+  "pkce": true,
+  "ownerIndependentRole": true
+}

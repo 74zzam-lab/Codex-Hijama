@@ -1,0 +1,20 @@
+{
+  "at": "2026-08-13T08:21:45.864Z",
+  "successfulJourney": {
+    "operationalConsoleError": 0,
+    "pageerror": 0,
+    "unhandledRejection": 0,
+    "mainUncaught": 0
+  },
+  "details": {
+    "consoleError": [],
+    "pageerror": [],
+    "unhandledRejection": [],
+    "mainUncaught": [],
+    "ipcFailures": [],
+    "sqliteErrors": [],
+    "backupErrors": [],
+    "operational": []
+  },
+  "pass": true
+}

@@ -1,0 +1,11 @@
+{
+  "fields": [
+    "deviceId",
+    "organizationId",
+    "branchId",
+    "fingerprint",
+    "deviceName"
+  ],
+  "function": "readDeviceCommitState",
+  "mismatchFails": true
+}

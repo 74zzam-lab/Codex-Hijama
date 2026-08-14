@@ -1,0 +1,12 @@
+{
+  "device": "A",
+  "role": "activation-primary",
+  "startedAt": "2026-08-13T15:13:06.759Z",
+  "finishedAt": "2026-08-13T15:13:06.908Z",
+  "ok": true,
+  "platform": "linux",
+  "unitStatus": 0,
+  "scenariosStatus": 0,
+  "distPresent": false,
+  "note": "Await Windows CI build artifacts"
+}

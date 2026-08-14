@@ -1,0 +1,5 @@
+{
+  "inFlightGuard": true,
+  "verifiedSkips": true,
+  "noDuplicateRemoteFiles": "overwrite:true + find-first download paths"
+}

@@ -1,0 +1,5 @@
+{
+  "dir": "rtl",
+  "checklistLayout": "bf-checklist-layout",
+  "responsiveCollapse": "max-width 640px"
+}

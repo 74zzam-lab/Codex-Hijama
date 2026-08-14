@@ -1,0 +1,53 @@
+{
+  "fields": [
+    {
+      "field": "centerName",
+      "currentSource": "settings",
+      "writer": "commitBusinessSetupFromForm",
+      "reader": "BusinessSetupContract.readSettingsSnapshot",
+      "required": true,
+      "organizationLevel": true,
+      "cloudPublished": "Stage 13",
+      "usedForReady": true,
+      "legacyDefaultAllowed": false
+    },
+    {
+      "field": "phone",
+      "currentSource": "settings",
+      "writer": "commitBusinessSetupFromForm",
+      "reader": "BusinessSetupContract.readSettingsSnapshot",
+      "required": true,
+      "organizationLevel": true,
+      "cloudPublished": "Stage 13",
+      "usedForReady": true,
+      "legacyDefaultAllowed": false
+    },
+    {
+      "field": "address",
+      "currentSource": "settings",
+      "writer": "commitBusinessSetupFromForm",
+      "reader": "BusinessSetupContract.readSettingsSnapshot",
+      "required": false,
+      "organizationLevel": true,
+      "usedForReady": false
+    },
+    {
+      "field": "centerCity",
+      "currentSource": "settings",
+      "writer": "commitBusinessSetupFromForm",
+      "reader": "BusinessSetupContract.readSettingsSnapshot",
+      "required": false,
+      "organizationLevel": true,
+      "usedForReady": false
+    },
+    {
+      "field": "taxNum",
+      "currentSource": "settings",
+      "writer": "settings UI",
+      "reader": "settings",
+      "required": false,
+      "organizationLevel": true,
+      "usedForReady": false
+    }
+  ]
+}

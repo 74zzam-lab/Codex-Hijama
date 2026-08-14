@@ -1,0 +1,267 @@
+{
+  "steps": [
+    {
+      "stepId": "language",
+      "displayName": "اللغة",
+      "path": "BOTH",
+      "currentPositionNew": 0,
+      "currentPositionExisting": 0,
+      "uiRenderer": "renderStepUI:language",
+      "entry": "lang button",
+      "completionChecker": "validateStep: loadWizard().lang",
+      "sourceOfTruth": "__tdw_boot_wizard__.lang",
+      "writes": [
+        "wizard.lang",
+        "localStorage LANG_KEY"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [],
+      "produces": [
+        "lang"
+      ]
+    },
+    {
+      "stepId": "google",
+      "displayName": "ربط Google",
+      "path": "BOTH",
+      "currentPositionNew": 1,
+      "currentPositionExisting": 1,
+      "uiRenderer": "renderStepUI:google",
+      "entry": "runGoogleConnect",
+      "completionChecker": "hasGoogle()",
+      "sourceOfTruth": "DriveAdapter+settings.backup.providers.google",
+      "writes": [
+        "settings oauth",
+        "wizard path/completedSteps on discovery"
+      ],
+      "cloudEffect": true,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "language"
+      ],
+      "produces": [
+        "google session",
+        "embedded license discovery"
+      ]
+    },
+    {
+      "stepId": "license",
+      "displayName": "التفعيل والترخيص",
+      "path": "BOTH",
+      "currentPositionNew": 2,
+      "currentPositionExisting": 2,
+      "uiRenderer": "renderStepUI:license",
+      "entry": "activateLicenseKey / autoDiscover",
+      "completionChecker": "hasValidLicense()",
+      "sourceOfTruth": "__tdw_cloud_license__+LicenseActivationGate",
+      "writes": [
+        "setupCommitSignedActivation",
+        "activation state"
+      ],
+      "cloudEffect": true,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "google"
+      ],
+      "produces": [
+        "consumed activation"
+      ]
+    },
+    {
+      "stepId": "organization",
+      "displayName": "المؤسسة",
+      "path": "BOTH",
+      "currentPositionNew": 3,
+      "currentPositionExisting": 3,
+      "uiRenderer": "renderStepUI:organization",
+      "entry": "commitSetupOrganizationDevice({centerName})",
+      "completionChecker": "hasCenterData()",
+      "sourceOfTruth": "centerId+centerName license/settings",
+      "writes": [
+        "meta setupOrganizationDeviceCommittedAt",
+        "settings"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "license"
+      ],
+      "produces": [
+        "organization metadata"
+      ]
+    },
+    {
+      "stepId": "branch",
+      "displayName": "إنشاء أول فرع",
+      "path": "NEW",
+      "currentPositionNew": 4,
+      "uiRenderer": "renderStepUI:branch",
+      "entry": "createFirstBranchFromForm / bindExistingBranch",
+      "completionChecker": "hasBranch()&&hasDeviceBranch()",
+      "sourceOfTruth": "license.branches+DeviceConfig",
+      "writes": [
+        "device config",
+        "device registry",
+        "license branches",
+        "RESTART_REQUIRED"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "organization"
+      ],
+      "produces": [
+        "branch",
+        "device registration"
+      ]
+    },
+    {
+      "stepId": "branch_select",
+      "displayName": "اختيار فرع موجود",
+      "path": "EXISTING",
+      "currentPositionExisting": 4,
+      "uiRenderer": "renderStepUI:branch_select",
+      "entry": "bindExistingBranch",
+      "completionChecker": "hasBranch()&&hasDeviceBranch()",
+      "sourceOfTruth": "license.branches+DeviceConfig",
+      "writes": [
+        "device bind only"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "organization"
+      ],
+      "produces": [
+        "device registration"
+      ]
+    },
+    {
+      "stepId": "restore",
+      "displayName": "مصدر البيانات",
+      "path": "BOTH",
+      "currentPositionNew": 5,
+      "currentPositionExisting": 5,
+      "uiRenderer": "renderStepUI:restore",
+      "entry": "runDiscovery / restore actions",
+      "completionChecker": "hasRestoreDecision()",
+      "sourceOfTruth": "wizard.restoreChoice+RestoreReconciliation",
+      "writes": [
+        "restoreChoice",
+        "optional full DB replace"
+      ],
+      "cloudEffect": true,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "branch/device",
+        "google for cloud"
+      ],
+      "produces": [
+        "data source decision"
+      ]
+    },
+    {
+      "stepId": "owner",
+      "displayName": "حساب المالك",
+      "path": "BOTH",
+      "currentPositionNew": 6,
+      "currentPositionExisting": 6,
+      "uiRenderer": "renderStepUI:owner",
+      "entry": "createOwnerFromWizard / authenticateExistingOwnerFromWizard",
+      "completionChecker": "ownerSetupRequirementMet&&setupOwnerSessionReady",
+      "sourceOfTruth": "OwnerManagement+users+RBAC session",
+      "writes": [
+        "users owner profile"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "restore decision",
+        "branch/device"
+      ],
+      "produces": [
+        "owner credential",
+        "setup session"
+      ]
+    },
+    {
+      "stepId": "sync",
+      "displayName": "المزامنة الأولية",
+      "path": "BOTH",
+      "currentPositionNew": 7,
+      "currentPositionExisting": 7,
+      "uiRenderer": "renderStepUI:sync",
+      "entry": "runInitialSyncPipeline",
+      "completionChecker": "hasSyncDone()",
+      "sourceOfTruth": "meta.bootstrapCompletedAt",
+      "writes": [
+        "bootstrapCompletedAt",
+        "SyncEngine"
+      ],
+      "cloudEffect": true,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "owner session",
+        "restoreChoice",
+        "google"
+      ],
+      "produces": [
+        "initial sync complete"
+      ]
+    },
+    {
+      "stepId": "ready",
+      "displayName": "الجاهزية",
+      "path": "BOTH",
+      "currentPositionNew": 8,
+      "currentPositionExisting": 8,
+      "uiRenderer": "renderStepUI:ready",
+      "entry": "finalize + relaunch",
+      "completionChecker": "isBootComplete/evaluateReady",
+      "sourceOfTruth": "ReadyPureEvaluator",
+      "writes": [
+        "setupCompletedAt",
+        "BOOT_DONE_KEY"
+      ],
+      "cloudEffect": false,
+      "sqliteEffect": true,
+      "canRetry": true,
+      "canResume": true,
+      "canSkip": false,
+      "dependsOn": [
+        "all gates"
+      ],
+      "produces": [
+        "READY durable"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "codes": [
+    "existing_business_not_found",
+    "existing_candidate_ambiguous",
+    "existing_license_recovery_failed",
+    "existing_org_mismatch",
+    "existing_branch_missing",
+    "existing_device_limit",
+    "existing_restore_failed",
+    "existing_owner_auth_required",
+    "existing_sync_failed"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "steps": [
+    "language",
+    "license",
+    "google",
+    "discovery",
+    "path_decision",
+    "organization",
+    "owner",
+    "branch",
+    "device",
+    "restore",
+    "sync",
+    "ready"
+  ]
+}

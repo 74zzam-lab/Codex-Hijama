@@ -1,0 +1,41 @@
+{
+  "buildId": "P0A-20260805-160250-97B2C694",
+  "result": "PASS",
+  "requirements": {
+    "AUD-SEC-001": "PASS",
+    "AUD-SEC-002": "PASS",
+    "AUD-SEC-003": "PASS",
+    "AUD-SEC-004": "PASS",
+    "AUD-SEC-005": "PASS",
+    "AUD-SEC-006": "PASS",
+    "AUD-SEC-007": "PASS",
+    "AUD-SEC-008": "UNVERIFIED",
+    "AUD-SEC-009": "PASS",
+    "AUD-SEC-010": "PASS",
+    "AUD-SEC-011": "PASS",
+    "AUD-SEC-012": "UNVERIFIED",
+    "AUD-SEC-013": "UNVERIFIED",
+    "AUD-SEC-014": "PASS",
+    "AUD-SEC-015": "PASS",
+    "AUD-SEC-016": "PASS"
+  },
+  "critical": {
+    "fail": 0,
+    "unverified": []
+  },
+  "storedXssExecution": 0,
+  "forgedDeveloperBind": "DENIED",
+  "intentionalDeveloperLogin": "PASS",
+  "unknownRendererIpcSurface": "ABSENT",
+  "protectedKvLowRole": "DENIED",
+  "protectedIpcRuntimeCoverage": {
+    "channels": 61,
+    "unauthenticated": "PASS",
+    "lowRole": "PASS",
+    "authorizedOwner": "PASS"
+  },
+  "nativeSaveAsPdf": "PASS",
+  "unexpectedConsoleErrors": 0,
+  "runtimePageErrors": 0,
+  "productionDependencyVulnerabilities": 0
+}

@@ -1,0 +1,9 @@
+{
+  "sourceResult": "PASS",
+  "focusedChecks": 11,
+  "crossBranchWrite": "DENIED",
+  "scopedReplace": "PASS",
+  "syncBranchBypass": "DENIED",
+  "unsignedBranchEntitlementMutation": "DENIED",
+  "installedResult": "UNVERIFIED"
+}

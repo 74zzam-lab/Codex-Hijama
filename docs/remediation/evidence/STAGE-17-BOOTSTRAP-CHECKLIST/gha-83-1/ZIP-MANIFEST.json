@@ -1,0 +1,9 @@
+{
+  "note": "populated after package-stage-source-zip",
+  "artifactName": "Tadawi-Stage-17-BOOTSTRAP-CHECKLIST-PASS-b476527.zip",
+  "sha256": "c5f99ccfb968a68a980f8b4a38aecfc78d9045b4ddecdb75781bbfa3f68f7894",
+  "size": 14213126,
+  "fileCount": 2284,
+  "uploadedAsGhaArtifact": true,
+  "committedToGit": false
+}

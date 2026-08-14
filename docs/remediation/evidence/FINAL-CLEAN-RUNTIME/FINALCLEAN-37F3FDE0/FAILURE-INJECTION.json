@@ -1,0 +1,12 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "activationUploadFailureLeavesNoConsumption": "PASS",
+  "bootCompletionPersistenceFailureBlocksReady": "PASS",
+  "discoveryStopFailureExplicit": "PASS",
+  "discoveryResumeFailureExplicit": "PASS",
+  "cloudV2InitializationFailureNoFalseSuccess": "PASS",
+  "licensePullCommitFailureExplicit": "PASS",
+  "databaseLockNoPartialDataOrOutbox": "PASS",
+  "realRemoteNetworkCheckpointMatrix": "UNVERIFIED",
+  "result": "PARTIAL"
+}

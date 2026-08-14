@@ -1,0 +1,23 @@
+{
+  "A_IMMUTABLE_SIGNED": [
+    "license"
+  ],
+  "B_ORG_METADATA": [
+    "outbox org projection"
+  ],
+  "C_BRANCH_METADATA": [
+    "license branches",
+    "settings pack"
+  ],
+  "D_DEVICE_METADATA": [
+    "outbox device projection"
+  ],
+  "E_CONFIG_BUSINESS_SETUP": [
+    "settings.json centerName/phone"
+  ],
+  "F_RUNTIME_ACTIVATION": [
+    "license identity reference only — no re-consume"
+  ],
+  "G_SYNC_DATA": "deferred to sync engine — not setup publication",
+  "H_BACKUP_DATA": "deferred to backup layer — not setup publication"
+}

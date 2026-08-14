@@ -1,0 +1,6 @@
+{
+  "lockedDatabaseWrite":{"result":"PASS","expected":"No row or outbox entry after rollback","actual":"PASS on installed app.asar"},
+  "hostilePrint":{"result":"PASS","expected":"No payload execution","actual":"PASS thermal, A4 and native PDF scenario"},
+  "invalidIpc":{"result":"PASS","expected":"Unknown/low-role calls denied","actual":"PASS"},
+  "googleNetworkAndConsent":{"result":"UNVERIFIED","reason":"Requires a controlled Google tenant"}
+}

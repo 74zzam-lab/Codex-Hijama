@@ -1,0 +1,9 @@
+{
+  "phase": "P0-C",
+  "p0aSecurityChecks": { "passed": 47, "failed": 0 },
+  "genericProtectedWritesRemainDenied": true,
+  "setupActivationUsesNarrowMainOwnedTransaction": true,
+  "developerLoginBehaviorChanged": false,
+  "installedP0CSecurityRegression": "UNVERIFIED"
+}
+

@@ -1,0 +1,18 @@
+{
+  "zipName": "Tadawi-Stage-12-BUSINESS-SETUP-PASS-2aa9857.zip",
+  "artifactOnly": true,
+  "committedToGit": false,
+  "commit": "6f02811366426dca09358a246b97a9e49cc9f1d6",
+  "commitShort": "6f02811",
+  "buildId": "gha-65-1",
+  "sha256": "eda24cc733720b8c90869c89c4e6ec2c4d5f93375104016e8f1fb5d80d14e759",
+  "zipSizeBytes": 13976133,
+  "fileCount": 1953,
+  "nestedZipCount": 0,
+  "validation": {
+    "requiredPresent": true,
+    "missing": [],
+    "nestedZipCount": 0,
+    "cleanExtract": "PASS"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "sqliteIntegrity": "PASS",
+  "migrationIdempotencyAfterRestart": "PASS",
+  "generatedLicencePersistenceAfterRestart": "PASS",
+  "atomicSetupRollback": "PASS_SOURCE",
+  "outboxRetryDurability": "PASS_SOURCE",
+  "backupV2Tests": "PASS",
+  "realFinalDriveRestore": "UNVERIFIED",
+  "realFreshStartArchiveRecovery": "UNVERIFIED",
+  "result": "PARTIAL"
+}

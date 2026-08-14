@@ -1,0 +1,13 @@
+{
+  "model": [
+    "currentStep",
+    "userPathChoice",
+    "restoreChoice",
+    "selectedCandidateId",
+    "selectedBranchCandidate",
+    "pendingRetry",
+    "lastDiagnostic",
+    "transientProgress"
+  ],
+  "module": "cloud/bootstrap-coordinator.js"
+}

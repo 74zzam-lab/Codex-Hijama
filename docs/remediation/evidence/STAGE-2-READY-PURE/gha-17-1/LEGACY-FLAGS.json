@@ -1,0 +1,30 @@
+{
+  "wizardComplete": {
+    "storage": "__tdw_boot_wizard__.completedSteps",
+    "classification": "UI-only"
+  },
+  "bootCompleted": {
+    "storage": "localStorage __tdw_boot_complete__",
+    "classification": "legacy/UI marker"
+  },
+  "setupComplete": {
+    "storage": "__tdw_boot_wizard__.setupCompletedAt",
+    "classification": "UI-only (SqliteBridge UI_ONLY)"
+  },
+  "syncDone": {
+    "storage": "__tdw_boot_wizard__.syncDone",
+    "classification": "derived wizard progress — not sole SoT for READY"
+  },
+  "firstRunComplete": {
+    "storage": "settings.firstRun.wizardCompleted",
+    "classification": "UI-only post-auth onboarding"
+  },
+  "restoreChoice": {
+    "storage": "__tdw_boot_wizard__.restoreChoice",
+    "classification": "UI prerequisite input"
+  },
+  "bootstrapCompletedAt": {
+    "storage": "__tdw_meta__.bootstrapCompletedAt",
+    "classification": "authoritative operational"
+  }
+}

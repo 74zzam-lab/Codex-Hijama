@@ -1,0 +1,4 @@
+{
+  "sameDeviceRetry": "deviceStepResolved + deviceRegisterInFlight guard",
+  "doubleSubmit": "deviceRegisterInFlight"
+}
