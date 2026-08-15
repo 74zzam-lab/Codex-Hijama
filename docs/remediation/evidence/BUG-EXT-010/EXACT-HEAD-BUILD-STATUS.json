@@ -1,0 +1,45 @@
+{
+  "schema": "EXACT-HEAD-BUILD-STATUS",
+  "at": "2026-08-15T03:30:00.000Z",
+  "currentHead": "9cdbfd359f7c9a7aef3e817507c83e16d2b8cc6e",
+  "preFixFailedExeSource": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "headEqualsFailedExeSource": false,
+  "headEqualsBuildSource": false,
+  "buildExecuted": false,
+  "buildBlocker": "GitHub hosted windows-2022 runner not assigned (runner_id=0); cloud agent is Linux; workflow dispatch/rerun denied (HTTP 403)",
+  "runtimeChangingCommitsSinceA0b699f": [
+    "d0c3582 fix(BUG-EXT-010): early license module for installed EXE cold start",
+    "aaac538 ci: retrigger Windows verification for BUG-EXT-010 installed EXE fix",
+    "9cdbfd3 chore(BUG-EXT-010): lint fix + evidence for installed EXE fix attempt"
+  ],
+  "runtimeFilesNotInFailedExe": [
+    "renderer/login-license-early.js (NEW — not packaged in a0b699f EXE)",
+    "index.html (loads login-license-early.js; mid-parse safety bump; __realLicCheck wiring)",
+    "cupping-ext-modules.js (window.DB guard)",
+    "cupping-import-wizard.js (window.DB guard)",
+    "cupping-leave-management.js (window.DB guard)",
+    "scripts/windows-uat/installed-startup-license-smoke.cjs (45s timeout, window.licCheck checks)",
+    "scripts/windows-uat/Install-Stage1-UAT.ps1 (45s smoke timeout)"
+  ],
+  "failedGhaRunsPostFix": [
+    { "id": "31855995142", "headSha": "d0c3582", "runnerAssigned": false, "steps": 0 },
+    { "id": "31856044590", "headSha": "aaac538", "runnerAssigned": false, "steps": 0 },
+    { "id": "31856200185", "headSha": "9cdbfd3", "runnerAssigned": false, "steps": 0 }
+  ],
+  "lastFullGhaRun": {
+    "id": "31843364686",
+    "headSha": "a0b699f",
+    "installedSmoke": "FAIL",
+    "note": "Pre-fix EXE — not valid to judge current HEAD fix"
+  },
+  "localRegressionAtHead": {
+    "lint": "PASS",
+    "testPostStage20LoginLicenseStartup": "PASS",
+    "testBootstrapRedMessageTruthfulness": "PASS (75)",
+    "testPostStage20ExternalDefects": "PASS",
+    "testStage20FinalBootstrapGate": "PASS (135)",
+    "bugExt010InstalledVerification": "PASS (electron source-path only — not installed EXE)"
+  },
+  "applicationCodeChangedThisTurn": false,
+  "installedExeAcceptanceExecuted": false
+}
