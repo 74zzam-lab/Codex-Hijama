@@ -1,0 +1,24 @@
+{
+  "phase": "P0-C",
+  "focused": { "passed": 42, "failed": 0 },
+  "crossRegression": {
+    "p0aChecks": 47,
+    "p0bChecks": 11,
+    "outboxDualDevice": "PASS",
+    "conflictResolution": "PASS",
+    "setupState": "PASS",
+    "ownerState": "PASS"
+  },
+  "baselineSource": {
+    "passed": 88,
+    "total": 90,
+    "failedAssertions": 0,
+    "unverifiedTimeouts": [
+      "tests/baseline/test-v2-5-10-setupstate-runtime-proof.js",
+      "tests/baseline/test-v2-5-7-production-release.js"
+    ]
+  },
+  "fullNpmTest": "TERMINATED_AFTER_NO_PROGRESS_IN_LEGACY_RUNTIME_HARNESS",
+  "activationUiRegression": "PASS",
+  "result": "UNVERIFIED"
+}

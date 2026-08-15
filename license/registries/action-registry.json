@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "registryVersion": "1.2.0",
+  "generatedAt": "2026-08-11T16:51:21.194Z",
+  "migratedFrom": null,
+  "actions": [
+    {
+      "id": "01",
+      "key": "new",
+      "name": "ترخيص جديد",
+      "nameEn": "New License",
+      "range": "lifecycle",
+      "status": "active",
+      "phase": "2.2"
+    },
+    {
+      "id": "02",
+      "key": "renew",
+      "name": "تجديد",
+      "nameEn": "Renew",
+      "range": "lifecycle",
+      "status": "active",
+      "phase": "2.2"
+    },
+    {
+      "id": "03",
+      "key": "upgrade",
+      "name": "ترقية",
+      "nameEn": "Upgrade",
+      "range": "lifecycle",
+      "status": "active",
+      "phase": "2.4"
+    },
+    {
+      "id": "04",
+      "key": "downgrade",
+      "name": "خفض",
+      "nameEn": "Downgrade",
+      "range": "lifecycle",
+      "status": "planned",
+      "phase": "2.4"
+    },
+    {
+      "id": "05",
+      "key": "extend",
+      "name": "تمديد",
+      "nameEn": "Extend",
+      "range": "lifecycle",
+      "status": "active",
+      "phase": "2.2"
+    },
+    {
+      "id": "06",
+      "key": "repair",
+      "name": "إصلاح",
+      "nameEn": "Repair",
+      "range": "lifecycle",
+      "status": "planned",
+      "phase": "2.4"
+    },
+    {
+      "id": "07",
+      "key": "developer",
+      "name": "مطور داخلي",
+      "nameEn": "Developer",
+      "range": "lifecycle",
+      "status": "active",
+      "phase": "2.2"
+    },
+    {
+      "id": "108",
+      "key": "feature_unlock",
+      "name": "فتح خاصية",
+      "nameEn": "Feature Unlock",
+      "range": "features",
+      "status": "reserved",
+      "phase": null
+    },
+    {
+      "id": "109",
+      "key": "feature_lock",
+      "name": "قفل خاصية",
+      "nameEn": "Feature Lock",
+      "range": "features",
+      "status": "reserved",
+      "phase": null
+    },
+    {
+      "id": "110",
+      "key": "temporary_unlock",
+      "name": "فتح مؤقت",
+      "nameEn": "Temporary Unlock",
+      "range": "features",
+      "status": "reserved",
+      "phase": null
+    },
+    {
+      "id": "211",
+      "key": "trial_extension",
+      "name": "تمديد تجريبي",
+      "nameEn": "Trial Extension",
+      "range": "admin",
+      "status": "reserved",
+      "phase": null
+    },
+    {
+      "id": "212",
+      "key": "reactivate",
+      "name": "إعادة تفعيل",
+      "nameEn": "Reactivate",
+      "range": "admin",
+      "status": "reserved",
+      "phase": null
+    },
+    {
+      "id": "313",
+      "key": "suspend",
+      "name": "تعليق ترخيص",
+      "nameEn": "Suspend",
+      "range": "system",
+      "status": "reserved",
+      "phase": null
+    }
+  ],
+  "registrySig": "880ee722fc4b9eaa40ea035e0014d12c6aee7784ed5af567841ee0e757753437"
+}

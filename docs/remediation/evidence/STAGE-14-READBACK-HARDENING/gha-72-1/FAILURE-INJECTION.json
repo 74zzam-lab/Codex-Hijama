@@ -1,0 +1,11 @@
+{
+  "codes": [
+    "cloud_readback_failed",
+    "cloud_artifact_missing",
+    "cloud_identity_mismatch",
+    "cloud_revision_conflict",
+    "cloud_stale_read",
+    "cloud_duplicate_artifact",
+    "cloud_content_mismatch"
+  ]
+}

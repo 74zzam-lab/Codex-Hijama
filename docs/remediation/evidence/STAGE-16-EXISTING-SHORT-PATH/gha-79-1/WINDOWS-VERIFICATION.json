@@ -1,0 +1,8 @@
+{
+  "nodeHarness": "PASS",
+  "runner": "windows-2022",
+  "setupExe": "HijamaManagement-Setup-2.0.1.exe",
+  "setupExeSizeBytes": 106714982,
+  "setupExeSha256": "9b549fff3144c362d7a14b63d31f8ab2da17896faf4887a8033fb5497a7080e3",
+  "installedExeSmoke": "PASS"
+}

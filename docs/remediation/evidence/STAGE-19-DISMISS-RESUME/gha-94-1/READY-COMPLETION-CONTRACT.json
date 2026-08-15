@@ -1,0 +1,17 @@
+{
+  "authority": "SetupStateService.evaluateReady / ReadyPureEvaluator",
+  "bootstrapCompleteMeans": "evaluateReady({ ignoreRestart: true }).ready === true",
+  "notCompletion": [
+    "wizard currentStep at end",
+    "completedSteps count",
+    "bootstrapCompletedAt alone"
+  ],
+  "transition": [
+    "final action success",
+    "authoritative state update",
+    "evaluate READY",
+    "clear transient bootstrap state",
+    "close bootstrap",
+    "show login once"
+  ]
+}

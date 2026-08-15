@@ -1,0 +1,17 @@
+{
+  "1366x768": {
+    "status": "NOT_EXECUTED",
+    "verdict": "BLOCKED",
+    "reason": "requires interactive GUI"
+  },
+  "1920x1080": {
+    "status": "NOT_EXECUTED",
+    "verdict": "BLOCKED",
+    "reason": "requires interactive GUI"
+  },
+  "narrow": {
+    "status": "NOT_EXECUTED",
+    "verdict": "BLOCKED",
+    "reason": "requires interactive GUI"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "RED-MESSAGE-FINAL-ACCEPTANCE",
+  "at": "2026-08-15T01:20:00.000Z",
+  "buildCommit": "aaac538ba575b1e0e4a0928fa797a29f5db72a99",
+  "result": "PASS",
+  "scenarios": 75,
+  "test": "tests/baseline/test-bootstrap-red-message-truthfulness.js",
+  "installedExeRedState": "UNVERIFIED"
+}

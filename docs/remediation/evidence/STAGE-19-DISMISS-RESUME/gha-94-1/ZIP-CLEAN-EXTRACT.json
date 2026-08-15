@@ -1,0 +1,8 @@
+{
+  "extract": "tar -xf Tadawi-Stage-19-DISMISS-RESUME-PASS-d5d9b1a.zip",
+  "npmCi": "PASS",
+  "stage19Focused": "PASS",
+  "stage18Focused": "PASS",
+  "stage17Focused": "PASS",
+  "sha256": "db7c6f22c6cd3e265c1267bf59b77757c0329495b286e0a77b3d4aed3baa4f7d"
+}

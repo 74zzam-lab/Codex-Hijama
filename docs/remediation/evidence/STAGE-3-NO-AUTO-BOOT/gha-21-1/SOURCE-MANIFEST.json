@@ -1,0 +1,12 @@
+{
+  "branch": "cursor/stage-3-no-auto-boot-beb8",
+  "commit": "012d7ce3fe45fdd7541d1f46ba61b96abef12d2c",
+  "commitShort": "012d7ce",
+  "stage2Baseline": {
+    "commit": "afa8e290fff539f42d544063567096c3e475c3b7",
+    "githubRun": "31688652938",
+    "zipSha256": "e60c2ec8f94b2efc302336c222ff977b405679b218da03c1f6297014331db0f9"
+  },
+  "buildId": "gha-21-1",
+  "at": "2026-08-13T11:01:07.399Z"
+}

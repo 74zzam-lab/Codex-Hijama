@@ -1,0 +1,8 @@
+{
+  "unknownIpcDenied": true,
+  "forgedPrivilegedBindDenied": true,
+  "developerFlowUnchanged": true,
+  "safeRendering": true,
+  "secretsLeaked": false,
+  "devUnchanged": true
+}

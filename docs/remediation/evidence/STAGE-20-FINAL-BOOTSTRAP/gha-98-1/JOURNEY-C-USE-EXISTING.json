@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "explicitFork": true,
+  "activationReConsume": 0,
+  "crossBusinessActivationProtection": true,
+  "organizationCreation": 0,
+  "ownerCreation": 0,
+  "branchCreation": 0,
+  "existingConvergence": [
+    "language",
+    "google",
+    "discovery",
+    "license_org_recovery",
+    "branch_select",
+    "device",
+    "restore",
+    "owner_auth",
+    "sync",
+    "ready"
+  ],
+  "ready": true,
+  "profile": "uat-stage20-use-existing"
+}

@@ -1,0 +1,57 @@
+[
+  {
+    "id": "A",
+    "name": "Fresh install startup",
+    "trigger": "maybeAutoOpenBootFlow"
+  },
+  {
+    "id": "B",
+    "name": "Partial setup startup",
+    "trigger": "needsBootFlow + coordinator resume"
+  },
+  {
+    "id": "C",
+    "name": "READY startup",
+    "trigger": "evaluateReady.ready === true → skip boot"
+  },
+  {
+    "id": "D",
+    "name": "Restart during setup",
+    "trigger": "prepareBootstrapResume"
+  },
+  {
+    "id": "E",
+    "name": "Logout then startup",
+    "trigger": "login gate + needsBootFlow"
+  },
+  {
+    "id": "F",
+    "name": "Failed login",
+    "trigger": "stay on login, no bootstrap unless needsBoot"
+  },
+  {
+    "id": "G",
+    "name": "App relaunch",
+    "trigger": "onAppStartupAfterRelaunch"
+  },
+  {
+    "id": "H",
+    "name": "Restore-triggered relaunch",
+    "trigger": "restart marker consume"
+  },
+  {
+    "id": "I",
+    "name": "Setup completion",
+    "trigger": "completeBootstrapTransition"
+  },
+  {
+    "id": "J",
+    "name": "Manual Bootstrap open",
+    "trigger": "BootFlow.forceOpen"
+  },
+  {
+    "id": "K",
+    "name": "Developer/support paths",
+    "trigger": "support mode only"
+  }
+]

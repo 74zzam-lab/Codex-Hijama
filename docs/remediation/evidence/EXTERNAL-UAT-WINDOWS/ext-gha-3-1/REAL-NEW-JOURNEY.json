@@ -1,0 +1,8 @@
+{
+  "status": "NOT_EXECUTED",
+  "verdict": "BLOCKED",
+  "reason": "hosted runner — no interactive desktop bootstrap",
+  "activationConsume": null,
+  "organizationCount": null,
+  "ownerCount": null
+}

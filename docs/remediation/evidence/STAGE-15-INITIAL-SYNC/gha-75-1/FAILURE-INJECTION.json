@@ -1,0 +1,8 @@
+{
+  "codes": [
+    "sync_plan_invalid",
+    "sync_post_restore_blocked",
+    "sync_publication_required",
+    "sync_readback_required"
+  ]
+}

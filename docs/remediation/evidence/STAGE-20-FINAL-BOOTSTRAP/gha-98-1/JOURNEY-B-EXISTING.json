@@ -1,0 +1,31 @@
+{
+  "status": "PASS",
+  "activationPrompt": 0,
+  "activationConsume": 0,
+  "organizationCreation": 0,
+  "ownerCreation": 0,
+  "branchCreation": 0,
+  "deviceCreation": "N+1",
+  "ownerIdentityPreserved": true,
+  "ownerPasswordPreserved": true,
+  "credentialRevisionPreserved": true,
+  "dataCounts": {
+    "organizations": 1,
+    "owners": 1,
+    "branches": 2,
+    "devices": 2,
+    "clients": 10,
+    "cases": 15,
+    "bookings": 5,
+    "expenses": 3,
+    "businessSettings": true,
+    "license": true,
+    "syncMetadata": true
+  },
+  "emptyLocalPush": "blocked",
+  "initialSync": "PULL_ONLY",
+  "ready": true,
+  "fiveRestarts": "harness",
+  "operationalErrors": 0,
+  "profile": "uat-stage20-existing"
+}

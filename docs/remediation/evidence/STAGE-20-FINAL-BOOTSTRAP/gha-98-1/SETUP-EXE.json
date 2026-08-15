@@ -1,0 +1,7 @@
+{
+  "note": "populated after build:win on GHA",
+  "filename": "HijamaManagement-Setup-2.0.1.exe",
+  "sizeBytes": 107025128,
+  "sha256": "058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0",
+  "sourceCommit": "c389e92"
+}

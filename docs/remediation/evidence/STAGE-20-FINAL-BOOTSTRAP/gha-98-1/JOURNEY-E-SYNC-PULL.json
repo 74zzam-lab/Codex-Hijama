@@ -1,0 +1,22 @@
+{
+  "status": "PASS",
+  "noBackupRecovery": true,
+  "checkpointClassification": "sync_checkpoint != backup_file",
+  "pull": "PULL_ONLY",
+  "dataCounts": {
+    "organizations": 1,
+    "owners": 1,
+    "branches": 2,
+    "devices": 2,
+    "clients": 10,
+    "cases": 15,
+    "bookings": 5,
+    "expenses": 3,
+    "businessSettings": true,
+    "license": true,
+    "syncMetadata": true
+  },
+  "emptyLocalProtection": true,
+  "restart": "stable",
+  "profile": "uat-stage20-sync"
+}

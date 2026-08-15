@@ -1,0 +1,129 @@
+name: External UAT Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - cursor/stage-20-final-bootstrap-gate-beb8
+    paths:
+      - '.github/workflows/external-uat-windows.yml'
+      - 'scripts/windows-uat/external-uat-windows-runner.cjs'
+      - 'scripts/windows-uat/Run-ExternalUAT-WindowsLab.ps1'
+
+concurrency:
+  group: external-uat-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  external-uat-windows:
+    name: External UAT Windows (automated + lab gate)
+    runs-on: windows-2022
+    timeout-minutes: 120
+    env:
+      EXTERNAL_UAT_BUILD_ID: ext-gha-${{ github.run_number }}-${{ github.run_attempt }}
+      STAGE1_BUILD_ID: ext-gha-${{ github.run_number }}-${{ github.run_attempt }}
+      EXPECTED_SETUP_SHA256: 058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Download exact Stage 20 Setup EXE (GHA run 31801984620)
+        uses: actions/download-artifact@v4
+        with:
+          name: setup-exe-98-2fe1a0e33f8e9c04b0e2fccffe40cd052137a76d
+          run-id: 31801984620
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: dist
+
+      - name: Verify exact Stage 20 Setup EXE SHA-256
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $setup = Get-ChildItem dist\HijamaManagement-Setup-*.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $setup) { throw 'Setup EXE missing after artifact download' }
+          $sha = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
+          $expected = $env:EXPECTED_SETUP_SHA256
+          if ($sha -ne $expected) {
+            throw "Setup EXE SHA mismatch: expected=$expected actual=$sha"
+          }
+          Write-Host "PASS exact EXE SHA: $sha ($($setup.Name))"
+
+      - name: npm ci
+        continue-on-error: true
+        id: npm_ci
+        run: npm ci
+
+      - name: Generate packaging inputs
+        if: steps.npm_ci.outcome == 'success'
+        run: |
+          node scripts/generate-oauth-config.mjs
+          node scripts/generate-license-registries.mjs
+          node scripts/generate-brand-assets.mjs
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+
+      - name: Installed EXE smoke (isolated userData)
+        shell: pwsh
+        run: |
+          pwsh -File scripts/windows-uat/Install-Stage1-UAT.ps1 `
+            -RepoRoot $PWD `
+            -BuildId $env:EXTERNAL_UAT_BUILD_ID `
+            -EvidenceDir (Join-Path $PWD "docs/remediation/evidence/STAGE-1-WINDOWS-UAT/$env:EXTERNAL_UAT_BUILD_ID")
+
+      - name: Security regression (unit)
+        if: steps.npm_ci.outcome == 'success'
+        run: node tests/baseline/test-p0-a-security-boundary.js
+
+      - name: Stage 20 invariant regression
+        if: steps.npm_ci.outcome == 'success'
+        run: node tests/baseline/test-stage-20-final-bootstrap-gate.js
+
+      - name: External UAT evidence runner
+        shell: pwsh
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+          EXTERNAL_UAT_INTERACTIVE: 'false'
+          EXTERNAL_UAT_DEVICE_B: 'false'
+          EXTERNAL_UAT_STAGE19_PROFILE: 'false'
+        run: node scripts/windows-uat/external-uat-windows-runner.cjs
+        continue-on-error: true
+        id: external_uat
+
+      - name: Upload External UAT evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: external-uat-windows-${{ github.run_number }}
+          path: docs/remediation/evidence/EXTERNAL-UAT-WINDOWS/**/*
+          retention-days: 14
+
+      - name: Report external UAT gate
+        if: always()
+        shell: pwsh
+        run: |
+          $finalPath = "docs/remediation/evidence/EXTERNAL-UAT-WINDOWS/$env:EXTERNAL_UAT_BUILD_ID/FINAL-EXTERNAL-UAT.json"
+          if (-not (Test-Path $finalPath)) {
+            Write-Host "EXTERNAL UAT verdict: BLOCKED"
+            Write-Host "BOOTSTRAP EXTERNAL GATE: FAIL"
+            exit 2
+          }
+          $final = Get-Content $finalPath -Raw | ConvertFrom-Json
+          Write-Host "EXTERNAL UAT verdict: $($final.verdict)"
+          Write-Host "BOOTSTRAP EXTERNAL GATE: $($final.bootstrapExternalGate)"
+          if ($final.verdict -eq 'PASS') { exit 0 }
+          if ($final.verdict -eq 'BLOCKED') { exit 2 }
+          exit 1

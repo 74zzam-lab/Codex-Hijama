@@ -1,0 +1,7 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "injection": "Second SQLite connection held BEGIN EXCLUSIVE while installed typed service attempted an upsert.",
+  "expected": "Command fails with rolledBack=true; no data row and no outbox event.",
+  "actual": "PASS — row count unchanged and outbox count unchanged after releasing the lock."
+}

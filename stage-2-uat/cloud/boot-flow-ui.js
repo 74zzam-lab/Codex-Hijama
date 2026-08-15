@@ -1,0 +1,2124 @@
+/**
+ * V2-5.9 Activation Wizard — simplified customer journey (no Owner Bootstrap).
+ * Welcome → Language → Google (+auto discovery) → License → Organization → Branch → Restore/Data → Sync → Ready
+ * Existing path: … → Branch Select (not create) → …
+ *
+ * Google Login never implies Owner. Owner is a seeded normal user account.
+ * Dashboard/login completion requires Google + license + org + device branch + data decision + sync.
+ */
+(function (global) {
+  'use strict';
+
+  const BOOT_DONE_KEY = '__tdw_boot_complete__';
+  const WIZARD_KEY = '__tdw_boot_wizard__';
+  const LANG_KEY = '__tdw_ui_lang__';
+  const RESTART_REQUIRED_KEY = '__tdw_restart_required__';
+
+  const PATHS = { NEW: 'new', EXISTING: 'existing' };
+  const SETUP_CONNECTIVITY_POLICY = Object.freeze({
+    mode: 'cloud_required_for_initial_setup',
+    initialSetupRequiresGoogle: true,
+    establishedOfflineStartAllowed: true,
+  });
+
+  const NEW_STEPS = ['language', 'google', 'license', 'organization', 'branch', 'restore', 'owner', 'sync', 'ready'];
+  const EXISTING_STEPS = ['language', 'google', 'license', 'organization', 'branch_select', 'restore', 'owner', 'sync', 'ready'];
+
+  const STEP_LABELS = {
+    language: 'اللغة',
+    google: 'ربط Google',
+    license: 'التفعيل والترخيص',
+    organization: 'المؤسسة',
+    branch: 'إنشاء أول فرع',
+    branch_select: 'اختيار فرع موجود',
+    owner: 'حساب المالك (دعم)',
+    restore: 'مصدر البيانات',
+    sync: 'المزامنة الأولية',
+    ready: 'الجاهزية وإعادة التشغيل'
+  };
+
+  /** Compact stepper labels — avoid tall wrap inside modal header */
+  const STEP_SHORT = {
+    language: 'لغة',
+    google: 'Google',
+    license: 'ترخيص',
+    organization: 'مؤسسة',
+    branch: 'فرع',
+    branch_select: 'فرع',
+    owner: 'مالك',
+    restore: 'بيانات',
+    sync: 'مزامنة',
+    ready: 'جاهز'
+  };
+
+  const STEP_HINTS = {
+    language: 'اختر لغة الواجهة.',
+    google: 'اربط حساب Google للمركز — يبدأ الفحص تلقائياً.',
+    license: 'يُسحب الترخيص من Drive إن وُجد؛ وإلا أدخل المفتاح.',
+    organization: 'أكد المؤسسة المصرّح بها فقط.',
+    branch: 'اسم الفرع الأول + اسم هذا الجهاز.',
+    branch_select: 'اختر فرعاً موجوداً واربط الجهاز به.',
+    owner: 'مسار دعم فقط — ليس في رحلة العميل اليومية.',
+    restore: 'فحص سريع للمصادر ثم تأكيد الاستعادة — سحابة / محلي / Backup V2 / فارغ بلا تنزيل أثناء الاكتشاف.',
+    sync: 'المزامنة تُفعَّل بعد اكتمال الربط.',
+    ready: 'أعد تشغيل التطبيق لتطبيق التفعيل.'
+  };
+
+  let oauthInFlight = false;
+  let branchCreateInFlight = false;
+  let branchBindInFlight = false;
+  let licenseActivateInFlight = false;
+  let ownerLoginInFlight = false;
+  let setupOwnerSessionUserId = null;
+  let restoreInFlight = false;
+  let syncInFlight = false;
+  let lastFocusEl = null;
+
+  function isCriticalOpInFlight() {
+    if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight || ownerLoginInFlight || restoreInFlight || syncInFlight) {
+      return true;
+    }
+    return !!global.OwnerManagement?.isOwnerCreationInProgress?.();
+  }
+
+  function ownerCreateInFlight() {
+    return !!global.OwnerManagement?.isOwnerCreationInProgress?.();
+  }
+
+  function loadWizard() {
+    return global.DB?.get?.(WIZARD_KEY, {
+      path: null,
+      currentStep: 0,
+      completedSteps: [],
+      startedAt: null,
+      lang: global.UxI18n?.getLang?.() || 'ar',
+      restoreChoice: null,
+      syncDone: false,
+      oauthLockAt: null
+    }) || {
+      path: null, currentStep: 0, completedSteps: [], startedAt: null, lang: 'ar', restoreChoice: null, syncDone: false
+    };
+  }
+
+  function saveWizard(w) {
+    global.DB?.set?.(WIZARD_KEY, w);
+    return w;
+  }
+
+  function resetWizard(path) {
+    return saveWizard({
+      path,
+      currentStep: 0,
+      completedSteps: [],
+      startedAt: new Date().toISOString(),
+      lang: loadWizard().lang || 'ar',
+      restoreChoice: null,
+      syncDone: false,
+      oauthLockAt: null
+    });
+  }
+
+  function stepsFor(path) {
+    return path === PATHS.EXISTING ? EXISTING_STEPS : NEW_STEPS;
+  }
+
+  function userError(err, code) {
+    if (global.ActivationErrors?.toUserError) {
+      return global.ActivationErrors.toUserError(err, code);
+    }
+    return { title: 'خطأ', detail: String(err && err.message || err || code || ''), diagnosticCode: 'TDW-ACT-FALLBACK' };
+  }
+
+  function setStatus(msg, isError) {
+    const el = document.getElementById('bf-wizard-status');
+    if (!el) return;
+    el.textContent = msg || '';
+    el.classList.toggle('bf-status-error', !!isError);
+    el.setAttribute('role', isError ? 'alert' : 'status');
+  }
+
+  function setStatusFromErr(err, code) {
+    const ue = userError(err, code);
+    setStatus(global.ActivationErrors?.formatForUi?.(ue) || `${ue.title} — ${ue.detail}`, true);
+    return ue;
+  }
+
+  function hasValidLicense() {
+    const lic = typeof global.licLoad === 'function' ? global.licLoad() : null;
+    const cloud = global.LicenseCloud?.loadLocal?.();
+    if (global._licStatus === 'valid') return true;
+    if (lic && global._licStatus !== 'expired' && global._licStatus !== 'blocked') return true;
+    if (cloud?.centerId && global.LicenseActivationGate?.isConsumed?.(cloud)) return true;
+    if (cloud?.centerId && (cloud.branches || []).length) return true;
+    return false;
+  }
+
+  function hasGoogle() {
+    const prov = global.settings?.backup?.providers?.google;
+    if (global.DriveAdapter?.isConnected?.()) return true;
+    return !!(prov?.connected && !prov?.userDisconnected && prov?.oauth !== false);
+  }
+
+  function hasCenterData() {
+    const cid = global.CenterId?.getStoredCenterId?.() || global.ConfigLayer?.getCenterId?.()
+      || global.LicenseCloud?.loadLocal?.()?.centerId;
+    const name = global.settings?.centerName || global.LicenseCloud?.loadLocal?.()?.centerName;
+    return !!(cid && name);
+  }
+
+  function hasBranch() {
+    const lic = global.LicenseCloud?.loadLocal?.();
+    const branches = (lic?.branches || []).filter((b) => b && b.active !== false);
+    return branches.length > 0;
+  }
+
+  function hasDeviceBranch() {
+    const cfg = global.DeviceConfig?.load?.();
+    return !!(cfg?.lockedBranchId && (cfg?.deviceName || cfg?.deviceUuid));
+  }
+
+  function hasOwnerPasswordAccount() {
+    // Delegate to Single Source of Truth — do not re-implement Owner detection here.
+    if (global.OwnerManagement?.getOwnerState) {
+      return global.OwnerManagement.getOwnerState().state === 'OWNER_EXISTS';
+    }
+    const users = global.users || global.DB?.get?.('users', []) || [];
+    return users.some((u) => u && u.active !== false
+      && ['owner', 'hq_admin'].includes(String(u.role || '').toLowerCase())
+      && u.mustChangePassword !== true && u.seedDefaultPassword !== true
+      && (u.hasUsableCredential === true
+        || /^(?:pbkdf2:|pbkdf2v2:|b64:)/i.test(String(u.password || ''))));
+  }
+
+  function ownerSetupRequirementMet() {
+    return hasOwnerPasswordAccount();
+  }
+
+  function getUsableOwnerAccount() {
+    const users = global.users || global.DB?.get?.('users', []) || [];
+    return users.find((user) => user
+      && user.active !== false
+      && /^(?:owner|hq_admin)$/i.test(String(user.role || ''))
+      && user.mustChangePassword !== true
+      && user.seedDefaultPassword !== true
+      && (user.hasUsableCredential === true
+        || /^(?:pbkdf2:|pbkdf2v2:|b64:)/i.test(String(user.password || '')))) || null;
+  }
+
+  function setupOwnerSessionReady() {
+    const owner = getUsableOwnerAccount();
+    return !!(owner && String(setupOwnerSessionUserId || '') === String(owner.id));
+  }
+
+  async function verifySetupOwnerSession() {
+    const owner = getUsableOwnerAccount();
+    const rbac = global.cuppingElectron?.rbac || global.tadawi?.rbac;
+    if (!owner || !rbac?.getSession) {
+      setupOwnerSessionUserId = null;
+      return { ok: false, error: owner ? 'rbac_session_unavailable' : 'owner_credential_required' };
+    }
+    const state = await rbac.getSession();
+    const matches = state?.ok
+      && String(state.session?.userId) === String(owner.id)
+      && /^(?:owner|hq_admin)$/i.test(String(state.session?.role || ''));
+    setupOwnerSessionUserId = matches ? owner.id : null;
+    return matches ? { ok: true, owner, session: state.session } : { ok: false, error: 'owner_session_required' };
+  }
+
+  function hasRestoreDecision() {
+    const w = loadWizard();
+    return ['empty', 'cloud', 'skip_existing', 'local', 'file'].includes(w.restoreChoice);
+  }
+
+  function hasSyncDone() {
+    return !!loadWizard().syncDone;
+  }
+
+  function getSetupConnectivityPolicy() {
+    return { ...SETUP_CONNECTIVITY_POLICY };
+  }
+
+  function initialOperationForChoice(choice) {
+    if (choice === 'empty') return 'push';
+    if (choice === 'cloud') return 'pull';
+    if (['local', 'file', 'skip_existing'].includes(choice)) return 'reconcile_verified_local';
+    return 'invalid';
+  }
+
+  function persistInitialSyncResult(ok) {
+    const wizard = loadWizard();
+    wizard.syncDone = ok === true;
+    saveWizard(wizard);
+    return wizard.syncDone;
+  }
+
+  async function runInitialSyncPipeline() {
+    const wizardBeforeSync = loadWizard();
+    const verifiedDatabaseRestore = wizardBeforeSync.restoreVerifiedDatabase === true;
+    const googleStepCompleted = Array.isArray(wizardBeforeSync.completedSteps)
+      && wizardBeforeSync.completedSteps.includes('google');
+    const googleState = await refreshGoogleConnectionState({
+      acceptLiveReconnect: googleStepCompleted,
+    });
+    if (!googleState.connected) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: googleState.error || 'google_not_connected', googleState };
+    }
+    const ownerSession = await verifySetupOwnerSession();
+    if (!ownerSession.ok) {
+      persistInitialSyncResult(false);
+      return ownerSession;
+    }
+    let defaultsResult;
+    try {
+      defaultsResult = await global.ActivationSyncDefaults?.applyDefaults?.({
+        startSync: true,
+        startBackup: true,
+        acceptLiveReconnect: googleStepCompleted,
+      });
+    } catch (error) {
+      defaultsResult = { ok: false, error: error?.code || error?.message || 'activation_defaults_failed' };
+    }
+    if (defaultsResult?.ok !== true) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: defaultsResult?.error || defaultsResult?.reason || 'activation_defaults_failed' };
+    }
+
+    const ready = global.SyncEngine?.getReadiness?.({ force: true });
+    if (ready && !ready.ready) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: ready.error || ready.state || 'sync_not_ready', readiness: ready };
+    }
+
+    const restoreChoice = loadWizard().restoreChoice;
+    const operation = initialOperationForChoice(restoreChoice);
+    let syncResult;
+    if (operation === 'reconcile_verified_local') {
+      const reconcileState = global.RestoreReconciliation?.loadState?.();
+      syncResult = reconcileState?.pullDone === true && reconcileState?.pushAllowed === true
+        ? { ok: true, reconciled: true, state: reconcileState }
+        : { ok: false, error: 'local_reconcile_required', state: reconcileState || null };
+    } else if (['push', 'pull'].includes(operation) && global.SyncEngine?.runOnce) {
+      if (!global.SyncEngine.isRunning?.()) {
+        global.SyncEngine.start?.({ pollIntervalMs: global.SyncState?.load?.()?.pollIntervalMs });
+      }
+      syncResult = await global.SyncEngine.runOnce({ force: true, direction: operation });
+    } else if (operation === 'pull' && global.CloudBootstrap?.hydrateFromDrive) {
+      syncResult = await global.CloudBootstrap.hydrateFromDrive(null, { allowMissingLicense: true });
+    } else {
+      syncResult = { ok: false, error: operation === 'invalid' ? 'restore_choice_required' : 'sync_runtime_unavailable' };
+    }
+    if (syncResult?.ok !== true) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: syncResult?.error || syncResult?.reason || syncResult?.message || 'initial_sync_failed', syncResult };
+    }
+
+    const bootstrap = await global.ensureCloudBootstrapReady?.();
+    if (!bootstrap) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: 'bootstrap_unavailable' };
+    }
+    const branchId = global.DeviceConfig?.load?.()?.lockedBranchId;
+    let bootResult;
+    if (operation === 'pull' && verifiedDatabaseRestore && bootstrap.markBootstrapComplete) {
+      // Backup V2 already restored and verified the complete authoritative
+      // SQLite database. The operation-log pull above reconciles newer records;
+      // running the legacy full-config bootstrap again can fail on optional
+      // historical files and must not overwrite the restored database.
+      bootstrap.markBootstrapComplete(branchId);
+      bootResult = { ok: true, mode: 'verified_backup_v2_reconcile', localDataPreserved: true };
+    } else if (operation === 'pull') {
+      if (!bootstrap.runNewDeviceBootstrap) {
+        persistInitialSyncResult(false);
+        return { ok: false, error: 'bootstrap_unavailable' };
+      }
+      bootResult = await bootstrap.runNewDeviceBootstrap({
+        branchId,
+        startSync: true,
+        allowMissingLicense: true
+      });
+    } else if (bootstrap.markBootstrapComplete) {
+      bootstrap.markBootstrapComplete(branchId);
+      bootResult = { ok: true, mode: operation, localDataPreserved: operation === 'reconcile_verified_local' };
+    } else {
+      bootResult = { ok: false, error: 'bootstrap_completion_unavailable' };
+    }
+    if (bootResult?.ok !== true) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: bootResult?.error || bootResult?.reason || 'device_bootstrap_failed', bootResult };
+    }
+    if (!ownerSetupRequirementMet()) {
+      persistInitialSyncResult(false);
+      return { ok: false, error: 'owner_credential_required' };
+    }
+
+    persistInitialSyncResult(true);
+    return { ok: true, defaultsResult, syncResult, bootResult };
+  }
+
+  function isBootComplete() {
+    const evaluation = global.SetupStateService?.evaluateReady?.({ ignoreRestart: true });
+    if (evaluation && typeof evaluation.ready === 'boolean') {
+      if (!evaluation.ready) {
+        try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
+      }
+      return evaluation.ready;
+    }
+    const base = hasGoogle() && hasValidLicense() && hasCenterData() && hasDeviceBranch()
+      && hasRestoreDecision() && ownerSetupRequirementMet() && hasSyncDone();
+    if (!base) {
+      try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
+      return false;
+    }
+    return true;
+  }
+
+  async function markBootComplete() {
+    if (!isBootComplete()) return false;
+    try {
+      const durable = await global.SetupStateService?.markBootCompleteDurable?.();
+      if (!durable || durable.ok !== true) {
+        try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
+        return false;
+      }
+      global.AuditLogger?.logSyncEvent?.('BOOTSTRAP', { summary: 'V2-5.9 activation wizard complete' });
+      return true;
+    } catch {
+      try { localStorage.removeItem(BOOT_DONE_KEY); } catch { /* empty */ }
+      return false;
+    }
+  }
+
+  function needsBootScreen() {
+    // Delegate to SetupStateService (via SetupStateDom) as sole SoT.
+    if (global.SetupStateDom?.needsBootFlow) return global.SetupStateDom.needsBootFlow();
+    const ss = global.SetupStateService?.getState?.({ ignoreRestart: true });
+    if (ss && typeof ss.needsBootFlow === 'boolean') return !!ss.needsBootFlow;
+    if (bootDonePersisted() && isBootComplete()) return false;
+    if (ss?.state === 'READY') return false;
+    return !isBootComplete();
+  }
+
+  function bootDonePersisted() {
+    try { return localStorage.getItem(BOOT_DONE_KEY) === '1'; } catch { return false; }
+  }
+
+  /**
+   * Call once on app startup after relaunch — consume restart marker and never reopen Ready.
+   */
+  function onAppStartupAfterRelaunch() {
+    const consumed = global.SetupStateService?.consumeRestartMarker?.()
+      || (() => {
+        try {
+          if (localStorage.getItem(RESTART_REQUIRED_KEY)) {
+            localStorage.removeItem(RESTART_REQUIRED_KEY);
+            localStorage.setItem(BOOT_DONE_KEY, '1');
+            return { consumed: true, loopDetected: false };
+          }
+        } catch { /* empty */ }
+        return { consumed: false };
+      })();
+    if (consumed?.loopDetected) {
+      global.notify?.('⚠️ حلقة إعادة تشغيل مكتشفة — راجع Diagnostic في أدوات الدعم', 'danger');
+    }
+    if (consumed?.consumed && isBootComplete()) {
+      close({ showLogin: true });
+      applyLoginGate();
+    }
+    return consumed;
+  }
+
+  function shouldAutoOpenBoot() {
+    try {
+      const bootParam = new URLSearchParams(global.location?.search || '').get('boot');
+      if (bootParam === '0') return false;
+      if (bootParam === '1' || bootParam === 'force') return true;
+    } catch { /* empty */ }
+    return needsBootScreen() && !global.currentUser;
+  }
+
+  function canShowLogin() {
+    const w = loadWizard();
+    if (w.completedSteps?.includes('ready') && isBootComplete()) return true;
+    return isBootComplete();
+  }
+
+  function canOpenDashboard() {
+    return isBootComplete() && !!global.currentUser;
+  }
+
+  function validateStep(step) {
+    switch (step) {
+      case 'language': return !!(loadWizard().lang);
+      case 'google': return hasGoogle();
+      case 'license': return hasValidLicense();
+      case 'organization': return hasCenterData();
+      case 'branch': return hasBranch() && hasDeviceBranch();
+      case 'branch_select': return hasBranch() && hasDeviceBranch();
+      case 'owner': return ownerSetupRequirementMet() && setupOwnerSessionReady();
+      case 'restore': return hasRestoreDecision();
+      case 'sync': return hasSyncDone();
+      case 'ready': return isBootComplete();
+      default: return false;
+    }
+  }
+
+  function completeCurrentStep(w) {
+    w = w || loadWizard();
+    const steps = stepsFor(w.path);
+    const step = steps[w.currentStep];
+    if (!w.completedSteps.includes(step)) w.completedSteps.push(step);
+    if (w.currentStep < steps.length - 1) w.currentStep += 1;
+    return saveWizard(w);
+  }
+
+  function hideBlockingScreens() {
+    document.getElementById('licenseScreen')?.classList.add('hidden');
+    document.getElementById('devContactModal')?.classList.remove('open');
+    if (typeof global.CenterSetupUI?.close === 'function') global.CenterSetupUI.close();
+  }
+
+  function injectStyles() {
+    const styleId = 'boot-flow-styles-v260';
+    let s = document.getElementById(styleId);
+    if (!s) {
+      s = document.createElement('style');
+      s.id = styleId;
+      document.head.appendChild(s);
+      ['boot-flow-styles-v258', 'boot-flow-styles-v259'].forEach((id) => {
+        document.getElementById(id)?.remove();
+      });
+    }
+    s.textContent = `
+.bf-overlay{position:fixed;inset:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:hidden}
+.bf-overlay.open{display:grid}
+.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,100%);max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box}
+.bf-card-header{flex:0 0 auto;padding:14px 20px 8px;position:relative;min-height:0;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card,#fff)}
+.bf-card-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 20px 12px;-webkit-overflow-scrolling:touch}
+.bf-card-footer{flex-shrink:0;padding:10px 20px 14px;border-top:1px solid var(--border,#e5e7eb);background:var(--card,#fff);display:grid;gap:8px;position:sticky;bottom:0;z-index:3}
+.bf-card h1{margin:0 0 6px;font-size:clamp(1.05rem,2.2vw,1.35rem);font-weight:900;color:var(--primary,#3D5A80);text-align:center}
+.bf-card>p,.bf-lead{margin:0 0 10px;font-size:13px;color:var(--text-muted,#666);text-align:center;line-height:1.6}
+.bf-progress{display:flex;gap:4px;margin-bottom:8px;justify-content:center;flex-wrap:nowrap;overflow-x:auto;max-height:16px}
+.bf-dot{width:10px;height:10px;border-radius:50%;background:var(--border,#ccc);flex:0 0 auto}
+.bf-dot.done{background:#2d7a5f}
+.bf-dot.current{background:var(--primary,#3D5A80);transform:scale(1.2)}
+.bf-dot.failed{background:var(--tdw-color-danger-600,#a94045)}
+.tdw-stepper.bf-stepper{display:flex;flex-wrap:nowrap;gap:4px;overflow-x:auto;overflow-y:hidden;max-height:2.75rem;padding-bottom:4px}
+.tdw-stepper.bf-stepper>li{flex:1 0 auto;min-width:4.5rem;max-width:7rem;font-size:11px;text-align:center;padding:6px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-block-end:3px solid var(--tdw-color-neutral-300,#cbd5e1)}
+.tdw-stepper.bf-stepper>li[data-state="done"]{border-color:#2d7a5f;color:#2d7a5f}
+.tdw-stepper.bf-stepper>li[data-state="failed"]{border-color:var(--tdw-color-danger-600);color:var(--tdw-color-danger-600)}
+.tdw-stepper.bf-stepper>li[aria-current="step"]{border-color:var(--tdw-color-accent-500,#2f8f83);color:var(--tdw-color-primary-700)}
+.bf-step-meta{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px}
+.bf-step-hint{font-size:12px;color:var(--primary);background:var(--surface,#f4f6f8);border:1px solid var(--border,#ddd);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7}
+.bf-step-content{min-height:60px}
+.bf-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:0;width:100%}
+.bf-actions:empty{display:none}
+.bf-actions .btn{width:100%;min-width:0;min-height:44px;white-space:normal;text-align:center}
+.bf-choice-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:12px}
+.bf-choice-actions .btn{width:100%;min-height:44px;white-space:normal;text-align:center}
+.bf-nav-row{display:flex;gap:8px;flex-wrap:nowrap}
+.bf-nav-row .btn{flex:1 1 0;min-width:0;min-height:44px;white-space:nowrap}
+.bf-status{margin-top:8px;font-size:12px;color:var(--text-muted);min-height:18px;text-align:center;line-height:1.5}
+.bf-status-error{color:var(--tdw-color-danger-600,#a94045);font-weight:700}
+.bf-choices{display:grid;gap:12px}
+.bf-choice{padding:16px;border-radius:14px;border:2px solid var(--border,#ddd);background:var(--surface,#f8f9fa);cursor:pointer;text-align:inherit;width:100%}
+.bf-choice h3{margin:0 0 6px;font-size:16px;font-weight:900;color:var(--primary)}
+.bf-choice p{margin:0;font-size:12px;color:var(--text-muted)}
+.bf-step{display:none}.bf-step.active{display:block}
+.bf-close-btn{position:absolute;top:8px;inset-inline-start:8px;width:40px;height:40px;border-radius:10px;border:1px solid var(--border);background:var(--surface);cursor:pointer;z-index:2}
+.bf-lang-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bf-lang-row .btn{min-width:0;min-height:44px}
+.tdw-password-row{display:flex;gap:8px;align-items:center}
+.tdw-password-row .form-control{flex:1;min-width:0}
+.tdw-field-error{color:var(--tdw-color-danger-600,#a94045);font-size:12px;margin-top:4px;font-weight:700}
+.ocf-form .form-group{margin-bottom:12px}
+.bf-support{margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.bf-support-title{font-size:13px;font-weight:900;text-align:center;margin-bottom:8px}
+body.bf-active #login-drive-bootstrap-panel,
+body.bf-active #lic-drive-bootstrap-panel{display:none!important}
+body.bf-active #licenseScreen:not(.hidden){z-index:100040!important}
+body.bf-active #cloudConnectModal.open{z-index:100039!important}
+body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
+.bf-source-card{border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;background:var(--surface,#f8fafc);display:grid;gap:6px;text-align:start}
+.bf-source-card[data-status="ready"]{border-color:#86efac;background:#f0fdf4}
+.bf-source-card[data-status="not_found"],.bf-source-card[data-status="offline"],.bf-source-card[data-status="timeout"]{border-color:#fcd34d;background:#fffbeb}
+.bf-source-card[data-status="error"],.bf-source-card[data-status="token_expired"]{border-color:#fca5a5;background:#fef2f2}
+.bf-source-card h4{margin:0;font-size:14px}
+.bf-source-meta{font-size:12px;color:var(--text-muted,#64748b);line-height:1.6;dir:rtl}
+.bf-source-meta code{font-size:11px}
+.bf-cloud-backup-list{display:grid;gap:6px;margin-top:6px}
+.bf-cloud-backup-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid var(--border,#e5e7eb);border-radius:9px;background:var(--card,#fff)}
+.bf-cloud-backup-row[data-selected="true"]{border-color:var(--primary,#3D5A80);box-shadow:0 0 0 1px var(--primary,#3D5A80)}
+.bf-cloud-backup-row .bf-cloud-backup-label{min-width:0;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.bf-restore-progress{margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:10px;background:#fff}
+.bf-restore-progress .bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+.bf-restore-progress .bar>i{display:block;height:100%;width:0;background:#3D5A80;transition:width .2s}
+@media (max-height:720px){.bf-card-header{padding-top:10px}.bf-card h1{font-size:1.05rem}}
+@media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}}
+@media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
+@media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}}
+`;
+  }
+
+  function ensureDOM() {
+    injectStyles();
+    let el = document.getElementById('bootFlowOverlay');
+    if (el) {
+      // Upgrade if missing shell parts or actions still inside scroll body
+      const actionsInFooter = !!el.querySelector('.bf-card-footer #bf-step-actions');
+      if (!el.querySelector('.bf-card-body') || !actionsInFooter) {
+        el.remove();
+        el = null;
+      }
+    }
+    if (el) return;
+    el = document.createElement('div');
+    el.id = 'bootFlowOverlay';
+    el.className = 'bf-overlay';
+    el.setAttribute('role', 'presentation');
+    el.innerHTML = `
+      <div class="bf-card modal-shell tdw-modal tdw-modal--wizard" role="dialog" aria-modal="true" aria-labelledby="bf-main-title" id="bf-dialog">
+        <header class="bf-card-header modal-header">
+          <button type="button" class="bf-close-btn" id="bf-close-btn" title="إغلاق" aria-label="إغلاق">✕</button>
+          <div id="bf-step-choose" class="bf-step active">
+            <h1 id="bf-main-title">مرحباً بك</h1>
+            <p class="bf-lead">رحلة إعداد موحّدة — لا يمكن تخطي الخطوات المطلوبة</p>
+          </div>
+          <div id="bf-step-wizard" class="bf-step">
+            <h1 id="bf-wizard-title">الإعداد</h1>
+            <ul class="tdw-stepper bf-stepper" id="bf-stepper" aria-label="خطوات الإعداد"></ul>
+            <div class="bf-progress" id="bf-progress" aria-hidden="true"></div>
+            <div class="bf-step-meta" id="bf-step-meta"></div>
+          </div>
+        </header>
+        <section class="bf-card-body modal-body">
+          <div id="bf-step-choose-body" class="bf-step active">
+            <div class="bf-choices">
+              <button type="button" class="bf-choice" id="bf-new-customer">
+                <h3>🆕 عميل جديد</h3>
+                <p>ربط Google ثم التفعيل وإنشاء أول فرع</p>
+              </button>
+              <button type="button" class="bf-choice" id="bf-existing-customer">
+                <h3>☁️ عميل حالي / جهاز جديد</h3>
+                <p>ربط Google وسحب الترخيص واختيار فرع موجود ثم الاستعادة</p>
+              </button>
+            </div>
+          </div>
+          <div id="bf-wizard-body" class="bf-step">
+            <p id="bf-step-label" style="font-weight:800;text-align:center"></p>
+            <div class="bf-step-hint" id="bf-step-hint"></div>
+            <div class="bf-step-content" id="bf-step-content"></div>
+            <div class="bf-status" id="bf-wizard-status" role="status"></div>
+          </div>
+          <div id="bf-support-host"></div>
+        </section>
+        <footer class="bf-card-footer modal-footer">
+          <div class="bf-actions modal-actions" id="bf-step-actions"></div>
+          <div class="bf-nav-row" id="bf-step-nav"></div>
+        </footer>
+      </div>`;
+    document.body.appendChild(el);
+    el.querySelector('#bf-new-customer').onclick = () => startPath(PATHS.NEW);
+    el.querySelector('#bf-existing-customer').onclick = () => startPath(PATHS.EXISTING);
+    el.querySelector('#bf-close-btn')?.addEventListener('click', () => closeToLogin());
+    el.addEventListener('keydown', onDialogKeydown);
+  }
+
+  function onDialogKeydown(ev) {
+    if (ev.key === 'Escape') {
+      // Safe close only when not in critical in-flight
+      if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight || ownerLoginInFlight || ownerCreateInFlight() || restoreInFlight || syncInFlight) {
+        setStatus('⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق', true);
+        ev.preventDefault();
+        return;
+      }
+      closeToLogin();
+      return;
+    }
+    if (ev.key !== 'Tab') return;
+    const dialog = document.getElementById('bf-dialog');
+    if (!dialog || !document.getElementById('bootFlowOverlay')?.classList.contains('open')) return;
+    const focusables = [...dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+      .filter((n) => !n.disabled && n.offsetParent !== null);
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (ev.shiftKey && document.activeElement === first) {
+      last.focus();
+      ev.preventDefault();
+    } else if (!ev.shiftKey && document.activeElement === last) {
+      first.focus();
+      ev.preventDefault();
+    }
+  }
+
+  function showStep(id) {
+    document.querySelectorAll('#bootFlowOverlay .bf-step').forEach((s) => s.classList.remove('active'));
+    if (id === 'bf-step-choose') {
+      document.getElementById('bf-step-choose')?.classList.add('active');
+      document.getElementById('bf-step-choose-body')?.classList.add('active');
+      const nav = document.getElementById('bf-step-nav');
+      if (nav) nav.innerHTML = '';
+      const actions = document.getElementById('bf-step-actions');
+      if (actions) actions.innerHTML = '';
+    } else {
+      document.getElementById('bf-step-wizard')?.classList.add('active');
+      document.getElementById('bf-wizard-body')?.classList.add('active');
+    }
+  }
+
+  function renderProgress(w) {
+    const steps = stepsFor(w.path);
+    const host = document.getElementById('bf-progress');
+    const stepper = document.getElementById('bf-stepper');
+    if (host) {
+      host.innerHTML = steps.map((s, i) => {
+        let cls = 'bf-dot';
+        if (w.completedSteps.includes(s)) cls += ' done';
+        else if (i === w.currentStep) cls += ' current';
+        return `<div class="${cls}" title="${STEP_LABELS[s] || s}"></div>`;
+      }).join('');
+    }
+    if (stepper) {
+      stepper.innerHTML = steps.map((s, i) => {
+        let state = 'pending';
+        if (w.completedSteps.includes(s)) state = 'done';
+        else if (i === w.currentStep) state = 'current';
+        const cur = i === w.currentStep ? 'step' : undefined;
+        const short = STEP_SHORT[s] || STEP_LABELS[s] || s;
+        const full = STEP_LABELS[s] || s;
+        return `<li data-state="${state}" title="${full}" ${cur ? 'aria-current="step"' : ''}>${short}</li>`;
+      }).join('');
+    }
+    const meta = document.getElementById('bf-step-meta');
+    if (meta) meta.textContent = `الخطوة ${w.currentStep + 1} من ${steps.length}`;
+    const label = document.getElementById('bf-step-label');
+    if (label) label.textContent = STEP_LABELS[steps[w.currentStep]] || '';
+    const hint = document.getElementById('bf-step-hint');
+    if (hint) hint.textContent = STEP_HINTS[steps[w.currentStep]] || '';
+    const title = document.getElementById('bf-wizard-title');
+    if (title) title.textContent = w.path === PATHS.NEW ? 'إعداد عميل جديد' : 'جهاز / عميل حالي';
+  }
+
+  function renderNavButtons(w) {
+    const nav = document.getElementById('bf-step-nav');
+    if (!nav) return;
+    nav.innerHTML = '';
+    const steps = stepsFor(w.path);
+    const step = steps[w.currentStep];
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'btn btn-ghost btn-sm';
+    prev.textContent = w.currentStep > 0 ? '◀ السابق' : '◀ مرحباً بك';
+    prev.onclick = () => prevStep();
+    nav.appendChild(prev);
+
+    // On ready step: no duplicate "إنهاء والدخول" — primary CTA lives in step actions only.
+    if (step === 'ready') {
+      return;
+    }
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'btn btn-primary btn-sm';
+    next.id = 'bf-next-btn';
+    next.textContent = 'متابعة ▶';
+    next.disabled = !validateStep(step);
+    next.onclick = () => advanceWizard();
+    nav.appendChild(next);
+  }
+
+  function addBtn(host, label, cls, handler, disabled) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'btn ' + (cls || 'btn-primary');
+    b.textContent = label;
+    b.disabled = !!disabled;
+    b.onclick = (ev) => {
+      if (typeof global.runWithButtonLock === 'function') {
+        return global.runWithButtonLock(b, () => handler(ev));
+      }
+      return handler(ev);
+    };
+    host.appendChild(b);
+    return b;
+  }
+
+  async function refreshGoogleConnectionState(options) {
+    options = options || {};
+    let refreshError = null;
+    if (typeof global.DriveAdapter?.ensureConnected === 'function') {
+      try {
+        await global.DriveAdapter.ensureConnected({
+          acceptLiveReconnect: options.acceptLiveReconnect === true,
+        });
+      } catch (error) {
+        refreshError = error?.code || error?.message || 'google_status_refresh_failed';
+      }
+    } else if (typeof global.syncCloudStatusFromElectron === 'function') {
+      try {
+        await global.syncCloudStatusFromElectron({
+          acceptLiveReconnect: options.acceptLiveReconnect === true,
+        });
+      } catch (error) {
+        refreshError = error?.code || error?.message || 'google_status_refresh_failed';
+      }
+    }
+    if (typeof global.licCheck === 'function') {
+      try { await global.licCheck(); } catch { /* license readiness is checked separately */ }
+    }
+    return {
+      ok: hasGoogle(),
+      connected: hasGoogle(),
+      error: hasGoogle() ? null : (refreshError || 'google_not_connected'),
+    };
+  }
+
+  /**
+   * After Google connects: automatically scan Drive for activation (Scenario A).
+   * Single valid license → pull; multiple → needsSelection; none → Scenario B (enter key).
+   */
+  async function autoDiscoverActivationAfterGoogle() {
+    setStatus('🔍 جارٍ فحص بيانات التفعيل على Drive/Cloud...');
+    try {
+      const bootstrap = global.CloudBootstrap;
+      if (!bootstrap?.discoverAndFetchLicenseFromDrive) {
+        return { ok: false, error: 'bootstrap_unavailable' };
+      }
+      let lic = await bootstrap.discoverAndFetchLicenseFromDrive({ forceList: false, persist: false });
+      if (lic?.error === 'multiple_licenses' && lic.needsSelection) {
+        setStatus('⚠️ وُجد أكثر من ترخيص — اختر الترخيص الصحيح من القائمة');
+        const host = document.getElementById('bf-license-candidates');
+        if (host && typeof global.renderDriveLicenseCandidates === 'function') {
+          host.style.display = '';
+          global.renderDriveLicenseCandidates('bf-license-candidates', lic.candidates, {
+            context: 'bootflow',
+            skipModal: true,
+            skipDeviceBootstrap: true,
+            recovery: true
+          });
+        }
+        return lic;
+      }
+      if (!lic?.ok) {
+        // Retry force list scan once for legacy roots
+        lic = await bootstrap.discoverAndFetchLicenseFromDrive({ forceList: true, persist: false });
+      }
+      if (lic?.error === 'multiple_licenses') return lic;
+      if (lic?.ok && lic.license) {
+        const bridge = global.LicenseLegacyBridge
+          || (typeof global.tdwLicenseLegacyBridge === 'function' ? global.tdwLicenseLegacyBridge() : null);
+        if (bridge?.applyFromCloudDoc) {
+          const applied = await bridge.applyFromCloudDoc(lic.license, { remotePath: lic.path });
+          if (!applied?.ok) {
+            setStatusFromErr(applied);
+            return { ...applied, discovery: true };
+          }
+        }
+        if (typeof global.licCheck === 'function') await global.licCheck();
+        const w = loadWizard();
+        if (hasBranch()) {
+          w.path = PATHS.EXISTING;
+          if (!w.completedSteps.includes('license')) w.completedSteps.push('license');
+          if (hasCenterData() && !w.completedSteps.includes('organization')) w.completedSteps.push('organization');
+        } else {
+          w.path = w.path || PATHS.NEW;
+          if (!w.completedSteps.includes('license')) w.completedSteps.push('license');
+        }
+        saveWizard(w);
+        setStatus('✅ تم العثور على بيانات التفعيل وسحبها بنجاح. يرجى اختيار الفرع وإدخال اسم هذا الجهاز لإكمال التسجيل.');
+        return { ok: true, discovered: true, license: lic.license };
+      }
+      setStatus('ℹ️ لم يُعثر على تفعيل على Drive — أدخل مفتاح الترخيص للمتابعة (عميل جديد).');
+      return { ok: false, error: 'no_activation_on_drive', scenario: 'B' };
+    } catch (e) {
+      // Preserve the real failure class. The previous hard-coded fallback
+      // mislabeled RBAC, signature, rendering and persistence errors as a
+      // network timeout, hiding the actionable root cause.
+      setStatusFromErr(e);
+      return { ok: false, error: String(e && e.message || e) };
+    }
+  }
+
+  async function commitSetupOrganizationDevice(options) {
+    const commit = global.cuppingElectron?.database?.setupCommitOrganizationDevice
+      || global.tadawi?.database?.setupCommitOrganizationDevice;
+    if (typeof commit !== 'function') {
+      const error = new Error('setup_organization_device_endpoint_unavailable');
+      error.code = 'setup_organization_device_endpoint_unavailable';
+      throw error;
+    }
+    const result = await commit(options || {});
+    if (result?.ok !== true) {
+      const error = new Error(result?.error || result?.message || 'setup_organization_device_commit_failed');
+      error.code = result?.error || 'setup_organization_device_commit_failed';
+      error.result = result;
+      throw error;
+    }
+    const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+    if (hydrated && hydrated.ok !== true) {
+      const error = new Error(hydrated.error || 'setup_activation_hydrate_failed');
+      error.code = hydrated.error || 'setup_activation_hydrate_failed';
+      throw error;
+    }
+    if (result.settings && typeof result.settings === 'object') global.settings = result.settings;
+    else if (result.centerName) global.settings = { ...(global.settings || {}), centerName: result.centerName };
+    return result;
+  }
+
+  async function runGoogleConnect() {
+    if (oauthInFlight) {
+      setStatus('⏳ ربط Google جارٍ بالفعل — انتظر', true);
+      return { ok: false, error: 'oauth_in_flight' };
+    }
+    oauthInFlight = true;
+    setStatus('🔗 جارٍ فتح Google للمصادقة...');
+    try {
+      const res = await global.connectGoogleDriveOnly?.({
+        context: 'boot-wizard',
+        skipModal: true
+      }) || await global.loginConnectGoogleAndBootstrap?.({
+        context: 'boot-wizard',
+        fieldPrefix: 'bf',
+        skipDeviceBootstrap: true,
+        connectOnly: true
+      }, true);
+      await refreshGoogleConnectionState();
+      if (!hasGoogle()) {
+        setStatusFromErr(res || { message: 'oauth_failed' }, res?.error || 'oauth_failed');
+        return res || { ok: false };
+      }
+      setStatus('✅ تم ربط Google' + (res?.email ? ' — ' + res.email : '') + ' — بدء الفحص التلقائي...');
+      const discovered = await autoDiscoverActivationAfterGoogle();
+      if (discovered?.ok && global.LicenseCloud?.loadLocal?.()) {
+        global.populateDriveBootstrapBranchFields?.(global.LicenseCloud.loadLocal(), 'bf');
+      }
+      return { ok: discovered?.ok === true, googleConnected: true, email: res?.email || '', discovery: discovered };
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false, error: String(e && e.message || e) };
+    } finally {
+      oauthInFlight = false;
+      const w = loadWizard();
+      renderProgress(w);
+      renderNavButtons(w);
+    }
+  }
+
+  async function disconnectGoogleDuringSetup() {
+    if (oauthInFlight || licenseActivateInFlight || branchBindInFlight || ownerLoginInFlight || syncInFlight) {
+      return { ok: false, error: 'setup_operation_in_progress' };
+    }
+    try {
+      const api = global.cuppingElectron || global.tadawi || global.tadawiElectron;
+      // Main owns OAuth-token removal. A Google-account switch never deletes
+      // the license, SQLite data, device binding, or setup choices.
+      const disconnected = await api?.backup?.disconnectCloud?.('google');
+      if (disconnected?.ok === false) return disconnected;
+      const settings = global.settings || (global.settings = {});
+      settings.backup = settings.backup || {};
+      settings.backup.providers = settings.backup.providers || {};
+      settings.backup.providers.google = {
+        ...(settings.backup.providers.google || {}),
+        connected: false, email: '', oauth: false, hasRefreshToken: false,
+        userDisconnected: true,
+      };
+      settings.backup.cloudEnabled = false;
+      // Pre-auth setup must not invoke a protected generic settings write.
+      global.DB?.set?.('settings', settings);
+      const wizard = loadWizard();
+      const steps = stepsFor(wizard.path);
+      const googleIndex = steps.indexOf('google');
+      wizard.completedSteps = (wizard.completedSteps || []).filter((step) => {
+        const index = steps.indexOf(step);
+        return index >= 0 && index < googleIndex;
+      });
+      wizard.currentStep = Math.max(0, googleIndex);
+      wizard.restoreChoice = null;
+      wizard.syncDone = false;
+      saveWizard(wizard);
+      setStatus('تم فصل حساب Google. يمكنك ربط الحساب الصحيح الآن.');
+      renderProgress(loadWizard());
+      renderNavButtons(loadWizard());
+      renderStepUI(loadWizard());
+      return { ok: true };
+    } catch (error) {
+      return { ok: false, error: error?.code || error?.message || 'google_disconnect_failed' };
+    }
+  }
+
+  async function activateLicenseKey() {
+    if (licenseActivateInFlight) {
+      setStatus('⏳ التفعيل جارٍ — لا تضغط مجدداً', true);
+      return { ok: false, error: 'activate_in_flight' };
+    }
+    const input = document.getElementById('bf-license-key');
+    let key = String(input?.value || '').replace(/\s+/g, '').trim();
+    if (!/^TDW6\./.test(key)) key = key.toUpperCase();
+    if (input) input.value = key;
+    if (!key) {
+      setStatus('⚠️ أدخل مفتاح الترخيص', true);
+      return { ok: false, error: 'key_required' };
+    }
+    licenseActivateInFlight = true;
+    try { global.OwnerManagement?.setSystemBusy?.('license_refresh'); } catch { /* empty */ }
+    setStatus('⏳ جارٍ التحقق من الترخيص...');
+    try {
+      let res;
+      const router = global.CommercialLicense?.router;
+      const uiSink = { style: { display: 'none' }, textContent: '' };
+      // licApplyRenewal is a legacy screen handler: it ignores this key and
+      // reads an input from another page, causing false invalid-key results.
+      if (router?.isV6Input?.(key)) {
+        res = await router.applyV6Activation(key, uiSink, null);
+        if (res?.ok === true) {
+          const commitSigned = global.cuppingElectron?.database?.setupCommitSignedActivation
+            || global.tadawi?.database?.setupCommitSignedActivation;
+          if (typeof commitSigned !== 'function') throw new Error('setup_signed_activation_endpoint_unavailable');
+          const committed = await commitSigned({
+            license: res.verified?.license,
+            legacyLicense: res.lic,
+          });
+          if (committed?.ok !== true) {
+            const error = new Error(committed?.error || 'setup_signed_activation_commit_failed');
+            error.code = committed?.error || 'setup_signed_activation_commit_failed';
+            throw error;
+          }
+          const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+          if (hydrated && hydrated.ok !== true) throw new Error(hydrated.error || 'setup_activation_hydrate_failed');
+        }
+      } else if (router?.isV5Key?.(key)) {
+        res = await router.applyActivation(key, uiSink, null);
+        if (res?.ok === true) {
+          const commitSigned = global.cuppingElectron?.database?.setupCommitSignedActivation
+            || global.tadawi?.database?.setupCommitSignedActivation;
+          if (typeof commitSigned !== 'function') throw new Error('setup_signed_activation_endpoint_unavailable');
+          const licenseDoc = res.activationCommit?.doc || global.LicenseCloud?.loadLocal?.();
+          if (!licenseDoc) throw new Error('setup_legacy_activation_document_missing');
+          const committed = await commitSigned({ license: licenseDoc, legacyLicense: res.lic });
+          if (committed?.ok !== true) {
+            const error = new Error(committed?.error || 'setup_signed_activation_commit_failed');
+            error.code = committed?.error || 'setup_signed_activation_commit_failed';
+            throw error;
+          }
+          const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+          if (hydrated && hydrated.ok !== true) throw new Error(hydrated.error || 'setup_activation_hydrate_failed');
+        }
+      } else {
+        res = { handled: true, ok: false, error: 'license_format_invalid' };
+      }
+      if (res?.ok !== true) {
+        if (uiSink.textContent) setStatus(uiSink.textContent, true);
+        else setStatusFromErr(res || { message: 'license_invalid' }, res?.error || 'license_invalid');
+        return { ok: false, error: res?.error || 'license_invalid', result: res };
+      }
+      if (typeof global.licCheck === 'function') await global.licCheck();
+      if (hasValidLicense()) {
+        setStatus('✅ تم التفعيل بنجاح');
+        return { ok: true, result: res };
+      }
+      setStatusFromErr(res || { message: 'license_invalid' }, 'license_invalid');
+      return { ok: false, result: res };
+    } catch (e) {
+      setStatusFromErr(e, 'license_invalid');
+      return { ok: false, error: String(e && e.message || e) };
+    } finally {
+      licenseActivateInFlight = false;
+      try { global.OwnerManagement?.clearSystemBusy?.('license_refresh'); } catch { /* empty */ }
+      const w = loadWizard();
+      renderNavButtons(w);
+    }
+  }
+
+  async function createFirstBranchFromForm() {
+    if (branchCreateInFlight) {
+      setStatusFromErr({ message: 'duplicate create' }, 'branch_duplicate_create');
+      return { ok: false, error: 'in_flight' };
+    }
+    const nameAr = String(document.getElementById('bf-branch-name-ar')?.value || '').trim();
+    const nameEn = String(document.getElementById('bf-branch-name-en')?.value || '').trim();
+    const code = String(document.getElementById('bf-branch-code')?.value || '').trim();
+    const city = String(document.getElementById('bf-branch-city')?.value || '').trim();
+    const phone = String(document.getElementById('bf-branch-phone')?.value || '').trim();
+    const deviceName = String(document.getElementById('bf-device-name')?.value || '').trim();
+    if (!nameAr) {
+      setStatusFromErr({ message: 'branch_name_required' }, 'branch_name_required');
+      return { ok: false };
+    }
+    // V2-5.9: never treat placeholder / center name as the branch name.
+    const centerName = String(global.settings?.centerName || global.LicenseCloud?.loadLocal?.()?.centerName || '').trim();
+    const banned = ['مركز الحجامة', 'الفرع الرئيسي', 'Hijama Center', 'Main Branch', centerName].filter(Boolean);
+    if (banned.some((b) => b && nameAr === b)) {
+      setStatus('⚠️ أدخل اسماً مخصصاً للفرع — لا تستخدم اسم المركز أو القيمة الافتراضية', true);
+      return { ok: false, error: 'branch_name_placeholder' };
+    }
+    if (!deviceName) {
+      setStatus('⚠️ أدخل اسم هذا الجهاز', true);
+      return { ok: false, error: 'device_name_required' };
+    }
+    branchCreateInFlight = true;
+    setStatus('⏳ جارٍ إنشاء الفرع...');
+    try {
+      let doc = global.LicenseCloud?.loadLocal?.();
+      if (!doc?.centerId) {
+        setStatus('⚠️ لا يوجد ترخيص/مؤسسة صالحة لإنشاء فرع', true);
+        return { ok: false, error: 'no_center' };
+      }
+      let committed;
+      if (hasBranch()) {
+        const branchId = (doc.branches || []).find((b) => b && b.active !== false)?.id;
+        committed = await commitSetupOrganizationDevice({
+          centerName: centerName || doc.centerName || nameAr,
+          branchId,
+          deviceName,
+        });
+      } else {
+        committed = await commitSetupOrganizationDevice({
+          centerName: centerName || doc.centerName || nameAr,
+          deviceName,
+          createBranch: {
+            source: 'activation_wizard',
+            id: code || 'BR-MAIN',
+            name: nameAr,
+            nameEn,
+            code: code || 'MAIN',
+            city,
+            phone,
+          },
+        });
+      }
+      if (!committed?.branch?.id || !hasDeviceBranch() || committed?.deviceRegistryCommit?.ok !== true) {
+        throw new Error('setup_device_binding_not_committed');
+      }
+      try { localStorage.setItem(RESTART_REQUIRED_KEY, '1'); } catch { /* empty */ }
+      setStatus('✅ تم تسجيل الجهاز وربطه بالفرع بنجاح. سيتم إعادة تشغيل البرنامج لتطبيق التفعيل واستكمال المزامنة.');
+      return { ok: true, restartRequired: true };
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false };
+    } finally {
+      branchCreateInFlight = false;
+      const w = loadWizard();
+      renderNavButtons(w);
+    }
+  }
+
+  async function bindExistingBranch() {
+    if (branchBindInFlight) {
+      setStatusFromErr({ message: 'duplicate bind' }, 'branch_duplicate_bind');
+      return { ok: false, error: 'in_flight' };
+    }
+    const deviceName = String(document.getElementById('bf-device-name')?.value || '').trim();
+    const branchId = String(document.getElementById('bf-branch-id')?.value || '').trim();
+    if (!deviceName || !branchId) {
+      setStatus('⚠️ أدخل اسم الجهاز واختر الفرع', true);
+      return { ok: false };
+    }
+    setStatus('⏳ جارٍ ربط الجهاز بالفرع...');
+    branchBindInFlight = true;
+    try {
+      const committed = await commitSetupOrganizationDevice({
+        centerName: global.settings?.centerName || global.LicenseCloud?.loadLocal?.()?.centerName || '',
+        branchId,
+        deviceName,
+      });
+      if (!committed?.deviceRegistryCommit?.ok) throw new Error('setup_device_registry_not_committed');
+      try { localStorage.setItem(RESTART_REQUIRED_KEY, '1'); } catch { /* empty */ }
+      setStatus('✅ تم تسجيل الجهاز وربطه بالفرع بنجاح. سيتم إعادة تشغيل البرنامج لتطبيق التفعيل واستكمال المزامنة.');
+      return { ok: true, restartRequired: true };
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false };
+    } finally {
+      branchBindInFlight = false;
+      renderNavButtons(loadWizard());
+    }
+  }
+
+  async function authenticateExistingOwnerFromWizard() {
+    if (ownerLoginInFlight) return { ok: false, error: 'owner_login_in_flight' };
+    const owner = getUsableOwnerAccount();
+    const password = String(document.getElementById('bf-owner-password')?.value || '');
+    if (!owner) return { ok: false, error: 'owner_credential_required' };
+    if (!password) {
+      setStatusFromErr({ message: 'password_required' }, 'password_required');
+      return { ok: false, error: 'password_required' };
+    }
+    if (typeof global.authenticateSetupOwner !== 'function') {
+      setStatusFromErr({ message: 'setup_owner_authentication_unavailable' }, 'setup_owner_authentication_unavailable');
+      return { ok: false, error: 'setup_owner_authentication_unavailable' };
+    }
+    ownerLoginInFlight = true;
+    setStatus('⏳ جارٍ التحقق من كلمة مرور المالك...');
+    try {
+      const authenticated = await global.authenticateSetupOwner(owner.id, password);
+      if (authenticated?.ok !== true) {
+        setStatusFromErr(authenticated || { message: 'setup_owner_authentication_failed' }, authenticated?.error);
+        return authenticated || { ok: false, error: 'setup_owner_authentication_failed' };
+      }
+      const verified = await verifySetupOwnerSession();
+      if (!verified.ok) {
+        setStatusFromErr(verified, verified.error);
+        return verified;
+      }
+      setStatus('✅ تم التحقق من حساب المالك — يمكن بدء المزامنة');
+      return { ok: true, userId: owner.id, sessionBound: true };
+    } catch (error) {
+      setStatusFromErr(error, error?.code || error?.message || 'setup_owner_authentication_failed');
+      return { ok: false, error: error?.code || error?.message || 'setup_owner_authentication_failed' };
+    } finally {
+      ownerLoginInFlight = false;
+      renderNavButtons(loadWizard());
+      renderStepUI(loadWizard());
+    }
+  }
+
+  async function createOwnerFromWizard() {
+    if (ownerCreateInFlight()) {
+      setStatus('⏳ إنشاء المالك جارٍ — انتظر', true);
+      return { ok: false, error: 'creation_in_progress' };
+    }
+    if (hasOwnerPasswordAccount()) {
+      const verified = await verifySetupOwnerSession();
+      if (verified.ok) return { ok: true, already: true, sessionBound: true };
+      setStatusFromErr({ message: 'owner_session_required' }, 'owner_session_required');
+      renderStepUI(loadWizard());
+      return verified;
+    }
+    const busy = global.OwnerManagement?.getSystemBusyReason?.();
+    if (busy === 'restore' || busy === 'sync' || busy === 'license_refresh') {
+      setStatus('⚠️ انتظر انتهاء ' + busy + ' قبل إنشاء Owner', true);
+      return { ok: false, error: 'system_busy', busy };
+    }
+    setStatus('⏳ جارٍ إنشاء حساب المالك...');
+    try {
+      // Single create path + single lock inside OwnerManagement.createOwner
+      let res;
+      if (global.OwnerManagement?.createOwner) {
+        res = await global.OwnerManagement.createOwner({ idPrefix: 'ocf' });
+      } else {
+        res = await global.OwnerCreateForm?.createOwnerFromForm?.('ocf');
+      }
+      if (!res?.ok) {
+        setStatusFromErr(res, res?.code || res?.error);
+        return res || { ok: false };
+      }
+      const owner = getUsableOwnerAccount();
+      const activated = global.activateSetupOwnerIdentity?.(res.userId || owner?.id);
+      if (activated?.ok === false) {
+        setStatusFromErr(activated, activated.error);
+        return { ...activated, committed: true };
+      }
+      const verified = await verifySetupOwnerSession();
+      if (!verified.ok) {
+        setStatusFromErr(verified, verified.error);
+        return { ...verified, committed: true };
+      }
+      try { global.OwnerSetupState?.clearRequired?.(); } catch { /* empty */ }
+      try { global.OwnerManagement?.clearBootstrapOpenRequest?.(); } catch { /* empty */ }
+      setStatus('✅ تم إنشاء حساب المالك (Owner)');
+      try { global.OwnerHub?.applyNavVisibility?.(); } catch { /* empty */ }
+      return res;
+    } catch (e) {
+      setStatusFromErr(e);
+      return { ok: false };
+    } finally {
+      renderNavButtons(loadWizard());
+      renderStepUI(loadWizard());
+    }
+  }
+
+  async function restoreLocalBackupDuringSetup() {
+    const api = global.cuppingElectron?.backup || global.tadawiElectron?.backup || global.tadawi?.backup;
+    if (!api?.v2PickFile || !api?.v2SetupLocalRestore) {
+      return { ok: false, error: 'backup_v2_setup_restore_unavailable' };
+    }
+    const picked = await api.v2PickFile({ allowLegacy: true });
+    if (!picked?.ok || !picked.filePath) return { ok: false, canceled: true, error: 'file_not_selected' };
+    let password = typeof global.getBackupV2Password === 'function' ? await global.getBackupV2Password() : '';
+    const execute = async () => {
+      try {
+        return await api.v2SetupLocalRestore({
+          filePath: picked.filePath,
+          password,
+          setupMode: true,
+          relaunch: false,
+          ...(typeof global.getBackupV2IdentityMeta === 'function' ? global.getBackupV2IdentityMeta() : {})
+        });
+      } catch (error) {
+        if (/password|decrypt|authentication|scrypt/i.test(String(error?.code || error?.message || error))) {
+          password = typeof global.openBackupPasswordModal === 'function'
+            ? await global.openBackupPasswordModal('أدخل كلمة مرور Backup V2:')
+            : '';
+          if (!password) return { ok: false, canceled: true, error: 'backup_password_required' };
+          return api.v2SetupLocalRestore({
+            filePath: picked.filePath,
+            password,
+            setupMode: true,
+            relaunch: false,
+            ...(typeof global.getBackupV2IdentityMeta === 'function' ? global.getBackupV2IdentityMeta() : {})
+          });
+        }
+        return { ok: false, error: error?.code || error?.message || String(error) };
+      }
+    };
+    const result = global.OpsUxBridge?.runRestoreWizardFlow
+      ? await global.OpsUxBridge.runRestoreWizardFlow({
+        point: { id: picked.filePath, path: picked.filePath, label: picked.filePath },
+        execute
+      })
+      : await execute();
+    if (result?.ok !== true) return result || { ok: false, error: 'local_restore_failed' };
+    const hydrated = await global.SqliteBridge?.hydrateIntoMemory?.();
+    if (hydrated && hydrated.ok !== true) return { ok: false, error: hydrated.error || 'restore_hydrate_failed' };
+    return { ok: true, filePath: picked.filePath, restartRequired: true };
+  }
+
+  function renderStepUI(w) {
+    const steps = stepsFor(w.path);
+    const step = steps[w.currentStep];
+    const content = document.getElementById('bf-step-content');
+    const actions = document.getElementById('bf-step-actions');
+    if (!content || !actions) return;
+    content.innerHTML = '';
+    actions.innerHTML = '';
+
+    switch (step) {
+      case 'language': {
+        content.innerHTML = '<p class="bf-lead">اختر لغة الواجهة</p><div class="bf-lang-row" id="bf-lang-row"></div>';
+        const row = content.querySelector('#bf-lang-row');
+        [['ar', 'العربية'], ['en', 'English']].forEach(([code, label]) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'btn ' + ((w.lang || 'ar') === code ? 'btn-primary' : 'btn-secondary');
+          b.textContent = label;
+          b.onclick = () => {
+            w.lang = code;
+            saveWizard(w);
+            try { localStorage.setItem(LANG_KEY, code); } catch { /* empty */ }
+            global.UxI18n?.setLang?.(code);
+            global.UxI18n?.applyDocumentLang?.(document, code);
+            setStatus(code === 'ar' ? '✅ العربية' : '✅ English');
+            renderProgress(loadWizard());
+            renderNavButtons(loadWizard());
+            renderStepUI(loadWizard());
+          };
+          row.appendChild(b);
+        });
+        break;
+      }
+      case 'google': {
+        content.innerHTML = '<p>اربط حساب Google الخاص بالمركز. بعد الربط يبدأ فحص التفعيل تلقائياً (بدون زر إضافي).</p><div id="bf-google-email" class="bf-lead" dir="ltr"></div><div id="bf-license-candidates" style="display:none"></div>';
+        const emailEl = content.querySelector('#bf-google-email');
+        const provEmail = global.settings?.backup?.providers?.google?.email || '';
+        if (hasGoogle() && provEmail) emailEl.textContent = '✅ ' + provEmail;
+        const btn = addBtn(actions, oauthInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط Google', 'btn-primary', () => runGoogleConnect(), oauthInFlight);
+        btn.id = 'bf-google-connect-btn';
+        if (hasGoogle()) {
+          addBtn(actions, 'تبديل حساب Google', 'btn-secondary', async () => {
+            const result = await disconnectGoogleDuringSetup();
+            if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed');
+          });
+        }
+        if (hasGoogle() && hasValidLicense()) setStatus('✅ Google متصل والترخيص جاهز — تابع للمؤسسة/الفرع');
+        else if (hasGoogle()) setStatus('✅ Google متصل — إن لم يُعثر على تفعيل أدخل المفتاح في الخطوة التالية');
+        break;
+      }
+      case 'license': {
+        content.innerHTML = `
+          <p>${hasValidLicense() ? '✅ الترخيص جاهز من الفحص التلقائي.' : 'لم يُعثر على تفعيل تلقائي — أدخل مفتاح الترخيص.'}</p>
+          <label for="bf-license-key">مفتاح التفعيل</label>
+          <input type="text" id="bf-license-key" class="form-control" dir="ltr" autocomplete="off" placeholder="XXXX-XXXX-...">
+          <div id="bf-license-candidates" style="display:none;margin-top:8px"></div>`;
+        const keyInput = content.querySelector('#bf-license-key');
+        keyInput?.addEventListener('paste', () => {
+          setTimeout(() => {
+            let pasted = String(keyInput.value || '').replace(/\s+/g, '').trim();
+            if (!/^TDW6\./.test(pasted)) pasted = pasted.toUpperCase();
+            keyInput.value = pasted;
+          }, 0);
+        });
+        addBtn(actions, licenseActivateInFlight ? '⏳ جارٍ التفعيل...' : '✅ تحقق وتفعيل', 'btn-primary', () => activateLicenseKey(), licenseActivateInFlight);
+        addBtn(actions, '🔁 إعادة فحص Drive', 'btn-secondary', async () => {
+          setStatus('⏳ جارٍ إعادة الفحص...');
+          await autoDiscoverActivationAfterGoogle();
+          renderNavButtons(loadWizard());
+        });
+        if (hasValidLicense()) setStatus('✅ الترخيص صالح');
+        break;
+      }
+      case 'organization': {
+        const lic = global.LicenseCloud?.loadLocal?.() || {};
+        const cid = lic.centerId || global.CenterId?.getStoredCenterId?.() || '';
+        const cname = lic.centerName || global.settings?.centerName || '';
+        content.innerHTML = `
+          <p>المؤسسة المصرّح بها من الترخيص:</p>
+          <div class="form-group"><label>Center ID</label><input class="form-control" id="bf-org-id" dir="ltr" value="${String(cid).replace(/"/g, '&quot;')}" readonly></div>
+          <div class="form-group"><label>اسم المؤسسة</label><input class="form-control" id="bf-org-name" value="${String(cname).replace(/"/g, '&quot;')}"></div>`;
+        addBtn(actions, '💾 تأكيد المؤسسة', 'btn-primary', async () => {
+          const name = String(document.getElementById('bf-org-name')?.value || '').trim();
+          if (!name) { setStatus('⚠️ أدخل اسم المؤسسة', true); return; }
+          try {
+            await commitSetupOrganizationDevice({ centerName: name });
+          } catch (error) {
+            setStatusFromErr(error);
+            return;
+          }
+          setStatus('✅ تم تأكيد المؤسسة');
+          renderNavButtons(loadWizard());
+        });
+        if (hasCenterData()) setStatus('✅ بيانات المؤسسة جاهزة');
+        break;
+      }
+      case 'branch': {
+        if (hasBranch()) {
+          content.innerHTML = `
+            <p>يوجد فرع في الترخيص — اربط هذا الجهاز به.</p>
+            <div class="form-group"><label>اسم الجهاز</label><input id="bf-device-name" class="form-control" placeholder="Reception-PC"></div>
+            <div class="form-group"><label>الفرع</label><select id="bf-branch-id" class="form-control"></select></div>`;
+          global.populateDriveBootstrapBranchFields?.(global.LicenseCloud.loadLocal(), 'bf');
+          addBtn(actions, branchBindInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط الجهاز بالفرع', 'btn-primary', () => bindExistingBranch(), branchBindInFlight);
+        } else {
+          content.innerHTML = `
+            <p><strong>إنشاء أول فرع</strong> — لا توجد فروع بعد.</p>
+            <div class="form-group"><label>اسم الفرع (عربي) *</label><input id="bf-branch-name-ar" class="form-control" required></div>
+            <div class="form-group"><label>الاسم بالإنجليزية</label><input id="bf-branch-name-en" class="form-control" dir="ltr"></div>
+            <div class="form-group"><label>رمز الفرع</label><input id="bf-branch-code" class="form-control" dir="ltr" placeholder="BR-MAIN"></div>
+            <div class="form-group"><label>المدينة</label><input id="bf-branch-city" class="form-control"></div>
+            <div class="form-group"><label>الهاتف</label><input id="bf-branch-phone" class="form-control" dir="ltr"></div>
+            <div class="form-group"><label>اسم هذا الجهاز *</label><input id="bf-device-name" class="form-control" placeholder="Reception-PC"></div>
+            <select id="bf-branch-id" class="form-control" hidden></select>`;
+          addBtn(actions, branchCreateInFlight ? '⏳ جارٍ الإنشاء...' : '➕ إنشاء أول فرع وربطه', 'btn-primary', () => createFirstBranchFromForm(), branchCreateInFlight);
+        }
+        break;
+      }
+      case 'branch_select': {
+        content.innerHTML = `
+          <p><strong>اختيار فرع موجود</strong> وربط هذا الجهاز به (ليس إنشاء فرع جديد).</p>
+          <div class="form-group"><label>اسم الجهاز</label><input id="bf-device-name" class="form-control" placeholder="Clinic-PC-2"></div>
+          <div class="form-group"><label>الفرع الموجود</label><select id="bf-branch-id" class="form-control"></select></div>`;
+        const lic = global.LicenseCloud?.loadLocal?.();
+        if (lic) global.populateDriveBootstrapBranchFields?.(lic, 'bf');
+        if (!hasBranch()) {
+          content.innerHTML += '<p class="tdw-field-error">لا توجد فروع — ارجع لمسار عميل جديد أو أنشئ فرعاً من Owner Hub بعد الدخول.</p>';
+        }
+        addBtn(actions, branchBindInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط هذا الجهاز بالفرع', 'btn-primary', () => bindExistingBranch(), !hasBranch() || branchBindInFlight);
+        break;
+      }
+      case 'owner': {
+        const st = global.OwnerManagement?.getOwnerState?.()?.state;
+        if (st === 'OWNER_EXISTS' || hasOwnerPasswordAccount()) {
+          const owner = getUsableOwnerAccount();
+          if (setupOwnerSessionReady()) {
+            content.innerHTML = '<p>✅ تم التحقق من حساب المالك لهذه الجلسة. يمكنك المتابعة.</p>';
+            setStatus('✅ Owner جاهز');
+          } else {
+            content.innerHTML = `
+              <p>حساب المالك موجود بالفعل. أدخل كلمة المرور الحالية للمتابعة دون إنشاء الحساب أو تغييرها.</p>
+              <div class="form-group"><label>حساب المالك</label><div id="bf-owner-account" class="form-control" dir="ltr"></div></div>
+              <div class="form-group"><label for="bf-owner-password">كلمة مرور المالك الحالية</label><input type="password" id="bf-owner-password" class="form-control" autocomplete="current-password"></div>`;
+            const account = content.querySelector('#bf-owner-account');
+            if (account) account.textContent = String(owner?.username || owner?.fullName || 'Owner');
+            addBtn(actions, ownerLoginInFlight ? '⏳ جارٍ التحقق...' : '🔐 تحقق من حساب المالك', 'btn-primary', () => authenticateExistingOwnerFromWizard(), ownerLoginInFlight);
+            setStatus('يجب التحقق من كلمة مرور المالك قبل بدء المزامنة', true);
+          }
+        } else if (st === 'OWNER_CREATION_IN_PROGRESS') {
+          content.innerHTML = '<p>⏳ إنشاء المالك جارٍ — لا تبدأ عملية ثانية.</p>';
+          setStatus('⏳ OWNER_CREATION_IN_PROGRESS', true);
+        } else {
+          const label = (st === 'OWNER_CORRUPTED' || st === 'OWNER_RECOVERY_REQUIRED')
+            ? 'استرداد / إصلاح حساب المالك — كلمة المرور إلزامية.'
+            : 'أنشئ حساب المالك المستقل — كلمة المرور إلزامية.';
+          content.innerHTML = `<p>${label}</p>`
+            + (global.OwnerCreateForm?.renderFormHtml?.({ idPrefix: 'ocf' }) || '<p>OwnerCreateForm غير محمّل</p>');
+          global.OwnerCreateForm?.bindPasswordToggles?.(content);
+          const creating = ownerCreateInFlight();
+          addBtn(actions, creating ? '⏳ جارٍ الإنشاء...' : '👤 إنشاء حساب المالك', 'btn-primary', () => createOwnerFromWizard(), creating);
+        }
+        break;
+      }
+      case 'restore': {
+        // Fast Discovery (metadata) then Confirmed Restore — never silent infinite loader.
+        content.innerHTML = `
+          <p><strong>اختر مصدر البيانات</strong> — يتم فحص الخيارات المتاحة بسرعة قبل أي تنزيل.</p>
+          <div id="bf-discovery-status" class="bf-source-meta">⏳ جارٍ فحص مصادر البيانات (بدون تنزيل)…</div>
+          <div class="bf-choice-actions" id="bf-restore-choices" style="display:grid;gap:10px;margin-top:10px"></div>
+          <div id="bf-restore-progress-host"></div>`;
+        const choiceHost = content.querySelector('#bf-restore-choices') || content;
+        const statusEl = content.querySelector('#bf-discovery-status');
+        const progressHost = content.querySelector('#bf-restore-progress-host');
+        const Discovery = global.CloudDataDiscovery;
+
+        const markRestore = (choice, msg, meta = {}) => {
+          const w2 = loadWizard();
+          w2.restoreChoice = choice;
+          w2.restoreVerifiedDatabase = meta.verifiedDatabase === true;
+          w2.restoreMode = meta.mode || null;
+          w2.cloudDiscovery = Discovery?.getLastDiscovery?.() || w2.cloudDiscovery || null;
+          saveWizard(w2);
+          setStatus(msg);
+          renderNavButtons(loadWizard());
+        };
+
+        const reconcileAndSelectLocal = async (choice, successMessage, meta = {}) => {
+          if (!global.RestoreReconciliation?.afterRestoreDataSourceSelected) {
+            setStatusFromErr({ message: 'restore_reconcile_unavailable' }, 'restore_reconcile_unavailable');
+            return false;
+          }
+          setStatus('⏳ مواءمة البيانات المحلية مع السحابة (سحب الأحدث بلا رفع فوري)...');
+          const reconciled = await global.RestoreReconciliation.afterRestoreDataSourceSelected(choice);
+          if (reconciled?.ok !== true) {
+            setStatusFromErr(
+              { message: reconciled?.error || 'restore_reconcile_incomplete' },
+              reconciled?.error || 'restore_reconcile_incomplete'
+            );
+            return false;
+          }
+          markRestore(choice, successMessage, meta);
+          return true;
+        };
+
+        const renderProgress = (snap) => {
+          if (!progressHost || !snap) return;
+          const stageLine = snap.stageCount
+            ? `${snap.stageIndex || 0}/${snap.stageCount} — ${snap.stageLabel || '—'}`
+            : (snap.stageLabel || 'فحص مصادر البيانات');
+          progressHost.innerHTML = `<div class="bf-restore-progress" dir="rtl">
+            <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px">
+              <span>${stageLine}</span>
+              <strong dir="ltr">${snap.percent || 0}%</strong>
+            </div>
+            <div class="bar"><i style="width:${snap.percent || 0}%"></i></div>
+            <div class="bf-source-meta" style="margin-top:6px">
+              المنقضي: ${Math.round((snap.elapsedMs || 0) / 1000)}ث
+              ${snap.budgetMs ? ` / ~${Math.round(snap.budgetMs / 1000)}ث` : ''}
+              ${snap.foundCount ? ` · وُجد: ${snap.foundCount}` : ''}
+              ${snap.downloadedBytes ? ` · منزّل: ${Discovery.formatBytes(snap.downloadedBytes)}` : ''}
+              ${snap.totalBytes ? ` / ${Discovery.formatBytes(snap.totalBytes)}` : ''}<br>
+              آخر نشاط: ${snap.lastActivity || '—'}
+              ${snap.diagnosticId ? `<br>Diagnostic ID: <code dir="ltr">${snap.diagnosticId}</code>` : ''}
+            </div>
+          </div>`;
+        };
+
+        const addSourceCard = (opts) => {
+          const card = document.createElement('div');
+          card.className = 'bf-source-card';
+          card.dataset.status = opts.status || 'unknown';
+          const title = document.createElement('h4');
+          title.textContent = String(opts.title || '');
+          const meta = document.createElement('div');
+          meta.className = 'bf-source-meta';
+          if (global.SafeRender?.setStructuredHtml) global.SafeRender.setStructuredHtml(meta, opts.metaHtml || '');
+          else meta.textContent = String(opts.metaText || '');
+          const actions = document.createElement('div');
+          actions.className = 'bf-source-actions';
+          actions.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;margin-top:4px';
+          card.append(title, meta, actions);
+          choiceHost.appendChild(card);
+          return { card, meta, actions };
+        };
+
+        const runDiscovery = async () => {
+          if (restoreInFlight) {
+            setStatus('⚠️ عملية جارية — انتظر', true);
+            return;
+          }
+          if (!Discovery?.discoverAllSources) {
+            if (statusEl) {
+              statusEl.textContent = '⚠️ وحدة الاكتشاف غير محمّلة — حدّث التطبيق أو أعد التحميل.';
+            }
+            // Still show non-cloud alternatives
+            addBtn(choiceHost, '💾 استخدام البيانات المحلية الموجودة', 'btn-secondary', async () => {
+              await reconcileAndSelectLocal('local', '✅ تم اعتماد البيانات المحلية بعد المواءمة');
+            });
+            addBtn(choiceHost, '📁 اختيار ملف Backup / Database', 'btn-secondary', async () => {
+              const restored = await restoreLocalBackupDuringSetup();
+              if (restored?.ok === true) {
+                await reconcileAndSelectLocal('file', '✅ تمت استعادة Backup V2 ومواءمتها', {
+                  verifiedDatabase: true,
+                  mode: 'backup_v2_local',
+                });
+              } else if (!restored?.canceled) {
+                setStatus('❌ لم تتم الاستعادة: ' + (restored?.error || 'restore_failed'), true);
+              }
+            });
+            addBtn(choiceHost, '📭 البدء بدون قاعدة بيانات سابقة', 'btn-ghost', () => {
+              markRestore('empty', '✅ بدء صريح بدون قاعدة سابقة');
+            });
+            return;
+          }
+
+          restoreInFlight = true;
+          try { global.OwnerManagement?.setSystemBusy?.('discovery'); } catch { /* empty */ }
+          const discoveryBudgetMs = Discovery.DISCOVERY_TIMEOUT_MS || 180000;
+          setStatus(`🔍 فحص مصادر البيانات (حتى ${Math.round(discoveryBudgetMs / 1000)}ث) — بلا تنزيل…`);
+          choiceHost.innerHTML = '';
+          if (statusEl) statusEl.textContent = '⏳ جارٍ الفحص: سحابة / محلي / نسخ — مع مؤشر تقدم…';
+          if (progressHost) {
+            renderProgress({
+              stageLabel: 'بدء الفحص',
+              percent: 2,
+              elapsedMs: 0,
+              budgetMs: discoveryBudgetMs,
+              lastActivity: 'بيانات وصفية فقط — لا تنزيل',
+            });
+          }
+
+          let discovery;
+          try {
+            discovery = await Discovery.discoverAllSources({
+              timeoutMs: discoveryBudgetMs,
+              onProgress: (snap) => {
+                renderProgress(snap);
+                if (statusEl && snap?.stageLabel) {
+                  statusEl.textContent = `⏳ ${snap.stageLabel} — ${snap.percent || 0}%`;
+                }
+              },
+            });
+          } catch (e) {
+            discovery = { ok: false, error: e.message || String(e), cloud: { status: 'error', message: e.message } };
+          } finally {
+            restoreInFlight = false;
+            try { global.OwnerManagement?.clearSystemBusy?.('discovery'); } catch { /* empty */ }
+          }
+
+          const cloud = discovery?.cloud || {};
+          const dur = discovery?.durationMs != null ? `${discovery.durationMs}ms` : '—';
+          const cloudHasPoint = !!(cloud.newest && (cloud.status === 'ready' || cloud.status === 'ipc_missing'));
+          if (statusEl) {
+            if (cloudHasPoint && cloud.timedOut) {
+              statusEl.textContent = `⚠️ اكتمل الفحص جزئياً (${dur}) — وُجدت نسخة سحابية للتأكيد.`;
+            } else if (cloud.timedOut) {
+              statusEl.textContent = `⏱️ انتهى وقت الفحص السحابي (${dur}). يمكنك إعادة المحاولة أو اختيار مصدر آخر.`;
+            } else {
+              statusEl.textContent = `✅ اكتمل الفحص خلال ${dur}. لا تنزيل أثناء الاكتشاف.`;
+            }
+          }
+          setStatus(cloud.timedOut && !cloudHasPoint
+            ? '⏱️ مهلة اكتشاف السحابة — أعد المحاولة'
+            : (cloudHasPoint && cloud.timedOut ? '⚠️ نتائج جزئية — يمكن التأكيد' : '✅ نتائج الفحص جاهزة'));
+
+          // --- Cloud card ---
+          const newest = cloud.newest;
+          const backupPoints = Array.isArray(cloud.restorePoints)
+            ? cloud.restorePoints.filter((point) => point?.kind === 'backup_file').slice(0, 10)
+            : (newest?.kind === 'backup_file' ? [newest] : []);
+          // When several backups exist, require an explicit choice. A newer
+          // file can be a valid but nearly-empty setup snapshot and must not
+          // silently supersede an older data-rich recovery point.
+          let selectedCloudPoint = backupPoints.length > 1 ? null : newest;
+          let selectedRestoreButton = null;
+          const cloudStatus = cloud.status || 'unknown';
+          const cloudMeta = newest
+            ? `الحالة: <strong>${cloud.ok === true && cloudStatus === 'ready' ? 'جاهزة للتأكيد' : 'نتيجة جزئية غير قابلة للاختيار'}</strong><br>
+               ${cloud.ok !== true ? `<span class="bf-source-meta">⚠️ ${cloud.message || 'لم يكتمل الفحص؛ أعد المحاولة.'}</span><br>` : ''}
+               النوع: ${newest.kind === 'backup_file' ? 'نسخة Backup' : 'نقطة مزامنة سحابية'}<br>
+               المركز: <code dir="ltr">${cloud.centerId || discovery?.identity?.centerId || '—'}</code><br>
+               الفرع: <code dir="ltr">${cloud.branchId || discovery?.identity?.branchId || '—'}</code><br>
+               آخر نسخة: ${Discovery.formatWhen(newest.modifiedAt)}<br>
+               الحجم: ${Discovery.formatBytes(newest.sizeBytes)}<br>
+               الملف: <code dir="ltr">${newest.name || newest.path || '—'}</code><br>
+               التحقق: ${newest.validation || 'metadata_ok'}`
+            : `الحالة: <strong>${cloudStatus}</strong><br>${cloud.message || 'لم يتم العثور على نسخ سحابية — جرّب «ملف Backup» أو تأكد من حساب Google.'}`;
+
+          const cloudCard = addSourceCard({
+            title: backupPoints.length > 1 ? '☁️ النسخ السحابية المتاحة' : '☁️ أحدث بيانات سحابية',
+            status: newest ? 'ready' : cloudStatus,
+            metaHtml: cloudMeta,
+          });
+
+          if (newest && cloud.ok === true && cloudStatus === 'ready'
+              && !cloud.partialScan && !cloud.truncated && !cloud.timedOut) {
+            selectedRestoreButton = addBtn(cloudCard.actions, 'استعادة هذه البيانات المحددة', 'btn-primary', async () => {
+              if (!selectedCloudPoint) {
+                setStatus('⚠️ اختر نسخة من القائمة أولاً', true);
+                return;
+              }
+              if (restoreInFlight || Discovery.isRestoreLocked?.()) {
+                setStatus('⚠️ استعادة جارية — انتظر', true);
+                return;
+              }
+              restoreInFlight = true;
+              try { global.OwnerManagement?.setSystemBusy?.('restore'); } catch { /* empty */ }
+              setStatus('⏳ جارٍ الاستعادة المؤكدة من السحابة…');
+              try {
+                const result = await Discovery.confirmedCloudRestore(selectedCloudPoint, {
+                  onProgress: (snap) => {
+                    renderProgress(snap);
+                    setStatus(`⏳ ${snap.stageLabel} — ${snap.percent}%`);
+                  },
+                });
+                if (!result?.ok) {
+                  setStatusFromErr(result, result?.error || 'cloud_backup_restore_failed');
+                  if (progressHost) {
+                    progressHost.innerHTML += `<p class="bf-source-meta">لم تُستبدل القاعدة المحلية. الترخيص والجهاز والفرع محفوظون. يمكنك إعادة المحاولة أو تغيير المصدر.${result?.diagnosticId ? ` · ID ${result.diagnosticId}` : ''}</p>`;
+                  }
+                  return;
+                }
+                markRestore('cloud', '✅ تمت الاستعادة السحابية المؤكدة — انتقل للمزامنة', {
+                  verifiedDatabase: result?.result?.native === true,
+                  mode: result?.result?.mode || null,
+                });
+                setStatus('✅ تمت الاستعادة — المزامنة التالية تسحب الأحدث فقط');
+              } catch (e) {
+                setStatusFromErr(e, 'restore_interrupted');
+              } finally {
+                restoreInFlight = false;
+                try { global.OwnerManagement?.clearSystemBusy?.('restore'); } catch { /* empty */ }
+                renderNavButtons(loadWizard());
+              }
+            }, !selectedCloudPoint);
+          } else {
+            addBtn(cloudCard.actions, 'إعادة فحص السحابة', 'btn-secondary', () => {
+              renderStepUI(loadWizard());
+            });
+          }
+
+          if (backupPoints.length > 1) {
+            const note = document.createElement('p');
+            note.className = 'bf-source-meta';
+            note.textContent = 'اختر النسخة حسب التاريخ والحجم. النسخ الأكبر قد تحتوي بيانات أكثر، ويُطلب رمز النسخة القديمة عند الحاجة.';
+            const list = document.createElement('div');
+            list.className = 'bf-cloud-backup-list';
+            const rows = [];
+            backupPoints.forEach((point, index) => {
+              const row = document.createElement('div');
+              row.className = 'bf-cloud-backup-row';
+              row.dataset.selected = String(point === selectedCloudPoint);
+              const label = document.createElement('span');
+              label.className = 'bf-cloud-backup-label';
+              label.textContent = `${index === 0 ? 'الأحدث · ' : ''}${Discovery.formatWhen(point.modifiedAt)} · ${Discovery.formatBytes(point.sizeBytes)}`;
+              const select = document.createElement('button');
+              select.type = 'button';
+              select.className = 'btn btn-secondary btn-sm';
+              select.textContent = point === selectedCloudPoint ? 'محددة ✓' : 'اختيار';
+              select.onclick = () => {
+                selectedCloudPoint = point;
+                rows.forEach(({ row: itemRow, button, point: itemPoint }) => {
+                  const isSelected = itemPoint === selectedCloudPoint;
+                  itemRow.dataset.selected = String(isSelected);
+                  button.textContent = isSelected ? 'محددة ✓' : 'اختيار';
+                });
+                if (selectedRestoreButton) selectedRestoreButton.textContent = 'استعادة هذه البيانات المحددة';
+                if (selectedRestoreButton) selectedRestoreButton.disabled = false;
+                setStatus(`✅ تم اختيار نسخة ${Discovery.formatWhen(point.modifiedAt)} بحجم ${Discovery.formatBytes(point.sizeBytes)}`);
+              };
+              row.append(label, select);
+              rows.push({ row, button: select, point });
+              list.appendChild(row);
+            });
+            cloudCard.card.insertBefore(note, cloudCard.actions);
+            cloudCard.card.insertBefore(list, cloudCard.actions);
+          }
+
+          // --- Local DB card ---
+          const local = discovery?.localDb || {};
+          const localCard = addSourceCard({
+            title: '💾 البيانات المحلية',
+            status: local.status === 'valid' ? 'ready' : (local.status || 'unknown'),
+            metaHtml: `المسار: <code dir="ltr">${local.path || '—'}</code><br>الحالة: ${local.message || local.status || '—'}`,
+          });
+          addBtn(localCard.actions, 'استخدام البيانات المحلية', 'btn-secondary', async () => {
+            try {
+              await reconcileAndSelectLocal('local', '✅ تم اعتماد البيانات المحلية بعد المواءمة');
+            } catch (error) { setStatusFromErr(error, 'restore_reconcile_incomplete'); }
+          });
+
+          // --- Local backups / file ---
+          const lb = discovery?.localBackup || {};
+          const fileCard = addSourceCard({
+            title: '📁 اختيار ملف Backup',
+            status: lb.available ? 'ready' : 'not_found',
+            metaHtml: `${lb.message || 'اختيار ملف...'}<br>النسخ المحلية: ${lb.count || 0}`,
+          });
+          addBtn(fileCard.actions, 'اختيار ملف…', 'btn-secondary', async () => {
+            if (restoreInFlight) return;
+            restoreInFlight = true;
+            setStatus('⏳ اختر ملف Backup V2 ثم أكّد الاستعادة...');
+            try {
+              const restored = await restoreLocalBackupDuringSetup();
+              if (restored?.ok !== true) {
+                if (!restored?.canceled) setStatus('❌ لم تتم الاستعادة: ' + (restored?.error || 'restore_failed'), true);
+                return;
+              }
+              await reconcileAndSelectLocal('file', '✅ تمت استعادة Backup V2 ومواءمتها', {
+                verifiedDatabase: true,
+                mode: 'backup_v2_local',
+              });
+            } catch (error) {
+              setStatusFromErr(error, 'local_restore_failed');
+            } finally {
+              restoreInFlight = false;
+              renderNavButtons(loadWizard());
+            }
+          });
+
+          // --- Empty start ---
+          const emptyCard = addSourceCard({
+            title: '📭 البدء بدون بيانات سابقة',
+            status: 'ready',
+            metaHtml: 'إنشاء قاعدة جديدة بقرار صريح منك — لن يحدث تلقائياً عند فشل السحابة.',
+          });
+          addBtn(emptyCard.actions, 'بدء قاعدة جديدة', 'btn-ghost', () => {
+            markRestore('empty', '✅ بدء صريح بدون قاعدة سابقة');
+          });
+
+          if (w.path === PATHS.EXISTING) {
+            addBtn(choiceHost, '✔️ تأكيد البيانات الحالية (جهاز موجود)', 'btn-ghost', async () => {
+              try {
+                await reconcileAndSelectLocal('skip_existing', '✅ تم تأكيد البيانات الحالية بعد المواءمة');
+              } catch (error) { setStatusFromErr(error, 'restore_reconcile_incomplete'); }
+            });
+          }
+        };
+
+        // Kick discovery asynchronously so the step paints first
+        setTimeout(() => { runDiscovery().catch(() => {}); }, 0);
+        break;
+      }
+      case 'sync': {
+        const readiness = global.SyncEngine?.getReadiness?.() || null;
+        content.innerHTML = `<p>نفّذ المزامنة الأولية بعد الاستعادة/البدء.</p>
+          <div class="bf-source-meta" id="bf-sync-readiness">${
+            readiness
+              ? (readiness.ready
+                ? `✅ الجاهزية: ${readiness.state}`
+                : `⚠️ غير جاهز بعد: ${(readiness.missing || []).join(', ') || readiness.messageAr || ''}`)
+              : 'جارٍ فحص جاهزية المزامنة…'
+          }</div>`;
+        addBtn(actions, '▶️ بدء المزامنة الأولية', 'btn-primary', async () => {
+          if (syncInFlight || ownerCreateInFlight()) {
+            setStatus('⚠️ عملية جارية — انتظر', true);
+            return;
+          }
+          syncInFlight = true;
+          try { global.OwnerManagement?.setSystemBusy?.('sync'); } catch { /* empty */ }
+          setStatus('⏳ جارٍ المزامنة...');
+          try {
+            const result = await runInitialSyncPipeline();
+            if (result.ok) setStatus('✅ اكتملت المزامنة الأولية');
+            else setStatusFromErr({ message: result.error }, result.error);
+          } catch (e) {
+            persistInitialSyncResult(false);
+            setStatusFromErr(e, 'sync_interrupted');
+          } finally {
+            syncInFlight = false;
+            try { global.OwnerManagement?.clearSystemBusy?.('sync'); } catch { /* empty */ }
+            renderNavButtons(loadWizard());
+            renderStepUI(loadWizard());
+          }
+        });
+        if (hasSyncDone()) setStatus('✅ المزامنة مسجّلة كمكتملة');
+        break;
+      }
+      case 'ready': {
+        const checks = [
+          ['Google', hasGoogle()],
+          ['الترخيص', hasValidLicense()],
+          ['المؤسسة', hasCenterData()],
+          ['الفرع والجهاز', hasDeviceBranch()],
+          ['مصدر البيانات', hasRestoreDecision()],
+          ['حساب المالك', ownerSetupRequirementMet()],
+          ['المزامنة', hasSyncDone()]
+        ];
+        const setupState = global.SetupStateService?.getState?.({ ignoreRestart: true });
+        content.innerHTML = `<ul style="font-size:13px;line-height:1.9">${checks.map(([l, ok]) => `<li>${ok ? '✅' : '❌'} ${l}</li>`).join('')}</ul>
+          <p>اكتمل الإعداد بنجاح. اضغط الزر الوحيد أدناه لإعادة تشغيل البرنامج وتطبيق التفعيل، ثم سجّل الدخول.</p>
+          <p class="bf-source-meta">لن تُعرض هذه الشاشة مرة أخرى بعد إعادة التشغيل الناجحة.</p>`;
+        // Single terminal CTA — no duplicate finish / login / restart buttons.
+        addBtn(actions, '🔄 إعادة تشغيل البرنامج وتطبيق الإعداد', 'btn-primary', async () => {
+          if (!isBootComplete()) {
+            setStatus('⚠️ لم تكتمل جميع المتطلبات', true);
+            return;
+          }
+          const finalized = await global.SqliteBridge?.finalizeSetupData?.();
+          if (!finalized || finalized.ok !== true) {
+            setStatus('❌ تعذر تثبيت البيانات في SQLite: ' + (finalized?.error || 'setup_finalize_failed'), true);
+            return;
+          }
+          try {
+            // Flush durable state before relaunch
+            try {
+              const committed = typeof global.persistData === 'function'
+                ? await global.persistData('settings', global.settings)
+                : await global.SqliteBridge?.setAuthoritative?.('settings', global.settings);
+              if (!committed || committed.ok === false) throw new Error(committed?.error || 'settings_flush_failed');
+            } catch (error) {
+              setStatus('⚠️ تعذر حفظ الإعدادات قبل إعادة التشغيل', true);
+              return;
+            }
+            const completed = await markBootComplete();
+            if (!completed) {
+              setStatus('⚠️ تعذر تثبيت حالة اكتمال الإعداد قبل إعادة التشغيل', true);
+              return;
+            }
+            const meta = global.SetupStateService?.markRestartRequired?.('setup_finalize')
+              || (() => { try { localStorage.setItem(RESTART_REQUIRED_KEY, '1'); } catch { /* empty */ } return null; })();
+            setStatus('⏳ جارٍ حفظ الحالة وإعادة التشغيل…');
+            try { global.SyncEngine?.stop?.(); } catch { /* empty */ }
+            const api = global.cuppingElectron || global.tadawiElectron;
+            if (api?.relaunchApp) {
+              await api.relaunchApp({ reason: meta?.id || 'setup_finalize' });
+              return;
+            }
+            if (api?.app?.relaunch) {
+              await api.app.relaunch();
+              return;
+            }
+          } catch (e) {
+            setStatus('⚠️ تعذّر relaunch التلقائي — أعد التشغيل يدوياً من النظام', true);
+            return;
+          }
+          setStatus('ℹ️ أعد تشغيل التطبيق يدوياً من قائمة النظام لتطبيق الإعداد', true);
+        }, !isBootComplete());
+        break;
+      }
+      default:
+        break;
+    }
+    renderNavButtons(w);
+  }
+
+  function startPath(path) {
+    const w = resetWizard(path);
+    showStep('bf-step-wizard');
+    renderProgress(w);
+    renderStepUI(w);
+  }
+
+  function prevStep() {
+    const w = loadWizard();
+    if (!w.path) return;
+    if (w.currentStep <= 0) {
+      w.path = null;
+      w.currentStep = 0;
+      saveWizard(w);
+      showStep('bf-step-choose');
+      setStatus('');
+      return;
+    }
+    w.currentStep -= 1;
+    saveWizard(w);
+    renderProgress(w);
+    renderStepUI(w);
+    setStatus('');
+  }
+
+  async function advanceWizard() {
+    let w = loadWizard();
+    const steps = stepsFor(w.path);
+    const step = steps[w.currentStep];
+    if (!validateStep(step)) {
+      setStatusFromErr({ message: 'step_required' }, 'step_required');
+      return;
+    }
+    if (w.currentStep >= steps.length - 1) {
+      if (!await markBootComplete()) {
+        setStatus('⚠️ لم تكتمل جميع متطلبات الإعداد', true);
+        return;
+      }
+      close({ showLogin: true });
+      return;
+    }
+    w = completeCurrentStep(w);
+    renderProgress(w);
+    renderStepUI(w);
+    setStatus('');
+  }
+
+  function setBootActive(active) {
+    document.body?.classList.toggle('bf-active', !!active);
+  }
+
+  function openOverlay(force) {
+    if (!force && !needsBootScreen()) return false;
+    lastFocusEl = document.activeElement;
+    hideBlockingScreens();
+    ensureDOM();
+    const w = loadWizard();
+    if (w.path) {
+      showStep('bf-step-wizard');
+      renderProgress(w);
+      renderStepUI(w);
+    } else {
+      showStep('bf-step-choose');
+    }
+    document.getElementById('bootFlowOverlay')?.classList.add('open');
+    setBootActive(true);
+    const login = document.getElementById('loginScreen');
+    if (login) login.classList.add('hidden');
+    setTimeout(() => document.getElementById('bf-dialog')?.querySelector('button,input')?.focus?.(), 30);
+    return true;
+  }
+
+  function open() { return openOverlay(true); }
+  function forceOpen() { return openOverlay(true); }
+
+  /**
+   * Jump wizard to a specific step id (e.g. 'owner') and open overlay.
+   * Used by self-healing Owner Bootstrap when org has no Owner.
+   */
+  function openAtStep(stepId, opts) {
+    opts = opts || {};
+    let w = loadWizard();
+    if (!w.path) {
+      w.path = opts.path || (hasValidLicense() ? PATHS.EXISTING : PATHS.NEW);
+      w = saveWizard(w);
+    }
+    const steps = stepsFor(w.path);
+    const idx = steps.indexOf(stepId);
+    if (idx >= 0) {
+      w.currentStep = idx;
+      saveWizard(w);
+    }
+    return openOverlay(true);
+  }
+
+  /**
+   * V2-5.9: Owner Bootstrap is support/emergency only — never for Google activation.
+   */
+  function ensureOwnerBootstrapWizard(reason) {
+    const why = String(reason || '');
+    const allowed = /^(emergency|support|migration|owner_hub)/i.test(why);
+    if (!allowed) {
+      return { ok: true, opened: false, skipped: true, reason: 'v2_5_9_no_auto_owner_bootstrap', why };
+    }
+    if (global.OwnerManagement?.requestOwnerBootstrap) {
+      return global.OwnerManagement.requestOwnerBootstrap(why);
+    }
+    if (hasOwnerPasswordAccount()) {
+      try { global.OwnerSetupState?.clearRequired?.(); } catch { /* empty */ }
+      return { ok: true, opened: false, reason: 'owner_present' };
+    }
+    try { global.OwnerSetupState?.ensureMissingOwner?.(why); } catch { /* empty */ }
+    openAtStep('owner');
+    return { ok: true, opened: true, reason: why };
+  }
+
+  function close(opts) {
+    document.getElementById('bootFlowOverlay')?.classList.remove('open');
+    setBootActive(false);
+    const login = document.getElementById('loginScreen');
+    const forceLogin = !!(opts?.showLogin || !global.currentUser);
+    if (login && (forceLogin || canShowLogin())) {
+      login.classList.remove('hidden');
+      login.style.display = '';
+      login.style.pointerEvents = '';
+    }
+    applyLoginGate();
+    try { lastFocusEl?.focus?.(); } catch { /* empty */ }
+    if (forceLogin && typeof global.ensureUserLoginScreenVisible === 'function') {
+      global.ensureUserLoginScreenVisible();
+    }
+  }
+
+  function closeToLogin() {
+    close({ showLogin: true });
+    global.notify?.('ℹ️ يمكنك إعادة فتح الإعداد من «🚀 بدء الإعداد»', 'info');
+  }
+
+  async function refreshBootState() {
+    if (isBootComplete()) {
+      if (!await markBootComplete()) return;
+      close();
+      global.filterLoginUsers?.();
+    } else {
+      const w = loadWizard();
+      if (w.path && document.getElementById('bootFlowOverlay')?.classList.contains('open')) {
+        renderProgress(w);
+        renderStepUI(w);
+      }
+    }
+  }
+
+  function ensureLoginAccessible() {
+    // Do not force-close wizard if activation incomplete — only ensure login DOM usable when shown.
+    const login = document.getElementById('loginScreen');
+    if (login && !document.getElementById('bootFlowOverlay')?.classList.contains('open')) {
+      login.classList.remove('hidden');
+      login.style.display = '';
+      login.style.pointerEvents = '';
+    }
+    document.getElementById('centerSetupModal')?.classList.remove('open');
+  }
+
+  function updateLoginSetupHint() {
+    const el = document.getElementById('login-setup-hint');
+    const bootCta = document.getElementById('login-boot-cta')
+      || document.querySelector('#loginScreen .login-activate-btn, #loginScreen button[onclick*="openBootWizard"]');
+    const complete = isBootComplete() || global.SetupStateService?.getState?.()?.state === 'READY';
+    if (el) {
+      if (complete) {
+        el.style.display = 'none';
+        el.textContent = '';
+      } else {
+        el.style.display = '';
+        el.innerHTML = '💡 لم يكتمل الإعداد — <button type="button" class="btn btn-primary btn-sm" id="login-open-activation-wizard">🚀 بدء الإعداد الموحّد</button>';
+        document.getElementById('login-open-activation-wizard')?.addEventListener('click', () => forceOpen());
+      }
+    }
+    // Hide completed-step boot CTA on login when READY
+    if (bootCta) {
+      bootCta.style.display = complete ? 'none' : '';
+      bootCta.hidden = !!complete;
+    }
+    // License/dev support entry stays in collapsed <details> — never hide after activation
+  }
+
+  function applyLoginGate() {
+    ensureLoginAccessible();
+    updateLoginSetupHint();
+    try { global.SetupStateDom?.applyDomVisibility?.({ reason: 'bootflow-login-gate' }); } catch { /* empty */ }
+  }
+
+  // Inventory helpers for tests
+  function getStepCatalog() {
+    return { NEW_STEPS: NEW_STEPS.slice(), EXISTING_STEPS: EXISTING_STEPS.slice(), STEP_LABELS: { ...STEP_LABELS } };
+  }
+
+  global.BootFlow = {
+    PATHS,
+    NEW_STEPS,
+    EXISTING_STEPS,
+    open,
+    forceOpen,
+    openAtStep,
+    ensureOwnerBootstrapWizard,
+    close,
+    closeToLogin,
+    needsBootScreen,
+    shouldAutoOpenBoot,
+    isBootComplete,
+    markBootComplete,
+    onAppStartupAfterRelaunch,
+    canShowLogin,
+    canOpenDashboard,
+    ensureLoginAccessible,
+    updateLoginSetupHint,
+    applyLoginGate,
+    refreshBootState,
+    startPath,
+    validateStep,
+    loadWizard,
+    saveWizard,
+    getStepCatalog,
+    hasOwnerPasswordAccount,
+    /** @deprecated alias — prefer hasOwnerPasswordAccount */
+    hasOwnerAccount: hasOwnerPasswordAccount,
+    hasGoogle,
+    hasValidLicense,
+    hasCenterData,
+    hasBranch,
+    hasDeviceBranch,
+    hasRestoreDecision,
+    hasSyncDone,
+    getSetupConnectivityPolicy,
+    initialOperationForChoice,
+    runInitialSyncPipeline,
+    autoDiscoverActivationAfterGoogle,
+    disconnectGoogleDuringSetup,
+    isCriticalOpInFlight,
+    version: 'v2-5.10'
+  };
+})(typeof window !== 'undefined' ? window : globalThis);

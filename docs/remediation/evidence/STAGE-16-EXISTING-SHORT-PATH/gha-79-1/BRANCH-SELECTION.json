@@ -1,0 +1,5 @@
+{
+  "identity": "branchId",
+  "explicitWhenMultiple": true,
+  "autoSelectSingle": "policy-bound"
+}

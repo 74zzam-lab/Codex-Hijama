@@ -1,0 +1,6 @@
+{
+  "method": "VM sandbox with localStorage write guards",
+  "iterations": 5,
+  "result": "PASS",
+  "note": "evaluateReady must not mutate SQLite/KV/localStorage"
+}

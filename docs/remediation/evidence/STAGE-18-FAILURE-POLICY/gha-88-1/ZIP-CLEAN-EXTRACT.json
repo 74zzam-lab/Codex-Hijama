@@ -1,0 +1,8 @@
+{
+  "extract": "tar -xf Tadawi-Stage-18-FAILURE-POLICY-PASS-7c420f3.zip",
+  "npmCi": "PASS",
+  "stage18Focused": "PASS",
+  "stage17Focused": "PASS",
+  "stage16Focused": "PASS",
+  "sha256": "109df485617ba389fc5586dd080ba25c412283568de2dcef0838276c4bb44124"
+}

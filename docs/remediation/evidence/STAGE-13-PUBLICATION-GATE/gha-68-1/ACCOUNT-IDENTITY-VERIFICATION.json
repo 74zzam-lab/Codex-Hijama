@@ -1,0 +1,8 @@
+{
+  "function": "verifyGoogleIdentity",
+  "checks": [
+    "DriveAdapter connected",
+    "license ownerIdentity email binding"
+  ],
+  "accountChangeBlocked": true
+}

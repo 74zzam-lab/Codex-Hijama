@@ -1,0 +1,63 @@
+{
+  "schema": "INSTALLED-VALID-LICENSE",
+  "at": "2026-08-15T01:14:20.891Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "settled": {
+    "text": "✓ الترخيص صالح حتى: 8/15/2027",
+    "pending": false,
+    "licStatus": "valid",
+    "hasLicCheck": true,
+    "hasFinalize": true,
+    "loginHidden": false,
+    "bootOpen": false,
+    "ready": false,
+    "needsBoot": true,
+    "loginBtnDisabled": false,
+    "bfStatus": "",
+    "bfError": false
+  },
+  "samples": [
+    {
+      "ms": 29,
+      "text": "جارٍ التحقق من الترخيص...",
+      "pending": true,
+      "licStatus": "none",
+      "hasLicCheck": true,
+      "hasFinalize": true,
+      "loginHidden": false,
+      "ready": false,
+      "needsBoot": true,
+      "loginBtnDisabled": false,
+      "bfStatus": "",
+      "bfError": false
+    },
+    {
+      "ms": 532,
+      "text": "✓ الترخيص صالح حتى: 8/15/2027",
+      "pending": false,
+      "licStatus": "valid",
+      "hasLicCheck": true,
+      "hasFinalize": true,
+      "loginHidden": false,
+      "bootOpen": false,
+      "ready": false,
+      "needsBoot": true,
+      "loginBtnDisabled": false,
+      "bfStatus": "",
+      "bfError": false
+    }
+  ],
+  "maxPendingMs": 29,
+  "after15s": {
+    "text": "✓ الترخيص صالح حتى: 8/15/2027",
+    "pending": false,
+    "licStatus": "valid"
+  },
+  "trace": {
+    "pageErrors": [],
+    "unhandledRejections": [],
+    "consoleErrors": []
+  },
+  "profile": "valid-license"
+}

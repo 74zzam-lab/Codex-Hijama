@@ -1,0 +1,5 @@
+{
+  "publicationMutatesSignedBytes": false,
+  "contractFlag": true,
+  "branchInlinePublish": "pre-existing at branch step — separate from publication gate mutation"
+}

@@ -1,0 +1,82 @@
+{
+  "verdict": "BLOCKED",
+  "bootstrapExternalGate": "FAIL",
+  "generatedAt": "2026-08-14T14:06:12.363Z",
+  "buildId": "ext-gha-3-1",
+  "exactExeShaVerified": true,
+  "installedSmokePass": true,
+  "baseline": {
+    "sourceCommit": "c389e92",
+    "setupExeSha256": "058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0",
+    "sourceZipSha256": "bb8ae4bc104ae8ac6210a883eefa82709860224afdaec5d29a1c54bab11baf92"
+  },
+  "journeys": {
+    "googleOAuth": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant + interactive session"
+    },
+    "googleReconnect": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant + interactive session"
+    },
+    "driveListing": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant + interactive session"
+    },
+    "realNew": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "hosted runner — no interactive desktop bootstrap"
+    },
+    "realExisting": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no second Windows device/profile"
+    },
+    "publicationReadback": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant"
+    },
+    "liveDeviceAb": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no live Device A/B environment"
+    },
+    "backupUpload": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant"
+    },
+    "backupRestore": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Google test tenant"
+    },
+    "guiNew": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no interactive GUI session"
+    },
+    "guiExisting": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no interactive GUI session"
+    },
+    "upgrade": {
+      "status": "NOT_EXECUTED",
+      "verdict": "BLOCKED",
+      "reason": "no Stage 19 upgrade profile prepared"
+    }
+  },
+  "criticalBlockers": [
+    "Google OAuth test tenant credentials not configured (GOOGLE_OAUTH_CLIENT_ID/SECRET)",
+    "No interactive Windows desktop session (EXTERNAL_UAT_INTERACTIVE!=true)",
+    "No second Windows device/profile (EXTERNAL_UAT_DEVICE_B!=true)",
+    "No Stage 19 upgrade profile (EXTERNAL_UAT_STAGE19_PROFILE!=true)"
+  ],
+  "githubRun": "31807686209"
+}

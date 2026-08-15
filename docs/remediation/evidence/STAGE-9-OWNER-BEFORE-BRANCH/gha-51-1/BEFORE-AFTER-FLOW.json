@@ -1,0 +1,28 @@
+{
+  "before": "organization→branch→restore→owner",
+  "after": [
+    "language",
+    "license",
+    "google",
+    "discovery",
+    "path_decision",
+    "organization",
+    "owner",
+    "branch",
+    "restore",
+    "sync",
+    "ready"
+  ],
+  "existing": [
+    "language",
+    "google",
+    "discovery",
+    "license",
+    "organization",
+    "branch_select",
+    "restore",
+    "owner",
+    "sync",
+    "ready"
+  ]
+}

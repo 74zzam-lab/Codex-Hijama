@@ -1,0 +1,40 @@
+{
+  "buildId": "P0C-20260810-SOURCE-ZIP",
+  "phase": "P0-C",
+  "kind": "source-zip",
+  "generatedAt": "2026-08-10T00:00:00+03:00",
+  "filesChanged": [
+    "cloud/boot-flow-ui.js",
+    "cloud/activation-errors.js",
+    "cloud/cloud-data-discovery.js",
+    "cloud/config-layer.js",
+    "cloud/license-legacy-bridge.js",
+    "cloud/owner-management.js",
+    "cloud/owner-profile.js",
+    "cloud/setup-state-service.js",
+    "cloud/settings-split.js",
+    "cloud/sync-engine.js",
+    "cloud/table-merge-policy.js",
+    "cupping-first-run.js",
+    "cupping-sqlite-bridge.js",
+    "electron/backup-v2-core.js",
+    "electron/backup-v2-ipc.js",
+    "electron/cloud-data-discovery.js",
+    "electron/database/service.js",
+    "electron/main.js",
+    "electron/preload.js",
+    "electron/rbac-session.js",
+    "electron/setup-activation.js",
+    "index.html",
+    "tests/run-all.js",
+    "tests/baseline/test-p0-c-credential-publication.js",
+    "tests/baseline/test-p0-c-discovery-integrity.js",
+    "tests/baseline/test-p0-c-owner-credential-merge.js",
+    "tests/baseline/test-p0-c-restore-truth-and-boot-gate.js",
+    "tests/baseline/test-p0-c-setup-activation.js",
+    "tests/baseline/test-p0-c-setup-restore-target.js"
+    ,"tests/baseline/test-v2-5-8-auth-activation-ui.js"
+    ,"scripts/windows-uat/p0-c-cloud-diagnostic.cjs"
+  ],
+  "excludedFromZip": ["node_modules", "dist", ".codex-p0a", "runtime userData", "local tokens"]
+}

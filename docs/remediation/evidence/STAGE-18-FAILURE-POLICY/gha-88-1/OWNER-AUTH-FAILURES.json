@@ -1,0 +1,7 @@
+{
+  "setup_owner_authentication_failed": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-OWNER-AUTH"
+  }
+}

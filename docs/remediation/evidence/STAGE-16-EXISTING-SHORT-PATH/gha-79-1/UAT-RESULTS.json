@@ -1,0 +1,25 @@
+{
+  "fixture": {
+    "organizations": 1,
+    "owners": 1,
+    "branches": 2,
+    "devices": 2,
+    "clients": 10,
+    "cases": 15,
+    "bookings": 5,
+    "expenses": 3,
+    "businessSettings": true,
+    "license": true,
+    "syncMetadata": true
+  },
+  "journeys": [
+    "A Direct Existing fresh profile",
+    "B Replacement device",
+    "C NEW → discovery → Use Existing",
+    "D Restore from Backup V2",
+    "E No backup, sync checkpoint only",
+    "F Restart at every major gate"
+  ],
+  "realGoogle": "UNVERIFIED",
+  "gui": "UNVERIFIED"
+}

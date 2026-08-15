@@ -1,0 +1,7 @@
+{
+  "stage3Focused": "PASS",
+  "stage2Focused": "PASS",
+  "stage1Focused": "PASS",
+  "stage3Stdout": "PASS stage-3-no-auto-boot (READY→Login, NOT READY→Boot, stale wizard, restart, manual entry)",
+  "stage3Stderr": ""
+}

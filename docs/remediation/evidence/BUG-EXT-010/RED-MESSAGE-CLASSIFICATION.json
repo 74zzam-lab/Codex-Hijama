@@ -1,0 +1,9 @@
+{
+  "schema": "RED-MESSAGE-CLASSIFICATION",
+  "at": "2026-08-15T01:14:02.571Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "validError": 21,
+  "shouldBeRequired": 11,
+  "shouldBeInProgress": 8,
+  "neutralOk": 41
+}
