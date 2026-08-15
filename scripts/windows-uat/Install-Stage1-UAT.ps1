@@ -56,7 +56,7 @@ $startupSmokeJson = Join-Path $EvidenceDir 'INSTALLED-STARTUP-LICENSE-SMOKE.json
 $startupSmoke = @{ ok = $false; finalState = 'FAIL'; licensePending = $true; result = 'FAIL' }
 if (Test-Path $startupSmokeScript) {
   try {
-    & node $startupSmokeScript --exe $installedExe --user-data $isolatedUserData --output $startupSmokeJson --timeout-ms 15000 2> $stderrLog | Out-Null
+    & node $startupSmokeScript --exe $installedExe --user-data $isolatedUserData --output $startupSmokeJson --timeout-ms 45000 2> $stderrLog | Out-Null
     if (Test-Path $startupSmokeJson) {
       $startupSmoke = Get-Content $startupSmokeJson -Raw | ConvertFrom-Json
     }

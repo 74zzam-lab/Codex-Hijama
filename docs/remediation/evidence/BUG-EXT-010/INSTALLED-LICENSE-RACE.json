@@ -1,10 +1,10 @@
 {
   "schema": "INSTALLED-LICENSE-RACE",
-  "at": "2026-08-14T21:38:40.177Z",
-  "buildCommit": "91880f34e88ced67776dab046f7cef40b8825a88",
+  "at": "2026-08-15T01:14:28.084Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
   "ok": true,
   "race": {
-    "text": "✓ الترخيص صالح حتى: 8/14/2027",
+    "text": "✓ الترخيص صالح حتى: 8/15/2027",
     "pending": false,
     "licStatus": "valid"
   },

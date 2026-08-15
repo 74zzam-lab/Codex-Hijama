@@ -1,8 +1,8 @@
 {
   "schema": "INSTALLED-SLOW-LICENSE",
-  "at": "2026-08-14T21:38:44.252Z",
-  "buildCommit": "91880f34e88ced67776dab046f7cef40b8825a88",
+  "at": "2026-08-15T01:14:32.068Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
   "ok": true,
   "note": "covered by fresh settle timing",
-  "freshMaxPendingMs": 31
+  "freshMaxPendingMs": 524
 }

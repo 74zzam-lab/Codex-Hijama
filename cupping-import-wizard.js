@@ -1223,4 +1223,4 @@ if (typeof window !== 'undefined') {
   globalThis.buildImportCase = buildImportCase;
 }
 
-let importHistory = DB.get('importHistory', []);
+let importHistory = (window.DB || { get: (k, d) => d }).get('importHistory', []);

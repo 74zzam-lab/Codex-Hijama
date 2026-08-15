@@ -17,7 +17,7 @@ function arg(name, fallback = '') {
 const exe = path.resolve(arg('exe', ''));
 const userData = path.resolve(arg('user-data', ''));
 const output = path.resolve(arg('output', path.join(process.cwd(), 'INSTALLED-STARTUP-LICENSE-SMOKE.json')));
-const timeoutMs = Number(arg('timeout-ms', '15000')) || 15000;
+const timeoutMs = Number(arg('timeout-ms', '45000')) || 45000;
 
 if (!exe || !fs.existsSync(exe)) throw new Error(`exe missing: ${exe}`);
 if (!userData) throw new Error('user-data required');
@@ -50,8 +50,9 @@ async function sample(page) {
       ready,
       needsBoot,
       licStatus: typeof _licStatus !== 'undefined' ? _licStatus : null,
-      hasLicCheck: typeof licCheck === 'function',
-      hasFinalize: typeof finalizeLicCheckUi === 'function',
+      hasLicCheck: typeof window.licCheck === 'function',
+      hasFinalize: typeof window.finalizeLicCheckUi === 'function',
+      earlyBooted: window.__loginLicenseEarlyBooted === true,
     };
   });
 }

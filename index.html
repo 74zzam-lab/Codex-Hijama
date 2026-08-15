@@ -4061,6 +4061,7 @@ tr.client-row-selected { background: #ecfdf5 !important; outline: 2px solid var(
       <button class="login-btn" onclick="doLogin()">🔐 تسجيل الدخول</button>
       <div class="login-error" id="login-error">❌ اسم المستخدم أو كلمة المرور غير صحيحة</div>
       <div id="login-license-status" style="margin-top:8px;font-size:11px;color:rgba(255,255,255,0.4)">جارٍ التحقق من الترخيص...</div>
+      <script src="renderer/login-license-early.js"></script>
       <div class="login-setup-hint" id="login-setup-hint" role="status"></div>
       <!-- V2-5.10: login CenterSetup panel removed — BootFlow CTA below is the only customer path -->
       <div id="login-drive-bootstrap-panel" class="login-extra-panel" style="display:none" aria-live="polite">
@@ -4719,6 +4720,7 @@ tr.client-row-selected { background: #ecfdf5 !important; outline: 2px solid var(
 <script src="node_modules/acorn/dist/acorn.js"></script>
 <script>
 (function initLoginScreensEarly() {
+  if (window.__loginLicenseEarlyBooted) return;
   var login = document.getElementById('loginScreen');
   var license = document.getElementById('licenseScreen');
   var shell = document.getElementById('app-shell');
@@ -4726,19 +4728,6 @@ tr.client-row-selected { background: #ecfdf5 !important; outline: 2px solid var(
   if (login) login.classList.remove('hidden');
   if (shell) shell.classList.add('app-shell--locked');
   document.body.classList.add('app-locked');
-  // Early safety net: clear sticky login license pending before late inline scripts load.
-  function earlyClearLoginLicensePending(reason) {
-    var el = document.getElementById('login-license-status');
-    if (!el) return;
-    if (!/جار[ٍي]?\s*التحقق/.test(String(el.textContent || ''))) return;
-    el.textContent = reason || '⛔ تعذّر إكمال التحقق بسرعة — الدخول للموظفين فقط (قراءة)';
-    el.style.color = '#ffa05a';
-  }
-  [4500, 9000, 15000].forEach(function (ms) {
-    setTimeout(function () {
-      try { earlyClearLoginLicensePending(); } catch { /* empty */ }
-    }, ms);
-  });
 })();
 </script>
 
@@ -16692,6 +16681,15 @@ const BackupBridge = {
   }
 };
 window.BackupBridge = BackupBridge;
+(function loginLicenseMidParseSafety() {
+  function bump() {
+    try { window.finalizeLicCheckUi?.(); } catch { /* empty */ }
+  }
+  bump();
+  [4500, 9000, 15000].forEach(function (ms) {
+    setTimeout(bump, ms);
+  });
+})();
 </script>
 
 <!-- Cloud V2 modules (after BackupBridge — required by DriveAdapter & migration UI) -->
@@ -27278,6 +27276,7 @@ try {
   window.authenticateSetupOwner = authenticateSetupOwner;
   window.getUiScopedRecords = getUiScopedRecords;
   window.finalizeLicCheckUi = finalizeLicCheckUi;
+  window.__realLicCheck = licCheck;
   window.licCheck = licCheck;
   window.isPreAuthDbKeyAllowed = isPreAuthDbKeyAllowed;
   window.loginConnectGoogleAndBootstrap = loginConnectGoogleAndBootstrap;

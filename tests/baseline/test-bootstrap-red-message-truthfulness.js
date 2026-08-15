@@ -9,6 +9,8 @@ const root = path.join(__dirname, '..', '..');
 const boot = fs.readFileSync(path.join(root, 'cloud', 'boot-flow-ui.js'), 'utf8');
 const policy = fs.readFileSync(path.join(root, 'cloud', 'bootstrap-failure-policy-contract.js'), 'utf8');
 const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+const earlyJs = fs.readFileSync(path.join(root, 'renderer', 'login-license-early.js'), 'utf8');
+const earlySrc = html + earlyJs;
 const errors = [];
 
 function check(ok, name) {
@@ -70,12 +72,12 @@ const scenarios = [
   ['offline mapping', () => check(norm('oauth_offline').retryable, 'offline retryable')],
   ['sync retry success clears', () => check(boot.includes('clearChecklistStepError'), 'sync clear checklist')],
   ['READY clears bootstrap errors', () => check(boot.includes('clearTransientBootstrapState'), 'ready clear')],
-  ['login no stale red', () => check(html.includes('earlyClearLoginLicensePending'), 'login early clear')],
+  ['login no stale red', () => check(/finalizeLicCheckUi|earlyClearLoginLicensePending/.test(earlySrc), 'login early clear')],
   ['old context error invalidated', () => check(boot.includes('failureContextSnapshot'), 'context snapshot')],
   ['account switch', () => check(boot.includes('invalidateStaleChecklistErrors'), 'account switch stale')],
   ['branch switch', () => check(boot.includes('staleSteps.push'), 'branch switch stale')],
   ['restart clears transient error', () => check(boot.includes('prepareBootstrapResume'), 'resume clear')],
-  ['late timer cannot create red', () => check(html.includes('earlyClearLoginLicensePending'), 'early timer')],
+  ['late timer cannot create red', () => check(/\[0,\s*4500,\s*9000,\s*15000\]/.test(earlySrc), 'early timer')],
   ['superseded promise cannot create red', () => check(html.includes('licStatusLooksPending'), 'pending guard')],
   ['success after 15s remains success', () => check(html.includes('finalizeLicCheckUi'), 'finalize')],
   ['diagnostic code secondary only', () => check(boot.includes('correlationId'), 'correlation id separate')],

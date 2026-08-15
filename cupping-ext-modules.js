@@ -175,11 +175,12 @@ const HIJAMA_INVENTORY_SEED = [
   { name: 'شكاكات طبية للسكر', sku: 'LAN-01', perSession: 1, reorderPieces: 50, packaging: { largeLabel: 'كرتون', largeQty: 10, smallLabel: 'علبة', smallQty: 100, baseLabel: 'قطعة' } }
 ];
 
-let inventoryItems = DB.get('inventoryItems', []);
-let inventorySuppliers = DB.get('inventorySuppliers', []);
-let inventoryMovements = DB.get('inventoryMovements', []);
-let systemLogs = DB.get('systemLogs', []);
-let cashDrawerSession = DB.get('cashDrawerSession', null);
+const _db = () => window.DB || { get: (k, d) => d, set: () => Promise.resolve({ ok: false }) };
+let inventoryItems = _db().get('inventoryItems', []);
+let inventorySuppliers = _db().get('inventorySuppliers', []);
+let inventoryMovements = _db().get('inventoryMovements', []);
+let systemLogs = _db().get('systemLogs', []);
+let cashDrawerSession = _db().get('cashDrawerSession', null);
 
 function ensureExtSettings() {
   if (!settings.inventory) settings.inventory = JSON.parse(JSON.stringify(defaultInventoryConfig));

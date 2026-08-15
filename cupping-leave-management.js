@@ -23,7 +23,7 @@ const DEFAULT_LEAVE_POLICY = {
   weekendDays: [5],
 };
 
-let employeeLeaveRequests = DB.get('employeeLeaveRequests', []);
+let employeeLeaveRequests = (window.DB || { get: (k, d) => d }).get('employeeLeaveRequests', []);
 
 function ensureLeaveRequests() {
   employeeLeaveRequests = DB.get('employeeLeaveRequests', employeeLeaveRequests || []);

@@ -19,7 +19,9 @@ function sleep(ms) {
 }
 
 async function main() {
-  check(/earlyClearLoginLicensePending/.test(html), 'early login safety net present');
+  const earlyJs = fs.readFileSync(path.join(root, 'renderer', 'login-license-early.js'), 'utf8');
+  check(/earlyClearLoginLicensePending|finalizeLicCheckUi/.test(html + earlyJs), 'early login safety net present');
+  check(html.includes('renderer/login-license-early.js'), 'login-license-early.js linked before heavy scripts');
   check(/async function licCheck\(options\)/.test(html), 'licCheck supports silent option');
   check(html.includes('licStatusLooksPending(el?.textContent)'), 'licCheck timeout inspects pending text');
   check(/window\.licCheck = licCheck/.test(html), 'window.licCheck exported');
@@ -28,7 +30,8 @@ async function main() {
   check(/await withTimeout\(licCheck\(\), 4000, 'licCheck'\)/.test(html), 'Stage 20 startup timeout licCheck retained');
   check(html.includes('connected: !!p.connected'), 'BUG-EXT-009 transient google catch preserved');
   check(html.indexOf('cloud/boot-flow-ui.js') < html.indexOf('async function licCheck'), 'boot-flow script loads before licCheck');
-  check((html.match(/window\.licCheck\s*=/g) || []).length === 1, 'single window.licCheck export');
+  check(/window\.__realLicCheck = licCheck/.test(html), 'real licCheck wired after early stub');
+  check((html.match(/window\.licCheck\s*=/g) || []).length === 1, 'single window.licCheck export in index.html');
 
   for (const rel of ['cloud/boot-flow-ui.js', 'cloud/bootstrap-coordinator.js', 'cloud/cloud-data-discovery.js']) {
     try {
