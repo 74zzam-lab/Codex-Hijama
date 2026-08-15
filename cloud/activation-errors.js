@@ -51,11 +51,14 @@
     owner_session_required: { title: 'جلسة المالك مطلوبة', detail: 'سجّل دخول المالك في خطوة الإعداد قبل المزامنة.' },
     setup_owner_authentication_failed: { title: 'فشل التحقق من المالك', detail: 'تعذّر التحقق من كلمة مرور المالك أثناء الإعداد.' },
     sync_interrupted: { title: 'توقفت المزامنة', detail: 'يمكنك إعادة المحاولة دون فقدان التقدم المحفوظ.' },
-    step_required: { title: 'خطوة مطلوبة', detail: 'أكمل هذه الخطوة قبل المتابعة.' },
+    step_required: { title: 'خطوة مطلوبة', detail: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.' },
+    step_failed: { title: 'خطوة مطلوبة', detail: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.' },
+    discovery_in_flight: { title: 'الاكتشاف جارٍ', detail: 'انتظر اكتمال فحص السحابة قبل المتابعة.' },
+    cloud_download_stalled: { title: 'توقف التنزيل', detail: 'توقف تنزيل النسخة الاحتياطية — تحقق من الاتصال ثم أعد المحاولة.' },
     backup_v1_disabled: { title: 'Backup V1 معطّل', detail: 'استخدم Backup V2 لاستعادة الكوارث وCloud V2 للمزامنة.' },
     conflict_resolve_failed: { title: 'تعذّر حل التعارض', detail: 'أعد المحاولة أو راجع التعارضات من Owner Hub.' },
     bootflow_required: { title: 'أكمل الإعداد الموحّد', detail: 'استخدم معالج الإعداد (BootFlow) قبل الدخول.' },
-    unknown: { title: 'حدث خطأ', detail: 'تعذّر إكمال العملية. انسخ رمز التشخيص إن استمر الخطأ.' }
+    unknown: { title: 'حدث خطأ', detail: 'حدث خطأ غير متوقع. انسخ مرجع الدعم إن استمرت المشكلة.' }
   });
 
   function classifyTechnical(err) {

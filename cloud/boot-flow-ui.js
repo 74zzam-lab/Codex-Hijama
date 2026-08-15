@@ -321,10 +321,16 @@
   function formatFailureForStatus(normalized) {
     if (!normalized || normalized.ok) return '';
     if (normalized.cancelled) return `${normalized.message} (${normalized.correlationId})`;
+    const benignGate = normalized.code === 'TDW-BOOT-STEP-REQUIRED'
+      || normalized.rawCode === 'step_required'
+      || normalized.rawCode === 'step_failed'
+      || normalized.rawCode === 'discovery_in_flight';
+    if (benignGate) return normalized.message;
     const prefix = normalized.fatal ? 'خطأ حرج'
       : (normalized.userActionRequired ? 'إجراء مطلوب' : 'خطأ');
     const retryHint = normalized.retryable ? ' — يمكن إعادة المحاولة' : '';
-    return `${prefix} — ${normalized.message}${retryHint} (${normalized.correlationId})`;
+    const supportRef = normalized.correlationId ? ` — مرجع: ${normalized.correlationId}` : '';
+    return `${prefix} — ${normalized.message}${retryHint}${supportRef}`;
   }
 
   function logNormalizedFailure(stepId, normalized) {
@@ -395,6 +401,14 @@
     }
   }
 
+  function isStepOperationInFlight(stepId) {
+    const ctx = getChecklistUiContext();
+    const key = global.BootstrapChecklistContract?.STEP_IN_FLIGHT?.[stepId]
+      || { discovery: 'discovery', google: 'oauth', license_org_recovery: 'licenseActivate' }[stepId];
+    if (!key || !ctx.uiOps) return false;
+    return ctx.uiOps[key] === true;
+  }
+
   function setStatusFromErr(err, code, options) {
     options = options || {};
     const w = getDisplayWizard(loadWizard());
@@ -406,6 +420,17 @@
       if (discoveryCodes.includes(normalized.code)) step = 'discovery';
     }
     if (options.suppressIfResolved && step && validateStep(step)) {
+      return normalized;
+    }
+    if (normalized.code === 'TDW-BOOT-STEP-REQUIRED' || code === 'step_required' || code === 'step_failed') {
+      if (isStepOperationInFlight(step) || (step === 'discovery' && discoveryInFlight)) {
+        setStatus('⏳ العملية جارية — انتظر اكتمالها قبل المتابعة', false);
+        return normalized;
+      }
+      normalized.message = options.message || normalized.message || 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.';
+      normalized.userActionRequired = true;
+      normalized.retryable = false;
+      setStatus(normalized.message, false);
       return normalized;
     }
     if (options.retryHandler) lastGateRetryHandler = options.retryHandler;
@@ -450,6 +475,14 @@
   function getChecklistUiContext(w) {
     w = w || getDisplayWizard(loadWizard());
     invalidateStaleChecklistErrors(w);
+    if (checklistStepError?.stepId === 'discovery' && hasDiscoveryResolved()) {
+      checklistStepError = null;
+      lastGateRetryHandler = null;
+    }
+    if (checklistStepError?.stepId === 'branch_select' && authoritativeBranchCount() > 1 && !isBranchExplicitlySelected()) {
+      checklistStepError = null;
+      lastGateRetryHandler = null;
+    }
     const steps = stepsFor(w.path);
     const currentStepId = steps[w.currentStep] || steps[0] || null;
     if (checklistStepError?.stepId && validateStep(checklistStepError.stepId)) {
@@ -537,11 +570,43 @@
     return !!(prov?.connected && !prov?.userDisconnected && prov?.oauth !== false);
   }
 
+  function authoritativeBranchCount() {
+    const branches = authoritativeBootstrapBranches();
+    const discovery = getCachedDiscoveryResult();
+    const discoveryCount = Array.isArray(discovery?.branchCandidates) ? discovery.branchCandidates.length : 0;
+    return Math.max(branches.length, discoveryCount);
+  }
+
+  function reconcileBranchSelectionAfterDiscovery() {
+    const w = loadWizard();
+    const count = authoritativeBranchCount();
+    if (count <= 1) return w;
+    let changed = false;
+    if (w.branchExplicitlySelected && !(w.completedSteps || []).includes('branch_select')) {
+      w.branchExplicitlySelected = false;
+      changed = true;
+    }
+    if ((w.pendingBranchId || w.selectedBranchId) && !(w.completedSteps || []).includes('branch_select')) {
+      delete w.pendingBranchId;
+      delete w.selectedBranchId;
+      changed = true;
+    }
+    if ((w.completedSteps || []).includes('branch_select') && !w.branchExplicitlySelected) {
+      w.completedSteps = w.completedSteps.filter((s) => s !== 'branch_select');
+      changed = true;
+    }
+    if (changed) saveWizard(w);
+    return w;
+  }
+
   function isBranchExplicitlySelected() {
     const w = loadWizard();
-    if (w.branchExplicitlySelected === true) return true;
-    if ((w.completedSteps || []).includes('branch_select')) return true;
-    return authoritativeBootstrapBranches().length <= 1;
+    const count = authoritativeBranchCount();
+    if (count > 1) {
+      return w.branchExplicitlySelected === true || (w.completedSteps || []).includes('branch_select');
+    }
+    if (count === 1) return true;
+    return false;
   }
 
   function hasCenterData() {
@@ -1210,14 +1275,29 @@
     __stage3BootTrace.loginInitCalls += 1;
     ensureLoginAccessible();
     prepareBootstrapResume({ showResumeHint: false });
-    if (shouldAutoOpenBoot()) {
+    const tryOpen = (attempt) => {
+      if (!shouldAutoOpenBoot()) {
+        updateLoginSetupHint();
+        applyLoginGate();
+        return false;
+      }
       __stage3BootTrace.autoBootOpenCalls += 1;
       __stage3BootTrace.bootVisibilityEvents += 1;
-      return openOverlay(true);
-    }
-    updateLoginSetupHint();
-    applyLoginGate();
-    return false;
+      ensureDOM();
+      openOverlay(true);
+      const overlay = document.getElementById('bootFlowOverlay');
+      const isOpen = overlay?.classList.contains('open');
+      if (!isOpen && attempt < 4) {
+        setTimeout(() => tryOpen(attempt + 1), 120 * (attempt + 1));
+        return true;
+      }
+      if (!isOpen) {
+        updateLoginSetupHint();
+        applyLoginGate();
+      }
+      return isOpen;
+    };
+    return tryOpen(0);
   }
 
   function canShowLogin() {
@@ -1418,7 +1498,7 @@
     s.textContent = `
 .bf-overlay{position:fixed;inset:0;inset-inline:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:auto;overscroll-behavior:contain;direction:rtl}
 .bf-overlay.open{display:grid;align-items:flex-start;justify-items:stretch;justify-content:center}
-.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,calc(100vw - 2 * clamp(16px,3vw,32px)));max-width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box;margin-inline:auto;inset-inline:auto;transform:none;left:auto;right:auto}
+.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(960px,calc(100vw - 24px));max-width:min(960px,calc(100vw - 24px));max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box;margin-inline:auto;inset-inline:auto;transform:none;left:auto;right:auto}
 .bf-card-header{flex:0 0 auto;padding:14px clamp(12px,3vw,20px) 8px;position:relative;min-height:0;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card,#fff)}
 .bf-card-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 clamp(12px,3vw,20px) 12px;-webkit-overflow-scrolling:touch;max-width:100%}
 .bf-card-footer{flex-shrink:0;padding:10px 20px 14px;border-top:1px solid var(--border,#e5e7eb);background:var(--card,#fff);display:grid;gap:8px;position:sticky;bottom:0;z-index:3}
@@ -1435,8 +1515,8 @@
 .tdw-stepper.bf-stepper>li[data-state="failed"]{border-color:var(--tdw-color-danger-600);color:var(--tdw-color-danger-600)}
 .tdw-stepper.bf-stepper>li[aria-current="step"]{border-color:var(--tdw-color-accent-500,#2f8f83);color:var(--tdw-color-primary-700)}
 .bf-checklist-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start;width:100%;max-width:100%}
-@media (min-width:641px){.bf-checklist-layout{grid-template-columns:minmax(11rem,13.5rem) minmax(0,1fr)}}
-.bf-checklist-panel{border:1px solid var(--border,#e5e7eb);border-radius:12px;background:var(--surface,#f8fafc);padding:10px;max-height:min(52vh,420px);overflow:auto;min-width:0}
+@media (min-width:900px){.bf-checklist-layout{grid-template-columns:minmax(14rem,17rem) minmax(0,1fr)}}
+.bf-checklist-panel{border:1px solid var(--border,#e5e7eb);border-radius:12px;background:var(--surface,#f8fafc);padding:10px;max-height:min(58vh,480px);overflow:auto;min-width:0}
 .bf-checklist-progress{display:grid;gap:6px;margin-bottom:10px}
 .bf-checklist-bar{height:6px;border-radius:999px;background:var(--border,#e5e7eb);overflow:hidden}
 .bf-checklist-bar>i{display:block;height:100%;width:0;background:var(--tdw-color-accent-500,#2f8f83);transition:width .2s}
@@ -1472,12 +1552,12 @@
 .bf-step-content .form-control,.bf-step-content select,.bf-step-content input{max-width:100%;box-sizing:border-box}
 .bf-step-meta{font-size:12px;color:var(--text-muted);text-align:center;margin-bottom:6px}
 .bf-step-hint{font-size:12px;color:var(--primary);background:var(--surface,#f4f6f8);border:1px solid var(--border,#ddd);border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7}
-.bf-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin:0;width:100%}
+.bf-actions{display:flex;flex-wrap:wrap;gap:10px;margin:0;width:100%}
 .bf-actions:empty{display:none}
-.bf-actions .btn{width:100%;min-width:0;min-height:44px;white-space:normal;text-align:center}
-.bf-choice-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:12px}
+.bf-actions .btn{flex:1 1 11rem;min-width:min(100%,11rem);min-height:44px;white-space:normal;text-align:center}
+.bf-choice-actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:10px;margin-top:12px}
 .bf-choice-actions .btn{width:100%;min-height:44px;white-space:normal;text-align:center}
-.bf-nav-row{display:flex;gap:8px;flex-wrap:nowrap}
+.bf-nav-row{display:flex;gap:8px;flex-wrap:wrap}
 .bf-nav-row .btn{flex:1 1 0;min-width:0;min-height:44px;white-space:nowrap}
 .bf-status{margin-top:8px;font-size:12px;color:var(--text-muted);min-height:18px;text-align:center;line-height:1.5}
 .bf-status-error{color:var(--tdw-color-danger-600,#a94045);font-weight:700}
@@ -1516,10 +1596,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 .bf-restore-progress .bar>i{display:block;height:100%;width:0;background:#3D5A80;transition:width .2s}
 @keyframes bf-indeterminate{from{opacity:.35}to{opacity:.85}}
 @media (max-height:720px){.bf-card-header{padding-top:10px}.bf-card h1{font-size:1.05rem}}
-@media (max-width:1024px){.bf-overlay{padding-inline:clamp(12px,2.5vw,24px)}.bf-card,.bf-card.modal-shell{width:min(720px,calc(100vw - 24px));max-width:calc(100vw - 24px)}.bf-checklist-layout{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1024px){.bf-overlay{padding-inline:clamp(12px,2.5vw,24px)}.bf-card,.bf-card.modal-shell{width:min(960px,calc(100vw - 20px));max-width:calc(100vw - 20px)}.bf-checklist-layout{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}.bf-checklist-panel{max-height:none}}
 @media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%;max-width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
-@media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}.bf-card{width:min(720px,calc(100vw - 24px))}}
+@media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}.bf-card{width:min(960px,calc(100vw - 20px))}}
 `;
   }
 
@@ -2010,6 +2090,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       saveWizard(wAfter);
       clearChecklistStepError('google');
     }
+    reconcileBranchSelectionAfterDiscovery();
+    renderChecklist(getDisplayWizard(loadWizard()));
     return { ok: true, recovered: true, activationConsumeDelta: meta.existingShortPathRecovery.activationConsumeDelta };
   }
 
@@ -2156,6 +2238,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       clearChecklistStepError('discovery');
       clearTransientBootstrapState({ clearStepError: false, clearStatus: true });
+      reconcileBranchSelectionAfterDiscovery();
+      renderChecklist(getDisplayWizard(loadWizard()));
       return { ok: true, discovery: result };
     } catch (e) {
       setStatusFromErr(e, 'discovery_failed', {
@@ -2819,6 +2903,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
             if (!confirm('فصل حساب Google الحالي؟ لن تُحذف بيانات الترخيص أو SQLite المحلية.')) return;
             const result = await disconnectGoogleDuringSetup();
             if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed', { stepId: 'google' });
+            else renderStepUI(loadWizard());
           });
         }
         if (hasGoogle()) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
@@ -2866,13 +2951,19 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           if (statusHost) statusHost.textContent = '✅ اكتمل الاكتشاف سابقاً';
           renderSummary(cached);
           setStatus('✅ الاكتشاف مكتمل — تابع');
+          clearChecklistStepError('discovery');
+          reconcileBranchSelectionAfterDiscovery();
         } else if (hasGoogle()) {
+          clearChecklistStepError('discovery');
+          setStatus('🔍 جارٍ اكتشاف بيانات السحابة (read-only)...', false);
           runDiscoveryGate().then((r) => {
             if (statusHost) {
               statusHost.textContent = r.ok ? '✅ اكتمل الاكتشاف' : ('❌ ' + (r.error || 'discovery_failed'));
             }
             if (r.discovery) renderSummary(r.discovery);
+            if (r.ok) reconcileBranchSelectionAfterDiscovery();
             renderNavButtons(loadWizard());
+            renderChecklist(getDisplayWizard(loadWizard()));
           });
         } else {
           if (statusHost) statusHost.textContent = '⚠️ اربط Google أولاً';
@@ -3689,8 +3780,11 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   function startPath(path) {
+    ensureDOM();
     const w = resetWizard(path);
     showStep('bf-step-wizard');
+    document.getElementById('bootFlowOverlay')?.classList.add('open');
+    setBootActive(true);
     renderProgress(w);
     renderStepUI(w);
   }
@@ -3719,7 +3813,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const steps = stepsFor(w.path);
     const step = steps[w.currentStep];
     if (!validateStep(step)) {
-      setStatusFromErr({ message: 'step_required' }, 'step_required');
+      if (isStepOperationInFlight(step) || (step === 'discovery' && discoveryInFlight)) {
+        setStatus('⏳ انتظر اكتمال العملية الجارية قبل المتابعة', false);
+        return;
+      }
+      if (step === 'branch_select' && authoritativeBranchCount() > 1 && !isBranchExplicitlySelected()) {
+        setStatus('⚠️ اختر الفرع من القائمة ثم اضغط «تأكيد اختيار الفرع»', false);
+        return;
+      }
+      setStatusFromErr({ message: 'step_required' }, 'step_required', { stepId: step });
       return;
     }
     if (w.currentStep >= steps.length - 1) {

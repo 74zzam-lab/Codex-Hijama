@@ -98,7 +98,18 @@
     bootstrap_unavailable: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-RUNTIME-UNAVAILABLE' },
     database_integrity_failed: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-DB-INTEGRITY' },
     signed_license_corrupt: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-LICENSE-CORRUPT' },
-    step_required: { outcome: OUTCOME.USER_ACTION_REQUIRED, userActionRequired: true, code: 'TDW-BOOT-STEP-REQUIRED' },
+    step_required: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-STEP-REQUIRED',
+      message: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
+    },
+    step_failed: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-STEP-REQUIRED',
+      message: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
+    },
     cloud_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'تعذر تنزيل النسخة الاحتياطية — تحقق من الاتصال ثم حاول مرة أخرى.' },
     cloud_restore_timeout: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-RESTORE-TIMEOUT' },
   });
@@ -223,15 +234,16 @@
         stepId: options.stepId || null,
       };
     }
-    const code = resolveRawCode(raw);
+    const code = options.code || resolveRawCode(raw);
     const policy = lookupPolicy(code);
     const AE = global.ActivationErrors;
     const userErr = AE?.toUserError ? AE.toUserError(raw, code) : null;
     const message = options.message
-      || userErr?.detail
-      || (typeof raw === 'object' && raw.message)
       || policy.message
-      || 'تعذّر إكمال العملية.';
+      || userErr?.detail
+      || (typeof raw === 'object' && raw.message && String(raw.message) !== String(code) ? raw.message : null)
+      || (typeof raw === 'string' ? raw : null)
+      || 'حدث خطأ غير متوقع — راجع التفاصيل أو أعد المحاولة.';
     const outcome = raw?.outcome && OUTCOME[raw.outcome] ? raw.outcome
       : (raw?.retryable === true ? OUTCOME.RETRYABLE : policy.outcome);
     const result = {

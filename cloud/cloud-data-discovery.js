@@ -541,20 +541,24 @@
 
     async function invokeNativeRestore(restorePassword) {
       let heartbeat = null;
-      let heartbeatRatio = 0.08;
       let stallTimer = null;
-      let lastActivityAt = Date.now();
-      const touchActivity = () => { lastActivityAt = Date.now(); };
-      attachDownloadProgress(point.path, touchActivity);
+      let lastByteProgressAt = Date.now();
+      const touchByteProgress = () => { lastByteProgressAt = Date.now(); };
+      attachDownloadProgress(point.path, touchByteProgress);
       const bumpHeartbeat = () => {
-        heartbeatRatio = Math.min(0.92, heartbeatRatio + 0.04);
+        const totalBytes = point?.sizeBytes || null;
+        const hasBytes = lastDownloadBytes > 0;
         emit('download_db', {
-          stageRatio: heartbeatRatio,
+          stageRatio: hasBytes && totalBytes
+            ? Math.min(0.98, lastDownloadBytes / totalBytes)
+            : undefined,
           downloadedBytes: lastDownloadBytes || undefined,
-          totalBytes: point?.sizeBytes || null,
-          lastActivity: 'تنزيل/استعادة Backup V2 — العملية مستمرة',
+          totalBytes,
+          indeterminate: !hasBytes,
+          lastActivity: hasBytes && totalBytes
+            ? `تنزيل Backup V2 — ${formatBytes(lastDownloadBytes)} / ${formatBytes(totalBytes)}`
+            : 'بانتظار أول بايت من التنزيل…',
         });
-        touchActivity();
       };
       try {
         bumpHeartbeat();
@@ -578,7 +582,7 @@
         });
         const stallPromise = new Promise((_, reject) => {
           stallTimer = setInterval(() => {
-            if (Date.now() - lastActivityAt > DOWNLOAD_ACTIVITY_STALL_MS) {
+            if (Date.now() - lastByteProgressAt > DOWNLOAD_ACTIVITY_STALL_MS) {
               clearInterval(stallTimer);
               stallTimer = null;
               const err = new Error('cloud_download_stalled');

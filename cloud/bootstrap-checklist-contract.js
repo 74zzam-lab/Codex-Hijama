@@ -72,6 +72,10 @@
     initial_sync_failed: 'تعذر إكمال المزامنة الأولية.',
     sync_not_ready: 'المزامنة غير جاهزة بعد.',
     business_setup_invalid: 'أكمل البيانات الأساسية المطلوبة.',
+    step_required: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
+    step_failed: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
+    discovery_in_flight: 'انتظر اكتمال فحص السحابة قبل المتابعة.',
+    cloud_download_stalled: 'توقف تنزيل النسخة — تحقق من الاتصال ثم أعد المحاولة.',
   });
 
   const STEP_IN_FLIGHT = Object.freeze({
@@ -187,8 +191,10 @@
         status,
         required: status === STATUS.REQUIRED || status === STATUS.ERROR || status === STATUS.USER_ACTION || status === STATUS.FATAL,
         active: ctx.currentStepId === id,
-        error: error ? humanizeError(error.diagnostic || error.code, error.message) : null,
-        diagnostic: error?.correlationId || error?.diagnostic || error?.code || null,
+        error: error ? humanizeError(error.code || error.diagnostic, error.message) : null,
+        diagnostic: error?.code && !String(error.code).startsWith('TDW-BOOT-ERR')
+          ? error.code
+          : (error?.correlationId || error?.diagnostic || error?.code || null),
         outcome: error?.outcome || null,
         retryable: !!error?.retryable,
         userActionRequired: !!error?.userActionRequired,

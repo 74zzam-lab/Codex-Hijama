@@ -49,6 +49,13 @@ async function check(name, fn) {
 }
 
 async function main() {
+  await check('BUG-EXT-015 heartbeat does not reset byte stall timer', () => {
+    assert.match(discoverySrc, /lastByteProgressAt/);
+    assert.match(discoverySrc, /touchByteProgress/);
+    assert.doesNotMatch(discoverySrc, /heartbeatRatio/);
+    assert.doesNotMatch(discoverySrc, /touchActivity\(\)/);
+  });
+
   await check('BUG-EXT-015 restoreBridge prefers v2SetupCloudRestore', () => {
     assert.match(discoverySrc, /function restoreBridge\(\)/);
     assert.match(discoverySrc, /DOWNLOAD_ACTIVITY_STALL_MS/);
@@ -98,6 +105,14 @@ async function main() {
     assert.match(n.message, /تنزيل|اتصال/i);
   });
 
+  await check('BUG-EXT-012 step_required never maps to generic unknown', () => {
+    const BFPC = loadPolicy();
+    const n = BFPC.normalizeFailure({ message: 'step_required' }, { code: 'step_required' });
+    assert.strictEqual(n.code, 'TDW-BOOT-STEP-REQUIRED');
+    assert.match(n.message, /أكمل|المتطلبات/i);
+    assert.notStrictEqual(n.message, 'تعذّر إكمال العملية.');
+  });
+
   await check('BUG-EXT-012 discovery success clears red checklist path', () => {
     assert.match(bootSrc, /clearChecklistStepError\('discovery'\)/);
     assert.match(bootSrc, /clearTransientBootstrapState/);
@@ -117,6 +132,11 @@ async function main() {
     assert.strictEqual(rec.correlationId, 'TDW-BOOT-ERR-TEST-0001');
   });
 
+  await check('BUG-EXT-013 branch reconcile after license recovery', () => {
+    assert.match(bootSrc, /reconcileBranchSelectionAfterDiscovery/);
+    assert.match(bootSrc, /runLicenseOrgRecovery[\s\S]*reconcileBranchSelectionAfterDiscovery/);
+  });
+
   await check('BUG-EXT-013 two branches unresolved without explicit selection', () => {
     assert.match(bootSrc, /isBranchExplicitlySelected/);
     assert.match(bootSrc, /branchExplicitlySelected = true/);
@@ -131,6 +151,12 @@ async function main() {
   await check('BUG-EXT-014 google session latch + acceptLiveReconnect after recovery', () => {
     assert.match(bootSrc, /googleSessionConnected/);
     assert.match(bootSrc, /refreshGoogleConnectionState\(\{ acceptLiveReconnect: true \}\)/);
+  });
+
+  await check('BUG-EXT-011 modal width + wizard open retry contract', () => {
+    assert.match(bootSrc, /min\(960px/);
+    assert.match(bootSrc, /tryOpen/);
+    assert.match(bootSrc, /فصل \/ تغيير حساب Google/);
   });
 
   await check('BUG-EXT-011 modal RTL no clipping contract', () => {
