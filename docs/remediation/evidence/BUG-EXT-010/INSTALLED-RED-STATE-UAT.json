@@ -1,0 +1,14 @@
+{
+  "schema": "INSTALLED-RED-STATE-UAT",
+  "at": "2026-08-15T01:14:53.000Z",
+  "buildCommit": "aaac538ba575b1e0e4a0928fa797a29f5db72a99",
+  "environment": "electron-source-path-installed-style",
+  "result": "PASS",
+  "scenarios": {
+    "pendingLicenseNeutral": true,
+    "validLicenseNoRed": true,
+    "missingLicenseFirstTimeRequiredNotError": true,
+    "lateTimerNoFalseRed": true
+  },
+  "installedExeGha": "UNVERIFIED — pending post-fix GHA smoke"
+}

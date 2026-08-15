@@ -1,3 +1,4 @@
+/* global document, window, setTimeout */
 (function loginLicenseEarlyBoot() {
   'use strict';
 
