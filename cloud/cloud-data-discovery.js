@@ -8,7 +8,9 @@
 
   const DISCOVERY_TIMEOUT_MS = 180000;
   const NO_PROGRESS_WATCHDOG_MS = 30000;
+  const DOWNLOAD_ACTIVITY_STALL_MS = 45000;
   const RESTORE_OPERATION_TIMEOUT_MS = 600000;
+  const RESTORE_HEARTBEAT_MS = 2000;
 
   const BACKUP_V2_RESTORE_STAGES = [
     { id: 'verify_point', label: 'التحقق من النسخة', weight: 5 },
@@ -82,15 +84,37 @@
     return { ...(result || {}), syncResume };
   }
 
-  function bridge() {
-    const electronBackup = global.cuppingElectron?.backup
+  function electronBackupBridge() {
+    return global.cuppingElectron?.backup
       || global.tadawiElectron?.backup
       || global.tadawi?.backup
       || null;
+  }
+
+  function bridge() {
+    const electronBackup = electronBackupBridge();
     // Prefer Electron IPC when BackupBridge lacks discovery (older wrappers).
     if (electronBackup?.discoverCloudRestorePoints) return electronBackup;
     if (global.BackupBridge?.discoverCloudRestorePoints) return global.BackupBridge;
     return global.BackupBridge || electronBackup || null;
+  }
+
+  /** Native V2 cloud restore must use Electron IPC (v2SetupCloudRestore + download progress). */
+  function restoreBridge() {
+    const electronBackup = electronBackupBridge();
+    if (electronBackup?.v2SetupCloudRestore) return electronBackup;
+    const b = bridge();
+    if (b?.v2SetupCloudRestore) return b;
+    return electronBackup || b || null;
+  }
+
+  function recordRestoreDiagnostic(entry) {
+    try {
+      global.BootstrapFailurePolicyContract?.recordDiagnostic?.({
+        ...entry,
+        domain: 'restore',
+      });
+    } catch { /* dev-only registry */ }
   }
 
   function formatBytes(n) {
@@ -395,13 +419,20 @@
     let doneWeight = 0;
     for (let i = 0; i < safeIdx; i += 1) doneWeight += stages[i].weight;
     const stage = stages[safeIdx];
-    const ratio = Math.min(0.99, (doneWeight + (stage?.weight || 0) * (extra.stageRatio || 0.15)) / totalWeight);
+    const hasByteProgress = Number(extra.downloadedBytes) > 0 || Number(extra.totalBytes) > 0;
+    const stageRatio = Number.isFinite(extra.stageRatio)
+      ? extra.stageRatio
+      : (hasByteProgress ? 0.15 : 0.05);
+    const ratio = Math.min(0.99, (doneWeight + (stage?.weight || 0) * stageRatio) / totalWeight);
+    const indeterminate = extra.indeterminate === true
+      || (!hasByteProgress && stageRatio <= 0.05 && (stage?.id === 'download_db' || stage?.id === 'download_state'));
     return {
       stageId: stage?.id || stageId,
       stageLabel: stage?.label || stageId,
       stageIndex: safeIdx + 1,
       stageCount: stages.length,
-      percent: Math.round(ratio * 100),
+      percent: indeterminate ? null : Math.round(ratio * 100),
+      indeterminate: !!indeterminate,
       elapsedMs: extra.elapsedMs || 0,
       downloadedBytes: extra.downloadedBytes || 0,
       totalBytes: extra.totalBytes || null,
@@ -464,32 +495,41 @@
   }
 
   async function restoreCloudBackupFile(point, options, emit) {
-    const b = bridge();
+    const b = restoreBridge();
     const identity = getIdentity();
-    const electronBackup = global.cuppingElectron?.backup
-      || global.tadawiElectron?.backup
-      || global.tadawi?.backup
-      || null;
+    const electronBackup = electronBackupBridge();
     let detachDownloadProgress = null;
-    const attachDownloadProgress = (remotePath) => {
+    let lastDownloadBytes = 0;
+    const attachDownloadProgress = (remotePath, onActivity) => {
       if (!emit || typeof emit !== 'function') return;
       const listenerApi = electronBackup?.onDownloadProgress || b?.onDownloadProgress;
       if (!listenerApi) return;
       listenerApi((payload) => {
         if (remotePath && payload?.remotePath && payload.remotePath !== remotePath) return;
+        try { onActivity?.(); } catch { /* empty */ }
         const downloadedBytes = Number(payload?.downloadedBytes) || 0;
+        lastDownloadBytes = Math.max(lastDownloadBytes, downloadedBytes);
         const totalBytes = Number(payload?.totalBytes) || Number(point?.sizeBytes) || null;
         const ratio = totalBytes
           ? Math.min(0.98, downloadedBytes / totalBytes)
-          : (Number(payload?.percent) > 0 ? Math.min(0.98, Number(payload.percent) / 100) : 0.35);
+          : (Number(payload?.percent) > 0 ? Math.min(0.98, Number(payload.percent) / 100) : null);
         emit('download_db', {
-          stageRatio: ratio,
+          stageRatio: ratio != null ? ratio : 0.35,
           downloadedBytes,
           totalBytes,
+          indeterminate: ratio == null && downloadedBytes <= 0,
           lastActivity: payload?.stage === 'download_complete'
             ? 'اكتمل تنزيل ملف Backup V2'
             : `تنزيل Backup V2 — ${totalBytes ? `${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}` : formatBytes(downloadedBytes)}`,
         });
+        if (payload?.stage === 'download_complete') {
+          emit('download_db', {
+            stageRatio: 1,
+            downloadedBytes: totalBytes || downloadedBytes,
+            totalBytes,
+            lastActivity: 'اكتمل تنزيل ملف Backup V2',
+          });
+        }
       });
       detachDownloadProgress = () => {
         try { global.cuppingElectron?.backup?.onDownloadProgress?.(() => {}); } catch { /* empty */ }
@@ -500,17 +540,25 @@
       || (typeof global.getBackupV2Password === 'function' ? await global.getBackupV2Password() : '');
 
     async function invokeNativeRestore(restorePassword) {
-      attachDownloadProgress(point.path);
       let heartbeat = null;
-      let heartbeatRatio = 0.2;
+      let heartbeatRatio = 0.08;
+      let stallTimer = null;
+      let lastActivityAt = Date.now();
+      const touchActivity = () => { lastActivityAt = Date.now(); };
+      attachDownloadProgress(point.path, touchActivity);
+      const bumpHeartbeat = () => {
+        heartbeatRatio = Math.min(0.92, heartbeatRatio + 0.04);
+        emit('download_db', {
+          stageRatio: heartbeatRatio,
+          downloadedBytes: lastDownloadBytes || undefined,
+          totalBytes: point?.sizeBytes || null,
+          lastActivity: 'تنزيل/استعادة Backup V2 — العملية مستمرة',
+        });
+        touchActivity();
+      };
       try {
-        heartbeat = setInterval(() => {
-          heartbeatRatio = Math.min(0.92, heartbeatRatio + 0.03);
-          emit('download_db', {
-            stageRatio: heartbeatRatio,
-            lastActivity: 'تنزيل/استعادة Backup V2 — العملية مستمرة',
-          });
-        }, 5000);
+        bumpHeartbeat();
+        heartbeat = setInterval(bumpHeartbeat, RESTORE_HEARTBEAT_MS);
         const restorePromise = b.v2SetupCloudRestore({
           remotePath: point.path,
           password: restorePassword,
@@ -528,9 +576,22 @@
             reject(err);
           }, RESTORE_OPERATION_TIMEOUT_MS);
         });
-        return await Promise.race([restorePromise, timeoutPromise]);
+        const stallPromise = new Promise((_, reject) => {
+          stallTimer = setInterval(() => {
+            if (Date.now() - lastActivityAt > DOWNLOAD_ACTIVITY_STALL_MS) {
+              clearInterval(stallTimer);
+              stallTimer = null;
+              const err = new Error('cloud_download_stalled');
+              err.code = 'cloud_download_stalled';
+              err.retryable = true;
+              reject(err);
+            }
+          }, RESTORE_HEARTBEAT_MS);
+        });
+        return await Promise.race([restorePromise, timeoutPromise, stallPromise]);
       } finally {
         if (heartbeat) clearInterval(heartbeat);
+        if (stallTimer) clearInterval(stallTimer);
         if (detachDownloadProgress) detachDownloadProgress();
         detachDownloadProgress = null;
       }
@@ -624,19 +685,35 @@
     let lastProgressAt = Date.now();
     let watchdog = null;
     let maxPercent = 0;
-    let lastStageRatio = 0.15;
+    let lastStageRatio = 0.05;
+    let lastDownloadBytes = 0;
 
     const emit = (stageId, extra = {}) => {
       lastProgressAt = Date.now();
       if (Number.isFinite(extra.stageRatio)) lastStageRatio = extra.stageRatio;
+      if (Number(extra.downloadedBytes) > 0) lastDownloadBytes = Number(extra.downloadedBytes);
       const snap = buildProgressState(stageId, {
         ...extra,
         workflow,
         elapsedMs: Date.now() - started,
         diagnosticId,
       });
-      if (snap.percent < maxPercent) snap.percent = maxPercent;
-      else maxPercent = snap.percent;
+      if (snap.percent != null) {
+        if (snap.percent < maxPercent) snap.percent = maxPercent;
+        else maxPercent = snap.percent;
+      }
+      recordRestoreDiagnostic({
+        correlationId: diagnosticId,
+        stageId,
+        percent: snap.percent,
+        downloadedBytes: snap.downloadedBytes,
+        totalBytes: snap.totalBytes,
+        lastActivity: snap.lastActivity,
+        remotePath: point?.path || null,
+        remoteId: point?.id || point?.fileId || null,
+        selectedName: point?.name || null,
+        expectedBytes: point?.sizeBytes || null,
+      });
       try { onProgress(snap); } catch { /* empty */ }
       return snap;
     };
@@ -684,22 +761,25 @@
       }
 
       watchdog = setInterval(() => {
-        if (Date.now() - lastProgressAt > NO_PROGRESS_WATCHDOG_MS) {
+        const idleMs = Date.now() - lastProgressAt;
+        if (idleMs > NO_PROGRESS_WATCHDOG_MS && idleMs < DOWNLOAD_ACTIVITY_STALL_MS) {
           emit(workflow === 'backup_v2' ? 'download_db' : 'download_state', {
             lastActivity: 'تحذير: لا يوجد تحديث منذ أكثر من 30 ثانية — قد يستمر التنزيل في الخلفية',
             stageRatio: lastStageRatio,
+            downloadedBytes: lastDownloadBytes || undefined,
+            totalBytes: point?.sizeBytes || null,
           });
         }
-      }, 5000);
+      }, RESTORE_HEARTBEAT_MS);
 
       let restoreResult = { ok: false };
 
-      // BootFlow cloud confirm: apply Cloud V2 hydrate (metadata already shown).
-      // Encrypted .tdw full-file restore requires password → file picker path.
-      // Do NOT download multi‑MB .tdw here without a password / V2 restore execute.
       emit(workflow === 'backup_v2' ? 'download_db' : 'download_state', {
         lastActivity: workflow === 'backup_v2' ? 'تنزيل ملف النسخة المؤكد' : 'سحب حالة المزامنة المؤكدة',
-        stageRatio: 0.3
+        stageRatio: 0.05,
+        indeterminate: true,
+        downloadedBytes: 0,
+        totalBytes: point?.sizeBytes || null,
       });
       if (point.kind === 'backup_file' && point.path) {
         restoreResult = await restoreCloudBackupFile(point, options, emit);
@@ -709,7 +789,9 @@
             error: restoreResult?.error || 'cloud_backup_restore_failed',
             diagnosticId,
             preserved: preSnapshot,
-            detail: restoreResult
+            detail: restoreResult,
+            downloadedBytes: lastDownloadBytes,
+            expectedBytes: point?.sizeBytes || null,
           };
         }
       } else if (global.CloudBootstrap?.hydrateFromDrive) {

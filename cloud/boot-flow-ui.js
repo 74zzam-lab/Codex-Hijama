@@ -214,9 +214,21 @@
         if (!w.completedSteps.includes('device')) w.completedSteps.push('device');
         if (hasBranch() && !w.pendingBranchId) {
           const cfg = global.DeviceConfig?.load?.() || {};
-          if (cfg.lockedBranchId) w.pendingBranchId = cfg.lockedBranchId;
+          const branchCount = authoritativeBootstrapBranches().length;
+          if (cfg.lockedBranchId && branchCount <= 1) {
+            w.pendingBranchId = cfg.lockedBranchId;
+            w.branchExplicitlySelected = true;
+          }
         }
         changed = true;
+      }
+      if (w.path === PATHS.EXISTING && w.pendingBranchId && !w.branchExplicitlySelected) {
+        const branchCount = authoritativeBootstrapBranches().length;
+        if (branchCount > 1) {
+          delete w.pendingBranchId;
+          delete w.selectedBranchId;
+          changed = true;
+        }
       }
       if (version < 12 && businessSetupStepResolved()) {
         if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
@@ -393,10 +405,28 @@
       const discoveryCodes = ['discovery_failed', 'license_discovery_failed', 'data_discovery_failed', 'existing_license_recovery_failed', 'no_activation_on_drive'];
       if (discoveryCodes.includes(normalized.code)) step = 'discovery';
     }
+    if (options.suppressIfResolved && step && validateStep(step)) {
+      return normalized;
+    }
     if (options.retryHandler) lastGateRetryHandler = options.retryHandler;
     const isOperationalError = !normalized.cancelled
       && !normalized.userActionRequired
-      && (normalized.fatal || normalized.retryable);
+      && (normalized.fatal || normalized.retryable)
+      && options.inProgress !== true;
+    if (isOperationalError) {
+      try {
+        global.BootstrapFailurePolicyContract?.recordDiagnostic?.({
+          correlationId: normalized.correlationId,
+          stepId: step,
+          code: normalized.code,
+          rawCode: normalized.rawCode,
+          outcome: normalized.outcome,
+          operation: options.operation || null,
+          message: normalized.message,
+          recovered: false,
+        });
+      } catch { /* dev-only */ }
+    }
     setStatus(formatFailureForStatus(normalized), isOperationalError);
     if (step && !normalized.ok) {
       logNormalizedFailure(step, normalized);
@@ -502,7 +532,16 @@
   function hasGoogle() {
     const prov = global.settings?.backup?.providers?.google;
     if (global.DriveAdapter?.isConnected?.()) return true;
+    const w = loadWizard();
+    if (w.googleSessionConnected === true && !prov?.userDisconnected && prov?.oauth !== false) return true;
     return !!(prov?.connected && !prov?.userDisconnected && prov?.oauth !== false);
+  }
+
+  function isBranchExplicitlySelected() {
+    const w = loadWizard();
+    if (w.branchExplicitlySelected === true) return true;
+    if ((w.completedSteps || []).includes('branch_select')) return true;
+    return authoritativeBootstrapBranches().length <= 1;
   }
 
   function hasCenterData() {
@@ -523,10 +562,11 @@
 
   function getSelectedBranchId() {
     const w = loadWizard();
+    const branches = authoritativeBootstrapBranches();
     const pending = String(w.pendingBranchId || w.selectedBranchId || '').trim();
+    if (branches.length > 1 && !isBranchExplicitlySelected()) return '';
     if (pending) return pending;
     const lic = global.LicenseCloud?.loadLocal?.() || {};
-    const branches = authoritativeBootstrapBranches(lic);
     if (branches.length === 1) return String(branches[0].id || '');
     return '';
   }
@@ -695,7 +735,10 @@
   }
 
   function branchStepResolved() {
-    return hasBranch() && !!getSelectedBranchId();
+    if (!hasBranch()) return false;
+    const branches = authoritativeBootstrapBranches();
+    if (branches.length > 1) return isBranchExplicitlySelected() && !!getSelectedBranchId();
+    return !!getSelectedBranchId();
   }
 
   function hasOwnerPasswordAccount() {
@@ -1308,7 +1351,7 @@
         if (newBranchRequiresOwner()) return false;
         return branchStepResolved();
       }
-      case 'branch_select': return hasBranch() && !!getSelectedBranchId();
+      case 'branch_select': return branchStepResolved();
       case 'device': return deviceStepResolved();
       case 'business_setup': {
         if (!deviceStepResolved()) return false;
@@ -1373,9 +1416,9 @@
       });
     }
     s.textContent = `
-.bf-overlay{position:fixed;inset:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:auto;overscroll-behavior:contain}
-.bf-overlay.open{display:grid;align-items:flex-start;justify-items:center}
-.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,calc(100vw - 2 * clamp(16px,3vw,32px)));max-width:100%;max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box;margin-inline:auto}
+.bf-overlay{position:fixed;inset:0;inset-inline:0;z-index:100030;background:linear-gradient(145deg,#1a2f42,#2c4159);display:none;place-items:center;box-sizing:border-box;padding-block:clamp(24px,5vh,48px);padding-inline:clamp(16px,3vw,32px);overflow:auto;overscroll-behavior:contain;direction:rtl}
+.bf-overlay.open{display:grid;align-items:flex-start;justify-items:stretch;justify-content:center}
+.bf-card,.bf-card.modal-shell{position:relative;z-index:1;width:min(720px,calc(100vw - 2 * clamp(16px,3vw,32px)));max-width:min(720px,calc(100vw - 32px));max-height:calc(100dvh - (2 * clamp(24px,5vh,48px)));display:grid;grid-template-rows:auto minmax(0,1fr) auto;background:var(--card,#fff);border-radius:var(--tdw-radius-lg,16px);border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 64px rgba(0,0,0,.35);pointer-events:auto;overflow:hidden;min-height:0;box-sizing:border-box;margin-inline:auto;inset-inline:auto;transform:none;left:auto;right:auto}
 .bf-card-header{flex:0 0 auto;padding:14px clamp(12px,3vw,20px) 8px;position:relative;min-height:0;border-bottom:1px solid var(--border,#e5e7eb);background:var(--card,#fff)}
 .bf-card-body{min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;padding:0 clamp(12px,3vw,20px) 12px;-webkit-overflow-scrolling:touch;max-width:100%}
 .bf-card-footer{flex-shrink:0;padding:10px 20px 14px;border-top:1px solid var(--border,#e5e7eb);background:var(--card,#fff);display:grid;gap:8px;position:sticky;bottom:0;z-index:3}
@@ -1471,7 +1514,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 .bf-restore-progress{margin-top:10px;border:1px solid var(--border);border-radius:10px;padding:10px;background:#fff}
 .bf-restore-progress .bar{height:8px;background:#e5e7eb;border-radius:999px;overflow:hidden}
 .bf-restore-progress .bar>i{display:block;height:100%;width:0;background:#3D5A80;transition:width .2s}
+@keyframes bf-indeterminate{from{opacity:.35}to{opacity:.85}}
 @media (max-height:720px){.bf-card-header{padding-top:10px}.bf-card h1{font-size:1.05rem}}
+@media (max-width:1024px){.bf-overlay{padding-inline:clamp(12px,2.5vw,24px)}.bf-card,.bf-card.modal-shell{width:min(720px,calc(100vw - 24px));max-width:calc(100vw - 24px)}.bf-checklist-layout{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:640px){.bf-nav-row{display:grid;grid-template-columns:1fr 1fr}.tdw-stepper.bf-stepper>li{min-width:3.25rem;max-width:5rem;font-size:10px}.bf-checklist-panel{max-height:none}}
 @media (max-width:420px){.bf-overlay{padding-inline:10px}.bf-card{width:100%;max-width:100%}.bf-nav-row{grid-template-columns:1fr}.bf-actions .btn,.bf-choice-actions .btn{font-size:13px;white-space:normal;overflow-wrap:anywhere}}
 @media (min-resolution:1.5dppx) and (max-width:1100px){.bf-actions .btn,.bf-nav-row .btn{min-height:48px;font-size:13px;white-space:normal}.bf-card{width:min(720px,calc(100vw - 24px))}}
@@ -1957,6 +2002,14 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     global.DB?.set?.('__tdw_meta__', meta);
     if (!w.completedSteps.includes('license_org_recovery')) w.completedSteps.push('license_org_recovery');
     saveWizard(w);
+    await refreshGoogleConnectionState({ acceptLiveReconnect: true });
+    const wAfter = loadWizard();
+    if (hasGoogle()) {
+      wAfter.googleSessionConnected = true;
+      if (!wAfter.completedSteps.includes('google')) wAfter.completedSteps.push('google');
+      saveWizard(wAfter);
+      clearChecklistStepError('google');
+    }
     return { ok: true, recovered: true, activationConsumeDelta: meta.existingShortPathRecovery.activationConsumeDelta };
   }
 
@@ -2031,7 +2084,11 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       // Preserve the real failure class. The previous hard-coded fallback
       // mislabeled RBAC, signature, rendering and persistence errors as a
       // network timeout, hiding the actionable root cause.
-      setStatusFromErr(e);
+      if (options.existingRecovery && hasGoogle() && hasDiscoveryResolved()) {
+        console.info('[BootFlow] license_recovery_transient_error_ignored', e?.code || e?.message || e);
+        return { ok: false, error: String(e && e.message || e), transient: true };
+      }
+      setStatusFromErr(e, e?.code || e?.error, { suppressIfResolved: true });
       return { ok: false, error: String(e && e.message || e) };
     }
   }
@@ -2093,10 +2150,12 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       if (result.status === global.PostGoogleCloudDiscovery?.STATUS_EXISTING
         || result.status === global.PostGoogleCloudDiscovery?.STATUS_AMBIGUOUS) {
-        setStatus('ℹ️ وُجدت بيانات سابقة على السحابة — سجّلت للمراجعة (لا تبديل مسار صامت).');
+        setStatus('✅ وُجدت بيانات سابقة على السحابة — سجّلت للمراجعة (لا تبديل مسار صامت).');
       } else {
         setStatus('✅ اكتمل الاكتشاف — لا بيانات سابقة مرتبطة بهذا الحساب.');
       }
+      clearChecklistStepError('discovery');
+      clearTransientBootstrapState({ clearStepError: false, clearStatus: true });
       return { ok: true, discovery: result };
     } catch (e) {
       setStatusFromErr(e, 'discovery_failed', {
@@ -2133,13 +2192,18 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         skipDeviceBootstrap: true,
         connectOnly: true
       }, true);
-      await refreshGoogleConnectionState();
+      await refreshGoogleConnectionState({ acceptLiveReconnect: true });
       if (!hasGoogle()) {
         setStatusFromErr(res || { message: 'oauth_failed' }, res?.error || 'oauth_failed', { retryHandler: () => runGoogleConnect() });
         return res || { ok: false };
       }
+      const w = loadWizard();
+      w.googleSessionConnected = true;
+      if (!w.completedSteps.includes('google')) w.completedSteps.push('google');
+      saveWizard(w);
       setStatus('✅ تم ربط Google' + (res?.email ? ' — ' + res.email : '') + ' — تابع لخطوة الاكتشاف');
       clearChecklistStepError('google');
+      clearTransientBootstrapState({ clearStepError: false, clearStatus: true });
       return { ok: true, googleConnected: true, email: res?.email || '' };
     } catch (e) {
       setStatusFromErr(e, e?.code || e?.error || 'oauth_failed', { retryHandler: () => runGoogleConnect() });
@@ -2368,6 +2432,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       const w = loadWizard();
       w.pendingBranchId = branchId;
       w.selectedBranchId = branchId;
+      w.branchExplicitlySelected = true;
+      if (!w.completedSteps.includes('branch_select')) w.completedSteps.push('branch_select');
       saveWizard(w);
       setStatus('✅ تم اختيار الفرع — تابع إلى تسجيل الجهاز');
       return { ok: true, branchId };
@@ -2411,6 +2477,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         throw new Error('device_readback_mismatch');
       }
       try { localStorage.setItem(RESTART_REQUIRED_KEY, '1'); } catch { /* empty */ }
+      await refreshGoogleConnectionState({ acceptLiveReconnect: true });
+      const wDev = loadWizard();
+      if (hasGoogle()) {
+        wDev.googleSessionConnected = true;
+        if (!wDev.completedSteps.includes('google')) wDev.completedSteps.push('google');
+        saveWizard(wDev);
+      }
       setStatus('✅ تم تسجيل الجهاز وربطه بالفرع بنجاح. سيتم إعادة تشغيل البرنامج لتطبيق التفعيل واستكمال المزامنة.');
       return { ok: true, restartRequired: true, readBack };
     } catch (e) {
@@ -2749,6 +2822,14 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           });
         }
         if (hasGoogle()) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
+        else if (w.googleSessionConnected && !global.settings?.backup?.providers?.google?.userDisconnected) {
+          refreshGoogleConnectionState({ acceptLiveReconnect: true }).then((state) => {
+            if (state?.connected || hasGoogle()) {
+              setStatus('✅ Google متصل — تابع لخطوة الاكتشاف');
+              renderNavButtons(loadWizard());
+            }
+          });
+        }
         else if (isNew && !hasValidLicense()) setStatus('أكمل التفعيل في الخطوة السابقة أولاً', true);
         break;
       }
@@ -2996,7 +3077,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           setStatus(`✅ وُجد ${branchCount} فرع — اختر الفرع الصحيح`);
         }
         addBtn(actions, branchBindInFlight ? '⏳ جارٍ التأكيد...' : '✅ تأكيد اختيار الفرع', 'btn-primary', () => selectExistingBranchOnly(), !hasBranch() || branchBindInFlight);
-        if (getSelectedBranchId()) setStatus('✅ تم اختيار الفرع');
+        if (isBranchExplicitlySelected() && getSelectedBranchId()) setStatus('✅ تم اختيار الفرع');
         break;
       }
       case 'device': {
@@ -3188,12 +3269,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const stageLine = snap.stageCount
             ? `${snap.stageIndex || 0}/${snap.stageCount} — ${snap.stageLabel || '—'}`
             : (snap.stageLabel || 'فحص مصادر البيانات');
+          const pctLabel = snap.indeterminate ? '…' : `${snap.percent || 0}%`;
+          const barWidth = snap.indeterminate ? '100%' : `${snap.percent || 0}%`;
+          const barPulse = snap.indeterminate ? 'animation:bf-indeterminate 1.2s ease-in-out infinite alternate' : '';
           progressHost.innerHTML = `<div class="bf-restore-progress" dir="rtl">
             <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px">
               <span>${stageLine}</span>
-              <strong dir="ltr">${snap.percent || 0}%</strong>
+              <strong dir="ltr">${pctLabel}</strong>
             </div>
-            <div class="bar"><i style="width:${snap.percent || 0}%"></i></div>
+            <div class="bar"><i style="width:${barWidth};opacity:${snap.indeterminate ? 0.45 : 1};${barPulse}"></i></div>
             <div class="bf-source-meta" style="margin-top:6px">
               المنقضي: ${Math.round((snap.elapsedMs || 0) / 1000)}ث
               ${snap.budgetMs ? ` / ~${Math.round(snap.budgetMs / 1000)}ث` : ''}
@@ -3363,7 +3447,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
                 const result = await Discovery.confirmedCloudRestore(selectedCloudPoint, {
                   onProgress: (snap) => {
                     renderProgress(snap);
-                    setStatus(`⏳ ${snap.stageLabel} — ${snap.percent}%`);
+                    const pct = snap.indeterminate ? '…' : `${snap.percent}%`;
+                    setStatus(`⏳ ${snap.stageLabel} — ${pct}`, false);
                   },
                 });
                 if (!result?.ok) {
@@ -3857,6 +3942,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_EXISTING_STEPS_PRE_STAGE12,
     LEGACY_EXISTING_STEPS_PRE_STAGE16,
     branchStepResolved,
+    isBranchExplicitlySelected,
     deviceStepResolved,
     businessSetupStepResolved,
     readBusinessSetupState,

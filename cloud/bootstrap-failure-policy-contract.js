@@ -99,10 +99,52 @@
     database_integrity_failed: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-DB-INTEGRITY' },
     signed_license_corrupt: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-LICENSE-CORRUPT' },
     step_required: { outcome: OUTCOME.USER_ACTION_REQUIRED, userActionRequired: true, code: 'TDW-BOOT-STEP-REQUIRED' },
-    step_failed: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-STEP-FAIL' },
+    cloud_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'تعذر تنزيل النسخة الاحتياطية — تحقق من الاتصال ثم حاول مرة أخرى.' },
+    cloud_restore_timeout: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-RESTORE-TIMEOUT' },
   });
 
   let correlationCounter = 0;
+  const diagnosticRegistry = new Map();
+  const MAX_DIAGNOSTIC_ENTRIES = 500;
+
+  function recordDiagnostic(entry) {
+    entry = entry || {};
+    const id = String(entry.correlationId || entry.diagnosticId || '').trim();
+    if (!id) return null;
+    const safe = {
+      correlationId: id,
+      timestamp: entry.timestamp || new Date().toISOString(),
+      step: entry.stepId || entry.step || null,
+      operation: entry.operation || null,
+      code: entry.code || null,
+      rawCode: entry.rawCode || null,
+      outcome: entry.outcome || null,
+      domain: entry.domain || 'bootstrap',
+      message: entry.message ? redactSensitive(String(entry.message)) : null,
+      rootCause: entry.rootCause ? redactSensitive(String(entry.rootCause)) : null,
+      recovered: entry.recovered === true,
+      percent: entry.percent != null ? entry.percent : null,
+      downloadedBytes: entry.downloadedBytes != null ? entry.downloadedBytes : null,
+      totalBytes: entry.totalBytes != null ? entry.totalBytes : null,
+      expectedBytes: entry.expectedBytes != null ? entry.expectedBytes : null,
+      remotePath: entry.remotePath || null,
+      remoteId: entry.remoteId || null,
+      selectedName: entry.selectedName || null,
+      lastActivity: entry.lastActivity || null,
+    };
+    diagnosticRegistry.set(id, safe);
+    if (diagnosticRegistry.size > MAX_DIAGNOSTIC_ENTRIES) {
+      const oldest = diagnosticRegistry.keys().next().value;
+      if (oldest) diagnosticRegistry.delete(oldest);
+    }
+    return safe;
+  }
+
+  function lookupDiagnostic(correlationId) {
+    const id = String(correlationId || '').trim();
+    if (!id) return null;
+    return diagnosticRegistry.get(id) || null;
+  }
 
   function generateCorrelationId(prefix) {
     correlationCounter += 1;
@@ -225,6 +267,15 @@
       correlationId: entry.correlationId || null,
       details: entry.safeDetails ? redactSensitive(entry.safeDetails) : null,
     };
+    if (safe.correlationId) {
+      recordDiagnostic({
+        correlationId: safe.correlationId,
+        stepId: safe.step,
+        code: safe.code,
+        outcome: safe.outcome,
+        message: safe.details,
+      });
+    }
     if (typeof console !== 'undefined' && console.info) {
       console.info('[BootstrapFailure]', safe);
     }
@@ -289,6 +340,8 @@
     GATE_STEPS,
     CODE_POLICY,
     generateCorrelationId,
+    recordDiagnostic,
+    lookupDiagnostic,
     redactSensitive,
     isTruthySuccess,
     normalizeFailure,
