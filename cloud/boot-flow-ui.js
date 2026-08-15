@@ -165,6 +165,13 @@
   function normalizeWizardFlowState(w) {
     if (!w || !w.path) return w;
     let changed = false;
+    // Persisted records from older builds can omit completedSteps entirely.
+    // Every gate below (and runGoogleConnect) treats it as an array, so a
+    // missing value used to surface as a false "operation failed".
+    if (!Array.isArray(w.completedSteps)) {
+      w.completedSteps = [];
+      changed = true;
+    }
     const version = Number(w.wizardFlowVersion || 0);
     if (version < WIZARD_FLOW_VERSION) {
       const legacySteps = w.path === PATHS.EXISTING
@@ -212,23 +219,14 @@
       if (version < 11 && hasDeviceBranch()) {
         if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
         if (!w.completedSteps.includes('device')) w.completedSteps.push('device');
-        if (hasBranch() && !w.pendingBranchId) {
-          const cfg = global.DeviceConfig?.load?.() || {};
-          const branchCount = authoritativeBootstrapBranches().length;
-          if (cfg.lockedBranchId && branchCount <= 1) {
-            w.pendingBranchId = cfg.lockedBranchId;
-            w.branchExplicitlySelected = true;
-          }
-        }
+        // A locked local branch is NOT evidence that the operator chose it. The
+        // branch gate re-derives provenance from DeviceConfig separately, so
+        // migration must not forge an explicit selection here.
         changed = true;
       }
-      if (w.path === PATHS.EXISTING && w.pendingBranchId && !w.branchExplicitlySelected) {
-        const branchCount = authoritativeBootstrapBranches().length;
-        if (branchCount > 1) {
-          delete w.pendingBranchId;
-          delete w.selectedBranchId;
-          changed = true;
-        }
+      if (w.branchExplicitlySelected !== undefined) {
+        delete w.branchExplicitlySelected;
+        changed = true;
       }
       if (version < 12 && businessSetupStepResolved()) {
         if (!Array.isArray(w.completedSteps)) w.completedSteps = [];
@@ -473,13 +471,16 @@
   }
 
   function getChecklistUiContext(w) {
+    // Invalidate an unprovable branch selection BEFORE the checklist is derived,
+    // so a branch set that changed after an auto-selection cannot render DONE.
+    reconcileBranchSelection();
     w = w || getDisplayWizard(loadWizard());
     invalidateStaleChecklistErrors(w);
     if (checklistStepError?.stepId === 'discovery' && hasDiscoveryResolved()) {
       checklistStepError = null;
       lastGateRetryHandler = null;
     }
-    if (checklistStepError?.stepId === 'branch_select' && authoritativeBranchCount() > 1 && !isBranchExplicitlySelected()) {
+    if (checklistStepError?.stepId === 'branch_select' && !isBranchExplicitlySelected()) {
       checklistStepError = null;
       lastGateRetryHandler = null;
     }
@@ -570,28 +571,112 @@
     return !!(prov?.connected && !prov?.userDisconnected && prov?.oauth !== false);
   }
 
-  function authoritativeBranchCount() {
-    const branches = authoritativeBootstrapBranches();
-    const discovery = getCachedDiscoveryResult();
-    const discoveryCount = Array.isArray(discovery?.branchCandidates) ? discovery.branchCandidates.length : 0;
-    return Math.max(branches.length, discoveryCount);
+  function googleAccountKey() {
+    return String(global.settings?.backup?.providers?.google?.email || '').toLowerCase() || null;
   }
 
-  function reconcileBranchSelectionAfterDiscovery() {
+  function currentOrganizationId() {
+    return String(global.LicenseCloud?.loadLocal?.()?.centerId
+      || global.CenterId?.getStoredCenterId?.()
+      || '') || null;
+  }
+
+  /**
+   * Single count authority. The previous implementation compared two different
+   * numbers — the de-duplicated branch list and the RAW discovery candidate list
+   * (which contains one entry per piece of evidence, so the same branch appears
+   * twice). The gate read the de-duplicated count while the guard read the
+   * inflated one, so a single branch silently satisfied the gate while the UI
+   * reported "فروع: 2".
+   */
+  function eligibleBranchCount() {
+    return authoritativeBootstrapBranches().length;
+  }
+
+  /**
+   * The device already completed registration in THIS organization. That is a
+   * real prior user action, so it keeps a resumed/restarted journey valid without
+   * re-selecting. It is deliberately NOT enough on a device that has not
+   * registered yet — an existing customer on a new device must never inherit an
+   * old device's branch silently.
+   */
+  function deviceBoundBranchSelection() {
+    const cfg = global.DeviceConfig?.load?.() || {};
+    const branchId = String(cfg.lockedBranchId || '').trim();
+    if (!branchId || !cfg.deviceUuid || !cfg.deviceName) return null;
+    const orgId = currentOrganizationId();
+    const cfgOrg = String(cfg.centerId || '').trim();
+    if (orgId && cfgOrg && orgId !== cfgOrg) return null;
+    if (!authoritativeBootstrapBranches().some((b) => String(b.id) === branchId)) return null;
+    return { branchId, provenance: 'device_bound', organizationId: cfgOrg || orgId || null };
+  }
+
+  /**
+   * Validated branch selection or null. Provenance is the authority: only a real
+   * user click ('user') or a branch this journey created ('created') counts.
+   * `completedSteps` is NOT accepted as proof — it is derived state and was the
+   * reason a stale wizard could mark the gate DONE with no user action.
+   */
+  function currentBranchSelection() {
     const w = loadWizard();
-    const count = authoritativeBranchCount();
-    if (count <= 1) return w;
+    const sel = w.branchSelection;
+    if (!sel || typeof sel !== 'object') return deviceBoundBranchSelection();
+    const branchId = String(sel.branchId || '').trim();
+    const provenance = String(sel.provenance || '');
+    if (!branchId || (provenance !== 'user' && provenance !== 'created')) {
+      return deviceBoundBranchSelection();
+    }
+    const orgId = currentOrganizationId();
+    if (orgId && sel.organizationId && String(sel.organizationId) !== orgId) return deviceBoundBranchSelection();
+    const account = googleAccountKey();
+    if (account && sel.googleAccountKey && String(sel.googleAccountKey) !== account) {
+      return deviceBoundBranchSelection();
+    }
+    const branches = authoritativeBootstrapBranches();
+    if (branches.length && !branches.some((b) => String(b.id) === branchId)) {
+      return deviceBoundBranchSelection();
+    }
+    return { branchId, provenance, organizationId: sel.organizationId || orgId || null };
+  }
+
+  function recordBranchSelection(branchId, provenance) {
+    const w = loadWizard();
+    w.branchSelection = {
+      branchId: String(branchId),
+      provenance,
+      organizationId: currentOrganizationId(),
+      googleAccountKey: googleAccountKey(),
+      at: new Date().toISOString(),
+    };
+    w.pendingBranchId = String(branchId);
+    w.selectedBranchId = String(branchId);
+    return saveWizard(w);
+  }
+
+  /**
+   * Drop any selection that is no longer provable, and remove the derived
+   * completion marker with it. Runs synchronously before every checklist render
+   * so a branch set that grows from 1 to 2 can never leave a stale DONE behind.
+   */
+  function reconcileBranchSelection() {
+    const w = loadWizard();
     let changed = false;
-    if (w.branchExplicitlySelected && !(w.completedSteps || []).includes('branch_select')) {
-      w.branchExplicitlySelected = false;
+    const valid = currentBranchSelection();
+    if (w.branchSelection && !valid) {
+      delete w.branchSelection;
       changed = true;
     }
-    if ((w.pendingBranchId || w.selectedBranchId) && !(w.completedSteps || []).includes('branch_select')) {
+    // Legacy fields are no longer authority; clear them when unbacked.
+    if (!valid && (w.pendingBranchId || w.selectedBranchId)) {
       delete w.pendingBranchId;
       delete w.selectedBranchId;
       changed = true;
     }
-    if ((w.completedSteps || []).includes('branch_select') && !w.branchExplicitlySelected) {
+    if (w.branchExplicitlySelected !== undefined) {
+      delete w.branchExplicitlySelected;
+      changed = true;
+    }
+    if (!valid && Array.isArray(w.completedSteps) && w.completedSteps.includes('branch_select')) {
       w.completedSteps = w.completedSteps.filter((s) => s !== 'branch_select');
       changed = true;
     }
@@ -599,14 +684,44 @@
     return w;
   }
 
+  /** Kept for callers that ran after discovery/recovery specifically. */
+  function reconcileBranchSelectionAfterDiscovery() {
+    return reconcileBranchSelection();
+  }
+
   function isBranchExplicitlySelected() {
+    return !!currentBranchSelection();
+  }
+
+  /** Evidence for the branch gate decision — no secrets. */
+  function branchGateDiagnostics() {
     const w = loadWizard();
-    const count = authoritativeBranchCount();
-    if (count > 1) {
-      return w.branchExplicitlySelected === true || (w.completedSteps || []).includes('branch_select');
-    }
-    if (count === 1) return true;
-    return false;
+    const lic = global.LicenseCloud?.loadLocal?.() || {};
+    const discovery = getCachedDiscoveryResult();
+    const cfg = global.DeviceConfig?.load?.() || {};
+    const selection = currentBranchSelection();
+    const eligible = authoritativeBootstrapBranches();
+    return {
+      at: new Date().toISOString(),
+      organizationId: currentOrganizationId(),
+      licenseBranches: (lic.branches || []).map((b) => String(b?.id || '')).filter(Boolean),
+      discoveryCandidates: (discovery?.branchCandidates || []).map((b) => ({
+        id: String(b?.id || ''),
+        source: b?.source || null,
+        verified: b?.verified === true,
+      })),
+      localDeviceBranch: String(cfg.lockedBranchId || '') || null,
+      wizardBranchSelection: w.branchSelection
+        ? { branchId: w.branchSelection.branchId, provenance: w.branchSelection.provenance }
+        : null,
+      eligibleBranches: eligible.map((b) => ({ id: b.id, source: b.source })),
+      eligibleBranchCount: eligible.length,
+      selectionProvenance: selection?.provenance || null,
+      branchStepResolved: branchStepResolved(),
+      reason: selection
+        ? `selection_provenance_${selection.provenance}`
+        : (eligible.length ? 'explicit_selection_required' : 'no_cloud_authorized_branch'),
+    };
   }
 
   function hasCenterData() {
@@ -625,17 +740,25 @@
     return !!(cfg?.lockedBranchId && (cfg?.deviceName || cfg?.deviceUuid));
   }
 
+  /**
+   * The branch this device will use. Never falls back to "the only branch" —
+   * auto-returning a sole branch is what let device registration proceed with
+   * BR-MAIN that the operator never chose.
+   */
   function getSelectedBranchId() {
-    const w = loadWizard();
-    const branches = authoritativeBootstrapBranches();
-    const pending = String(w.pendingBranchId || w.selectedBranchId || '').trim();
-    if (branches.length > 1 && !isBranchExplicitlySelected()) return '';
-    if (pending) return pending;
-    const lic = global.LicenseCloud?.loadLocal?.() || {};
-    if (branches.length === 1) return String(branches[0].id || '');
-    return '';
+    return currentBranchSelection()?.branchId || '';
   }
 
+  /**
+   * Cloud-authorized branches only.
+   *
+   * `discovery.branchCandidates` contains a `data_discovery` entry built from
+   * `dataDiscovery.cloud.branchId`, which is an ECHO of local identity
+   * (DeviceConfig.lockedBranchId → passed into the Drive scan → returned
+   * unchanged). Treating it as a discovered branch let stale local state both
+   * invent a branch and inflate the candidate count, so it is accepted only when
+   * a cloud license document corroborates it.
+   */
   function authoritativeBootstrapBranches(license) {
     license = license || global.LicenseCloud?.loadLocal?.() || {};
     const branchMap = new Map();
@@ -648,13 +771,13 @@
     for (const b of (discovery?.branchCandidates || [])) {
       const id = String(b?.id || b?.branchId || '').trim();
       if (!id) continue;
-      if (!branchMap.has(id)) {
-        branchMap.set(id, {
-          id,
-          name: b.name || b.branchName || id,
-          source: b.source || 'discovery',
-        });
-      }
+      if (branchMap.has(id)) continue;
+      if (b?.source === 'data_discovery') continue;
+      branchMap.set(id, {
+        id,
+        name: b.name || b.branchName || id,
+        source: b.source || 'discovery',
+      });
     }
     return Array.from(branchMap.values());
   }
@@ -749,6 +872,32 @@
     return setupOwnerSessionReady();
   }
 
+  /**
+   * "بدء قاعدة جديدة" policy for the EXISTING path.
+   *
+   * On the existing-customer journey the Owner identity is recovered from the
+   * backup (or a cloud pull) — it is never created. Accepting an empty database
+   * resolved the restore gate while `owner_auth` still demanded an Owner that
+   * only the backup could provide, leaving the wizard in a contradictory state
+   * ("لا يوجد مالك مسترد بعد — أكمل الاستعادة أولاً" on a mandatory step).
+   * The option is therefore refused while no Owner is recoverable, and the
+   * operator is pointed at the paths that can actually produce one.
+   */
+  function existingEmptyStartPolicy() {
+    if (!isExistingCustomerPath()) {
+      return { allowed: true, code: null, messageAr: '', reason: 'new_path' };
+    }
+    if (hasOwnerPasswordAccount()) {
+      return { allowed: true, code: null, messageAr: '', reason: 'owner_present' };
+    }
+    return {
+      allowed: false,
+      code: 'existing_empty_start_blocked_no_owner',
+      reason: 'no_recoverable_owner',
+      messageAr: 'لا يمكن البدء بقاعدة فارغة لعميل حالي: حساب المالك يُسترد من النسخة الاحتياطية أو من المزامنة السحابية ولا يُنشأ في هذا المسار. أكمل الاستعادة من السحابة، أو استخدم «تأكيد البيانات الحالية» إذا كانت بيانات هذا الجهاز صحيحة.',
+    };
+  }
+
   function existingGatesBeforeSyncSatisfied() {
     if (!isExistingCustomerPath()) return true;
     const ESC = global.ExistingShortPathContract;
@@ -799,11 +948,15 @@
     return meta.setupPublication || null;
   }
 
+  /**
+   * Branch gate. The older working build completed this step only after the
+   * operator clicked to bind the device to a branch — including when exactly one
+   * branch existed. That requirement is preserved here: a provable selection is
+   * always needed, regardless of how many branches were recovered.
+   */
   function branchStepResolved() {
     if (!hasBranch()) return false;
-    const branches = authoritativeBootstrapBranches();
-    if (branches.length > 1) return isBranchExplicitlySelected() && !!getSelectedBranchId();
-    return !!getSelectedBranchId();
+    return !!currentBranchSelection();
   }
 
   function hasOwnerPasswordAccount() {
@@ -2480,10 +2633,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       if (!committed?.branch?.id || !hasBranch()) {
         throw new Error('setup_branch_not_committed');
       }
-      const w = loadWizard();
-      w.pendingBranchId = committed.branch.id;
-      w.selectedBranchId = committed.branch.id;
-      saveWizard(w);
+      recordBranchSelection(committed.branch.id, 'created');
       setStatus('✅ تم إنشاء الفرع — تابع إلى تسجيل الجهاز');
       return { ok: true, branch: committed.branch };
     } catch (e) {
@@ -2513,14 +2663,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         setStatus('⚠️ الفرع غير موجود في الترخيص', true);
         return { ok: false, error: 'branch_not_found' };
       }
-      const w = loadWizard();
-      w.pendingBranchId = branchId;
-      w.selectedBranchId = branchId;
-      w.branchExplicitlySelected = true;
+      const w = recordBranchSelection(branchId, 'user');
       if (!w.completedSteps.includes('branch_select')) w.completedSteps.push('branch_select');
       saveWizard(w);
+      clearChecklistStepError('branch_select');
       setStatus('✅ تم اختيار الفرع — تابع إلى تسجيل الجهاز');
-      return { ok: true, branchId };
+      renderChecklist(getDisplayWizard(loadWizard()));
+      return { ok: true, branchId, provenance: 'user' };
     } finally {
       branchBindInFlight = false;
       renderNavButtons(loadWizard());
@@ -3152,23 +3301,27 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         break;
       }
       case 'branch_select': {
+        const lic = global.LicenseCloud?.loadLocal?.() || {};
+        const orgLabel = lic.centerName || global.settings?.centerName || lic.centerId || '—';
         content.innerHTML = `
           <p><strong>اختيار فرع موجود</strong> — تسجيل الجهاز في الخطوة التالية.</p>
+          <p class="bf-source-meta">المؤسسة المستردة: <strong>${String(orgLabel).replace(/</g, '&lt;')}</strong>${lic.centerId ? ` · ${String(lic.centerId).replace(/</g, '&lt;')}` : ''}</p>
           <div class="form-group"><label>الفرع الموجود</label><select id="bf-branch-id" class="form-control"></select></div>`;
         populateBootstrapBranchSelect('bf');
-        const pending = getSelectedBranchId();
-        if (pending) {
+        const selection = currentBranchSelection();
+        if (selection?.branchId) {
           const sel = document.getElementById('bf-branch-id');
-          if (sel) sel.value = pending;
+          if (sel) sel.value = selection.branchId;
         }
-        const branchCount = authoritativeBootstrapBranches().length;
+        const branchCount = eligibleBranchCount();
         if (!hasBranch()) {
-          content.innerHTML += '<p class="tdw-field-error">لا توجد فروع — ارجع لمسار عميل جديد أو أنشئ فرعاً من Owner Hub بعد الدخول.</p>';
-        } else if (branchCount > 1) {
-          setStatus(`✅ وُجد ${branchCount} فرع — اختر الفرع الصحيح`);
+          content.innerHTML += '<p class="tdw-field-error">لا توجد فروع معتمدة من السحابة لهذه المؤسسة — أعد فحص الاكتشاف أو ارجع لمسار عميل جديد.</p>';
+        } else if (!selection) {
+          content.innerHTML += `<p class="bf-source-meta">وُجد ${branchCount} فرع معتمد. اختر الفرع الذي يعمل عليه هذا الجهاز ثم اضغط «تأكيد اختيار الفرع» — لا يتم الاختيار تلقائياً.</p>`;
         }
         addBtn(actions, branchBindInFlight ? '⏳ جارٍ التأكيد...' : '✅ تأكيد اختيار الفرع', 'btn-primary', () => selectExistingBranchOnly(), !hasBranch() || branchBindInFlight);
-        if (isBranchExplicitlySelected() && getSelectedBranchId()) setStatus('✅ تم اختيار الفرع');
+        if (selection?.branchId) setStatus(`✅ تم اختيار الفرع ${selection.branchId}`);
+        else if (hasBranch()) setStatus(`اختر الفرع من القائمة ثم اضغط «تأكيد اختيار الفرع» (${branchCount} فرع متاح)`, false);
         break;
       }
       case 'device': {
@@ -3652,14 +3805,29 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           });
 
           // --- Empty start ---
+          const emptyPolicy = existingEmptyStartPolicy();
           const emptyCard = addSourceCard({
             title: '📭 البدء بدون بيانات سابقة',
-            status: 'ready',
-            metaHtml: 'إنشاء قاعدة جديدة بقرار صريح منك — لن يحدث تلقائياً عند فشل السحابة.',
+            status: emptyPolicy.allowed ? 'ready' : 'blocked',
+            metaHtml: emptyPolicy.allowed
+              ? 'إنشاء قاعدة جديدة بقرار صريح منك — لن يحدث تلقائياً عند فشل السحابة.'
+              : `<span class="tdw-field-error">${emptyPolicy.messageAr}</span>`,
           });
           addBtn(emptyCard.actions, 'بدء قاعدة جديدة', 'btn-ghost', () => {
+            const policy = existingEmptyStartPolicy();
+            if (!policy.allowed) {
+              // Choosing "empty" here would resolve the restore gate while
+              // leaving owner_auth permanently unreachable. Refuse with the
+              // real reason instead of entering that state.
+              setStatusFromErr(
+                { message: policy.code },
+                policy.code,
+                { stepId: 'restore', message: policy.messageAr },
+              );
+              return;
+            }
             markRestore('empty', '✅ بدء صريح بدون قاعدة سابقة');
-          });
+          }, !emptyPolicy.allowed);
 
           if (w.path === PATHS.EXISTING) {
             addBtn(choiceHost, '✔️ تأكيد البيانات الحالية (جهاز موجود)', 'btn-ghost', async () => {
@@ -3817,7 +3985,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         setStatus('⏳ انتظر اكتمال العملية الجارية قبل المتابعة', false);
         return;
       }
-      if (step === 'branch_select' && authoritativeBranchCount() > 1 && !isBranchExplicitlySelected()) {
+      if (step === 'branch_select' && hasBranch() && !isBranchExplicitlySelected()) {
         setStatus('⚠️ اختر الفرع من القائمة ثم اضغط «تأكيد اختيار الفرع»', false);
         return;
       }
@@ -4045,6 +4213,16 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_EXISTING_STEPS_PRE_STAGE16,
     branchStepResolved,
     isBranchExplicitlySelected,
+    currentBranchSelection,
+    recordBranchSelection,
+    selectExistingBranchOnly,
+    createFirstBranchFromForm,
+    reconcileBranchSelection,
+    reconcileBranchSelectionAfterDiscovery,
+    eligibleBranchCount,
+    authoritativeBootstrapBranches,
+    branchGateDiagnostics,
+    existingEmptyStartPolicy,
     deviceStepResolved,
     businessSetupStepResolved,
     readBusinessSetupState,

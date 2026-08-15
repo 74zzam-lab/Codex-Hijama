@@ -137,15 +137,25 @@ async function main() {
     assert.match(bootSrc, /runLicenseOrgRecovery[\s\S]*reconcileBranchSelectionAfterDiscovery/);
   });
 
-  await check('BUG-EXT-013 two branches unresolved without explicit selection', () => {
+  await check('BUG-EXT-013 branch selection requires provable provenance', () => {
     assert.match(bootSrc, /isBranchExplicitlySelected/);
-    assert.match(bootSrc, /branchExplicitlySelected = true/);
-    assert.match(bootSrc, /branchCount > 1/);
+    assert.match(bootSrc, /currentBranchSelection/);
+    assert.match(bootSrc, /recordBranchSelection\(branchId, 'user'\)/);
+    // The forged-explicit flag and the count-based shortcuts are gone.
+    assert.doesNotMatch(bootSrc, /branchExplicitlySelected = true/);
+    assert.doesNotMatch(bootSrc, /authoritativeBranchCount/);
   });
 
-  await check('BUG-EXT-013 one branch auto-select policy preserved', () => {
-    assert.match(bootSrc, /branches\.length === 1/);
-    assert.match(bootSrc, /branchCount <= 1/);
+  await check('BUG-EXT-013 a single branch is never auto-selected', () => {
+    // The older working build required an explicit bind click even with one
+    // branch; auto-returning the sole branch is the reported defect.
+    assert.doesNotMatch(bootSrc, /if \(branches\.length === 1\) return String\(branches\[0\]\.id/);
+    assert.match(bootSrc, /function getSelectedBranchId\(\)\s*\{\s*return currentBranchSelection\(\)\?\.branchId \|\| '';/);
+    assert.match(bootSrc, /function branchStepResolved\(\)[\s\S]{0,240}return !!currentBranchSelection\(\);/);
+  });
+
+  await check('BUG-EXT-013 local data_discovery echo is not cloud authority', () => {
+    assert.match(bootSrc, /if \(b\?\.source === 'data_discovery'\) continue;/);
   });
 
   await check('BUG-EXT-014 google session latch + acceptLiveReconnect after recovery', () => {

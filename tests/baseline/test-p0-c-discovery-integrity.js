@@ -200,7 +200,9 @@ function loadRendererDiscovery(cloudOperation) {
     const catchEnd = source.indexOf('async function runGoogleConnect', catchStart);
     const functionSource = source.slice(catchStart, catchEnd);
     assert.ok(!/setStatusFromErr\(e,\s*['"]license_timeout['"]\)/.test(functionSource));
-    assert.ok(/setStatusFromErr\(e\)/.test(functionSource));
+    // The catch must forward the real error (optionally with the actual code),
+    // never a fixed diagnosis.
+    assert.ok(/setStatusFromErr\(e[,)]/.test(functionSource));
   });
 
   const failed = results.filter((entry) => !entry.ok);

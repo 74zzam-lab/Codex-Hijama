@@ -13,7 +13,9 @@ const backupV2 = require('./backup-v2-core');
 const { BackupV2Scheduler } = require('./backup-v2-scheduler');
 const { copyWithResume, uploadWithResume } = require('./backup-v2-transfer');
 const backupMain = require('./backup');
+const { encodeIpcError } = require('../cloud/ipc-error-envelope');
 const MASTER_SECRET_CREDENTIAL = 'backup-v2-master-secret-v1';
+const SETUP_RESTORE_DIAGNOSTIC_LIMIT = 40;
 
 function generateBackupMasterSecret() {
   return crypto.randomBytes(32).toString('base64url');
@@ -322,24 +324,91 @@ function registerBackupV2Ipc({
     return path.join(getUserDataPath(), 'Backups', 'V2');
   }
 
-  function resolveSetupRestorePassword(opts = {}) {
+  function setupRestoreDiagnosticDir() {
+    return path.join(getUserDataPath(), 'Backups', 'V2', 'diagnostics');
+  }
+
+  /**
+   * Setup-restore tracing. Records the boundary a failure came from so the real
+   * cause is recoverable after the fact — Electron IPC only carries the message.
+   * Secrets are never recorded: passwords are reduced to a boolean.
+   */
+  function createSetupRestoreTrace(kind) {
+    const operationId = `SRT-${Date.now().toString(36)}-${crypto.randomBytes(3).toString('hex')}`;
+    const trace = {
+      operationId,
+      kind,
+      startedAt: new Date().toISOString(),
+      stages: [],
+      outcome: null,
+    };
+    const mark = (stage, fields) => {
+      trace.stages.push({ stage, at: new Date().toISOString(), ...(fields || {}) });
+      return stage;
+    };
+    const flush = () => {
+      try {
+        const dir = setupRestoreDiagnosticDir();
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+          path.join(dir, `${operationId}.json`),
+          JSON.stringify(trace, null, 2),
+          { mode: 0o600 },
+        );
+        const files = fs.readdirSync(dir).filter((f) => /^SRT-.*\.json$/.test(f)).sort();
+        for (const stale of files.slice(0, Math.max(0, files.length - SETUP_RESTORE_DIAGNOSTIC_LIMIT))) {
+          try { fs.unlinkSync(path.join(dir, stale)); } catch { /* best effort */ }
+        }
+      } catch { /* diagnostics must never break restore */ }
+    };
+    /** Throw a failure whose code survives Electron IPC serialization. */
+    const fail = (code, fields) => {
+      trace.outcome = { ok: false, code, ...(fields || {}) };
+      mark('failed', { code });
+      flush();
+      const err = new Error(encodeIpcError(code, {
+        op: operationId,
+        stage: fields?.stage || trace.stages[trace.stages.length - 2]?.stage || 'unknown',
+      }));
+      err.code = code;
+      err.operationId = operationId;
+      if (fields?.details) err.details = fields.details;
+      return err;
+    };
+    const succeed = (fields) => {
+      trace.outcome = { ok: true, ...(fields || {}) };
+      mark('completed');
+      flush();
+    };
+    return { operationId, trace, mark, fail, succeed, flush };
+  }
+
+  function resolveSetupRestorePassword(opts = {}, trace = null) {
     let password = '';
+    let source = 'none';
     if (typeof opts.password === 'string' && opts.password.length) {
       password = V.asString(opts.password, {
         name: 'password', required: true, allowEmpty: false, max: 256,
       });
+      source = 'operator';
     } else {
       // Same-device recovery can use the Main-owned safeStorage secret without
       // ever exposing it to the pre-auth Renderer. A new device still receives
       // backup_password_required and asks the operator for the recovery secret.
-      try { password = credentialVault.get(MASTER_SECRET_CREDENTIAL) || ''; } catch { password = ''; }
+      try {
+        password = credentialVault.get(MASTER_SECRET_CREDENTIAL) || '';
+        if (password) source = 'master_secret';
+      } catch { password = ''; }
     }
+    trace?.mark('password_resolved', { passwordProvided: !!password, passwordSource: source });
     if (!password) {
+      if (trace) throw trace.fail('backup_password_required', { stage: 'password_resolved' });
       const err = new Error('backup_password_required');
       err.code = 'backup_password_required';
       throw err;
     }
     if (String(password).length < 8) {
+      if (trace) throw trace.fail('password_too_short', { stage: 'password_resolved' });
       const err = new Error('password_too_short');
       err.code = 'password_too_short';
       throw err;
@@ -675,25 +744,31 @@ function registerBackupV2Ipc({
   // Setup-only restore: cloud discovery returns a Drive path, not a local file.
   // Keep this pre-login route constrained to a genuinely empty SQLite target.
   handle('backup:v2:setupCloudRestore', async (event, options) => {
+    const trace = createSetupRestoreTrace('cloud');
+    trace.mark('handler_entered');
     const opts = V.asObject(options, { name: 'options', required: true });
-    if (opts.setupMode !== true) {
-      const err = new Error('setup_mode_required');
-      err.code = 'setup_mode_required';
-      throw err;
-    }
+    if (opts.setupMode !== true) throw trace.fail('setup_mode_required', { stage: 'handler_entered' });
     const remotePath = V.asString(opts.remotePath, { name: 'remotePath', required: true, allowEmpty: false, max: 1024 });
-    const password = resolveSetupRestorePassword(opts);
+    const password = resolveSetupRestorePassword(opts, trace);
     const normalized = remotePath.replace(/\\/g, '/');
     if (!/\.(?:tdw|json)$/i.test(normalized) || normalized.startsWith('/') || normalized.split('/').includes('..')) {
-      const err = new Error('invalid_remote_backup_path');
-      err.code = 'invalid_remote_backup_path';
-      throw err;
+      throw trace.fail('invalid_remote_backup_path', { stage: 'remote_path_validated' });
     }
+    trace.mark('remote_path_validated', {
+      remoteName: path.basename(normalized),
+      expectedBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
+    });
     const databasePath = path.join(getUserDataPath(), 'database', 'tadawi.db');
     const target = backupV2.classifySetupRestoreTarget(databasePath);
+    trace.mark('target_classified', {
+      classification: target?.classification || null,
+      replaceAllowed: target?.replaceAllowed === true,
+      bootstrapRows: target?.bootstrapRows ?? null,
+      meaningfulRows: target?.meaningfulRows ?? null,
+      reasons: Array.isArray(target?.reasons) ? target.reasons.join(',') : null,
+    });
     if (target.ok !== true || target.replaceAllowed !== true) {
-      const err = new Error('setup_restore_requires_empty_database');
-      err.code = 'setup_restore_requires_empty_database';
+      const err = trace.fail('setup_restore_requires_empty_database', { stage: 'target_classified' });
       err.targetClassification = target;
       throw err;
     }
@@ -712,23 +787,37 @@ function registerBackupV2Ipc({
       } catch { /* observer only */ }
     };
     sendDownloadProgress({ stage: 'download_start', downloadedBytes: 0, percent: 0 });
+    trace.mark('provider_call_started');
+    let observedBytes = 0;
+    let progressEvents = 0;
     const downloaded = await backupMain.downloadCloudBackup(normalized, 'google', {
       destPartialPath: partialPath,
       totalBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
-      onProgress: (evt) => sendDownloadProgress(evt),
+      onProgress: (evt) => {
+        progressEvents += 1;
+        const bytes = Number(evt?.downloadedBytes) || 0;
+        if (bytes > observedBytes) observedBytes = bytes;
+        sendDownloadProgress(evt);
+      },
+    });
+    trace.mark('provider_call_returned', {
+      providerOk: downloaded?.ok === true,
+      progressEvents,
+      observedBytes,
+      needsReauth: downloaded?.needsReauth === true,
+      streamed: !!downloaded?.streamedPath,
     });
     if (!downloaded?.ok) {
       try { if (fs.existsSync(partialPath)) fs.unlinkSync(partialPath); } catch { /* best effort */ }
-      const err = new Error(downloaded?.message || 'cloud_download_failed');
-      err.code = downloaded?.needsReauth ? 'needs_reauth' : 'cloud_download_failed';
-      throw err;
+      throw trace.fail(
+        downloaded?.needsReauth ? 'needs_reauth' : 'cloud_download_failed',
+        { stage: 'provider_call_returned', details: downloaded?.message || null },
+      );
     }
     let buffer = null;
     if (downloaded.streamedPath) {
       if (!fs.existsSync(downloaded.streamedPath)) {
-        const err = new Error('cloud_download_incomplete');
-        err.code = 'cloud_download_incomplete';
-        throw err;
+        throw trace.fail('cloud_download_incomplete', { stage: 'provider_call_returned' });
       }
       fs.renameSync(downloaded.streamedPath, destPath);
       sendDownloadProgress({
@@ -741,9 +830,7 @@ function registerBackupV2Ipc({
         ? downloaded.buffer
         : Buffer.from(downloaded.payload || downloaded.text || '', 'utf8');
       if (!buffer.length) {
-        const err = new Error('empty_cloud_backup');
-        err.code = 'empty_cloud_backup';
-        throw err;
+        throw trace.fail('empty_cloud_backup', { stage: 'provider_call_returned' });
       }
       fs.writeFileSync(partialPath, buffer, { mode: 0o600 });
       fs.renameSync(partialPath, destPath);
@@ -753,38 +840,61 @@ function registerBackupV2Ipc({
         percent: 100,
       });
     }
-    const legacySnapshot = readLegacyBackupSnapshot(destPath, password);
+    const stagedBytes = (() => {
+      try { return fs.statSync(destPath).size; } catch { return 0; }
+    })();
+    trace.mark('staged_file_ready', { stagedBytes });
+    let legacySnapshot = null;
+    try {
+      legacySnapshot = readLegacyBackupSnapshot(destPath, password);
+    } catch (error) {
+      throw trace.fail(String(error?.code || 'legacy_backup_read_failed'), { stage: 'legacy_classification' });
+    }
+    trace.mark('format_classified', { format: legacySnapshot ? 'legacy_json' : 'backup_v2_archive' });
     if (legacySnapshot) {
       if (typeof bootstrapFromLocalSnapshot !== 'function') {
-        const err = new Error('legacy_setup_restore_unavailable');
-        err.code = 'legacy_setup_restore_unavailable';
-        throw err;
+        throw trace.fail('legacy_setup_restore_unavailable', { stage: 'format_classified' });
       }
       const migrated = await bootstrapFromLocalSnapshot(legacySnapshot, {
         force: true,
         sourceLabel: 'first-setup-legacy-cloud-backup'
       });
       if (migrated?.ok !== true) {
-        const err = new Error(migrated?.error || 'legacy_setup_restore_failed');
-        err.code = migrated?.error || 'legacy_setup_restore_failed';
-        throw err;
+        throw trace.fail(String(migrated?.error || 'legacy_setup_restore_failed'), { stage: 'legacy_migration' });
       }
+      trace.succeed({ mode: 'legacy', stagedBytes });
       return {
         ok: true,
         legacy: true,
         needRestart: false,
         migration: migrated,
+        operationId: trace.operationId,
         stagedPath: destPath,
         remotePath: normalized,
-        downloadedBytes: buffer?.length || downloaded.downloadedBytes || fs.statSync(destPath).size
+        downloadedBytes: buffer?.length || downloaded.downloadedBytes || stagedBytes
       };
     }
-    const restored = await runRestore(destPath, password, {
-      ...opts,
-      relaunch: false,
-      prepareStagedDatabase: (stagedDatabasePath) => applySetupRestoreState(stagedDatabasePath, setupRestoreState),
-    });
-    return { ...restored, stagedPath: destPath, remotePath: normalized, downloadedBytes: buffer?.length || downloaded.downloadedBytes || fs.statSync(destPath).size };
+    let restored;
+    try {
+      restored = await runRestore(destPath, password, {
+        ...opts,
+        relaunch: false,
+        prepareStagedDatabase: (stagedDatabasePath) => applySetupRestoreState(stagedDatabasePath, setupRestoreState),
+      });
+    } catch (error) {
+      throw trace.fail(String(error?.code || error?.message || 'cloud_backup_restore_failed'), { stage: 'restore_pipeline' });
+    }
+    if (restored?.ok !== true) {
+      throw trace.fail(String(restored?.error || 'cloud_backup_restore_failed'), { stage: 'restore_pipeline' });
+    }
+    trace.succeed({ mode: 'backup_v2', stagedBytes });
+    return {
+      ...restored,
+      operationId: trace.operationId,
+      stagedPath: destPath,
+      remotePath: normalized,
+      downloadedBytes: buffer?.length || downloaded.downloadedBytes || stagedBytes,
+    };
   });
 
   handle('backup:v2:scheduleStatus', async () => {

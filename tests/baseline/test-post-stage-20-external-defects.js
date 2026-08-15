@@ -48,10 +48,16 @@ check('BUG-EXT-007 coordinator honors explicit back navigation review index', ()
   assert.match(bootSrc, /reviewStepIndex/);
 });
 
-check('BUG-EXT-008 restore emits heartbeat during native cloud restore', () => {
+check('BUG-EXT-008 restore heartbeat proves liveness without faking progress', () => {
   assert.match(discoverySrc, /RESTORE_OPERATION_TIMEOUT_MS/);
-  assert.match(discoverySrc, /heartbeatRatio/);
   assert.match(discoverySrc, /backup_password_required/);
+  // A heartbeat must still run so the UI can show the operation is alive...
+  assert.match(discoverySrc, /bumpHeartbeat/);
+  assert.match(discoverySrc, /RESTORE_HEARTBEAT_MS/);
+  // ...but it must not advance a synthetic ratio, and the stall clock must be
+  // driven by received bytes only (a heartbeat-driven clock never fires).
+  assert.doesNotMatch(discoverySrc, /heartbeatRatio/);
+  assert.match(discoverySrc, /lastByteProgressAt/);
 });
 
 check('BUG-EXT-009 syncCloudStatusFromElectron does not downgrade on transient read', () => {
@@ -70,8 +76,15 @@ check('BUG-EXT-003 google disconnect/switch exposed in bootstrap', () => {
 });
 
 check('BUG-EXT-001 responsive bootstrap layout guards clipping', () => {
-  assert.match(bootSrc, /calc\(100vw - 2 \* clamp/);
-  assert.match(bootSrc, /@media \(min-width:641px\)\{\.bf-checklist-layout/);
+  // The card must stay inside the viewport on 1366x768 RTL and never overflow.
+  assert.match(bootSrc, /width:min\(960px,calc\(100vw - \d+px\)\)/);
+  assert.match(bootSrc, /max-width:min\(960px,calc\(100vw - \d+px\)\)/);
+  // Centered without transform-based offsets that clipped the RTL inline start.
+  assert.match(bootSrc, /margin-inline:auto/);
+  assert.match(bootSrc, /inset-inline:auto/);
+  // Narrow-screen breakpoint collapses the checklist beside the step body.
+  assert.match(bootSrc, /@media \(max-width:1024px\)/);
+  assert.match(bootSrc, /\.bf-checklist-layout\{grid-template-columns:minmax\(0,1fr\)\}/);
   assert.match(bootSrc, /overflow-x:hidden/);
 });
 

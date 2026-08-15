@@ -419,13 +419,17 @@
     let doneWeight = 0;
     for (let i = 0; i < safeIdx; i += 1) doneWeight += stages[i].weight;
     const stage = stages[safeIdx];
-    const hasByteProgress = Number(extra.downloadedBytes) > 0 || Number(extra.totalBytes) > 0;
+    // Expected size is metadata, not progress. Counting `totalBytes` as progress
+    // made a zero-byte download render a weighted stage floor (13%) as if the
+    // file were downloading. Only real received bytes count.
+    const hasByteProgress = Number(extra.downloadedBytes) > 0;
     const stageRatio = Number.isFinite(extra.stageRatio)
       ? extra.stageRatio
       : (hasByteProgress ? 0.15 : 0.05);
     const ratio = Math.min(0.99, (doneWeight + (stage?.weight || 0) * stageRatio) / totalWeight);
+    const isDownloadStage = stage?.id === 'download_db' || stage?.id === 'download_state';
     const indeterminate = extra.indeterminate === true
-      || (!hasByteProgress && stageRatio <= 0.05 && (stage?.id === 'download_db' || stage?.id === 'download_state'));
+      || (!hasByteProgress && isDownloadStage);
     return {
       stageId: stage?.id || stageId,
       stageLabel: stage?.label || stageId,
@@ -443,8 +447,24 @@
     };
   }
 
+  /**
+   * Recover the Main-process cause. Electron replaces the thrown Error with a
+   * renderer-side wrapper, so `error.code` is absent and `error.message` is
+   * `Error invoking remote method '<ch>': ...`. Using that text as the code
+   * produced meaningless diagnostics, so decode the envelope first.
+   */
   function restoreErrorCode(error) {
-    return String(error?.code || error?.error || error?.message || error || 'restore_failed');
+    const decoded = global.IpcErrorEnvelope?.decodeIpcError?.(error);
+    if (decoded?.code) return decoded.code;
+    if (error?.code) return String(error.code);
+    if (error?.error) return String(error.error);
+    const message = String(error?.message || error || '').trim();
+    if (!message) return 'restore_failed';
+    if (global.IpcErrorEnvelope?.isIpcWrapperError?.(error)) {
+      // Wrapper text carries no usable code — keep it out of the code space.
+      return 'main_process_restore_failed';
+    }
+    return message;
   }
 
   function isPasswordFailure(error) {
@@ -510,17 +530,19 @@
         const downloadedBytes = Number(payload?.downloadedBytes) || 0;
         lastDownloadBytes = Math.max(lastDownloadBytes, downloadedBytes);
         const totalBytes = Number(payload?.totalBytes) || Number(point?.sizeBytes) || null;
-        const ratio = totalBytes
+        const ratio = downloadedBytes > 0 && totalBytes
           ? Math.min(0.98, downloadedBytes / totalBytes)
           : (Number(payload?.percent) > 0 ? Math.min(0.98, Number(payload.percent) / 100) : null);
         emit('download_db', {
-          stageRatio: ratio != null ? ratio : 0.35,
+          stageRatio: ratio != null ? ratio : undefined,
           downloadedBytes,
           totalBytes,
-          indeterminate: ratio == null && downloadedBytes <= 0,
+          indeterminate: downloadedBytes <= 0,
           lastActivity: payload?.stage === 'download_complete'
             ? 'اكتمل تنزيل ملف Backup V2'
-            : `تنزيل Backup V2 — ${totalBytes ? `${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}` : formatBytes(downloadedBytes)}`,
+            : (downloadedBytes > 0
+              ? `تنزيل Backup V2 — ${totalBytes ? `${formatBytes(downloadedBytes)} / ${formatBytes(totalBytes)}` : formatBytes(downloadedBytes)}`
+              : `جارٍ بدء التنزيل… (الحجم المتوقع ${totalBytes ? formatBytes(totalBytes) : 'غير معروف'})`),
         });
         if (payload?.stage === 'download_complete') {
           emit('download_db', {
@@ -542,6 +564,7 @@
     async function invokeNativeRestore(restorePassword) {
       let heartbeat = null;
       let stallTimer = null;
+      let operationTimeout = null;
       let lastByteProgressAt = Date.now();
       const touchByteProgress = () => { lastByteProgressAt = Date.now(); };
       attachDownloadProgress(point.path, touchByteProgress);
@@ -574,7 +597,7 @@
             : { centerId: identity.centerId, branchId: identity.branchId }),
         });
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => {
+          operationTimeout = setTimeout(() => {
             const err = new Error('cloud_restore_timeout');
             err.code = 'cloud_restore_timeout';
             reject(err);
@@ -596,6 +619,9 @@
       } finally {
         if (heartbeat) clearInterval(heartbeat);
         if (stallTimer) clearInterval(stallTimer);
+        // Without this the settled attempt left a live timer that would later
+        // reject a dead promise and kept the process/event loop awake.
+        if (operationTimeout) clearTimeout(operationTimeout);
         if (detachDownloadProgress) detachDownloadProgress();
         detachDownloadProgress = null;
       }
@@ -910,6 +936,7 @@
     confirmedCloudRestore,
     buildProgressState,
     buildDiscoveryProgressState,
+    restoreErrorCode,
     formatBytes,
     formatWhen,
     cancelDiscovery,
