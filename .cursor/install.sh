@@ -22,7 +22,12 @@ if [ -f "$ROOT/package.json" ]; then
 else
   # Delivery branch (e.g. main): source lives inside the committed bundle zip.
   APP_DIR="$ROOT/app"
-  if [ ! -f "$APP_DIR/package.json" ]; then
+  # Treat the app as unpacked only if it looks complete (both package.json and
+  # the tests tree present). A partial app/ (e.g. left behind by a snapshot that
+  # only captured generated dirs) is wiped and re-extracted from scratch.
+  if [ -f "$APP_DIR/package.json" ] && [ -d "$APP_DIR/tests" ]; then
+    echo "Application source already unpacked at $APP_DIR"
+  else
     BUNDLE="$(ls "$ROOT"/*Hijama-Clinic-COMPLETE-ORIGINAL-vs-CURRENT*.zip 2>/dev/null | head -n1 || true)"
     if [ -z "${BUNDLE:-}" ]; then
       echo "ERROR: no root package.json and no source bundle zip found in $ROOT" >&2
@@ -37,11 +42,16 @@ else
     unzip -o -q "$BUNDLE" "./02-CURRENT/CURRENT-FINAL-RESTORE-SOURCE.zip" -d "$TMP"
     NESTED="$TMP/02-CURRENT/CURRENT-FINAL-RESTORE-SOURCE.zip"
 
+    # Start from a clean directory so a previous partial extraction cannot linger.
+    rm -rf "$APP_DIR"
     mkdir -p "$APP_DIR"
     unzip -o -q "$NESTED" -d "$APP_DIR"
+
+    if [ ! -f "$APP_DIR/package.json" ]; then
+      echo "ERROR: extraction incomplete, $APP_DIR/package.json missing" >&2
+      exit 1
+    fi
     echo "Application source unpacked to $APP_DIR"
-  else
-    echo "Application source already unpacked at $APP_DIR"
   fi
 fi
 
