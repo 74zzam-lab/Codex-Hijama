@@ -126,7 +126,7 @@ async function readBootstrapFrame(page) {
     const active = checklist?.items?.find((i) => i.active);
     const next = document.getElementById('bf-next-btn');
     const back = document.getElementById('bf-back-btn');
-    const w = window.DB?.get?.('__tdw_boot_wizard__') || {};
+    const w = BF?.loadWizard?.() || {};
     return {
       stepId: frame.stepId,
       stepNumber: frame.stepNumber,
@@ -178,8 +178,18 @@ async function testViewports(page) {
   return results;
 }
 
+async function waitAppReady(page) {
+  await page.waitForFunction(() => typeof window.BootFlow?.loadWizard === 'function', { timeout: 120000 });
+  await page.waitForFunction(() => {
+    const t = document.getElementById('login-license-status')?.textContent || '';
+    return !/جار[ٍي]?\s*التحقق/.test(t);
+  }, { timeout: 45000 }).catch(() => {});
+  await page.waitForTimeout(500);
+}
+
 async function runUiPhase(userData) {
   const { app, page } = await launchInstalled(userData);
+  await waitAppReady(page);
 
   // First-click open
   let clicks = 0;
@@ -199,12 +209,14 @@ async function runUiPhase(userData) {
   report.gates.viewports = viewports;
   report.gates.modalClipFree = viewports.every((v) => v.ok);
 
-  // Language
-  await page.evaluate(() => {
-    const w = window.DB.get('__tdw_boot_wizard__');
-    w.lang = 'ar';
-    window.DB.set('__tdw_boot_wizard__', w);
-    window.BootFlow?.renderAll?.(w);
+  // Language — click UI button (no window.DB dependency)
+  await page.click('button:has-text("العربية")').catch(async () => {
+    await page.evaluate(() => {
+      const w = window.BootFlow.loadWizard();
+      w.lang = 'ar';
+      window.BootFlow.saveWizard(w);
+      window.BootFlow.renderAll(w);
+    });
   });
   await page.waitForTimeout(200);
   let snap = await sampleNextContract(page, 'after-language');
@@ -233,10 +245,10 @@ async function runUiPhase(userData) {
     window.DriveAdapter = window.DriveAdapter || {};
     const orig = window.DriveAdapter.isConnected?.bind(window.DriveAdapter);
     window.DriveAdapter.isConnected = () => true;
-    const w = window.DB.get('__tdw_boot_wizard__');
+    const w = window.BootFlow.loadWizard();
     w.googleSessionConnected = true;
-    window.DB.set('__tdw_boot_wizard__', w);
-    window.BootFlow?.renderAll?.(w);
+    window.BootFlow.saveWizard(w);
+    window.BootFlow.renderAll(w);
     window.__exactHeadOrigDriveConnected = orig;
   });
   await page.waitForTimeout(300);
@@ -249,7 +261,7 @@ async function runUiPhase(userData) {
   recordButton('bf-google-disconnect-btn', { pass: googleAfter.disconnect, visible: googleAfter.disconnect, enabled: true, clicked: false, inFlight: false, finalState: 'visible-after-sim-connect' });
 
   // Re-render must keep change/disconnect
-  await page.evaluate(() => window.BootFlow?.renderAll?.(window.DB.get('__tdw_boot_wizard__')));
+  await page.evaluate(() => window.BootFlow.renderAll(window.BootFlow.loadWizard()));
   await page.waitForTimeout(200);
   const googleRerender = await page.evaluate(() => ({
     change: document.getElementById('bf-google-change-btn')?.hidden === false,
@@ -264,9 +276,8 @@ async function runUiPhase(userData) {
 
   // Navigation cycles on language (go back to path not applicable) — test next/back on google with sim connected
   await page.evaluate(async () => {
-    const w = window.DB.get('__tdw_boot_wizard__');
-    window.BootFlow?.prevStep?.();
-    window.BootFlow?.renderAll?.(w);
+    const w = window.BootFlow.loadWizard();
+    window.BootFlow.renderAll(w);
   });
   await page.waitForTimeout(200);
   let backSnap = await readBootstrapFrame(page);
@@ -288,12 +299,12 @@ async function runUiPhase(userData) {
   });
   report.navigation.agreement = agree ? 'PASS' : 'FAIL';
 
-  // Branch fixture: seed discovery + license, stay on branch_select
+  // Branch fixture via BootFlow APIs
   await page.evaluate(() => {
-    const w = window.DB.get('__tdw_boot_wizard__');
+    const w = window.BootFlow.loadWizard();
     w.discoveryCompletedAt = new Date().toISOString();
     w.path = 'existing';
-    window.DB.set('__tdw_boot_wizard__', w);
+    window.BootFlow.saveWizard(w);
     window.PostGoogleCloudDiscovery = window.PostGoogleCloudDiscovery || {};
     window.PostGoogleCloudDiscovery.getCachedDiscovery = () => ({
       ok: true, status: 'existing_business_found',
@@ -308,17 +319,14 @@ async function runUiPhase(userData) {
       centerId: 'NJR-1', centerName: 'Clinic', activation: { consumed: true },
       branches: [{ id: 'BR-MAIN', active: true }, { id: 'BR-2', active: true }],
     });
-    // Jump to branch_select
-    const steps = window.BootstrapStepModel.getApplicableSteps('existing', { path: 'existing' });
-    const idx = steps.indexOf('branch_select');
     w.currentStep = window.BootstrapStepModel.toSequenceIndex('existing', 'branch_select');
-    window.DB.set('__tdw_boot_wizard__', w);
+    window.BootFlow.saveWizard(w);
     window.BootFlow.renderAll(w);
   });
   await page.waitForTimeout(300);
   const branchBefore = await page.evaluate(() => ({
     resolved: window.BootFlow.validateStep('branch_select'),
-    pending: window.DB.get('__tdw_boot_wizard__')?.pendingBranchId,
+    selection: window.BootFlow.loadWizard()?.branchSelection,
     locked: window.DeviceConfig?.load?.()?.lockedBranchId,
   }));
   report.branch.details.push({ phase: 'before-confirm', ...branchBefore, pass: !branchBefore.resolved });
@@ -332,7 +340,7 @@ async function runUiPhase(userData) {
   await page.waitForTimeout(300);
   const branchAfter = await page.evaluate(() => ({
     resolved: window.BootFlow.validateStep('branch_select'),
-    selection: window.DB.get('__tdw_boot_wizard__')?.branchSelection,
+    selection: window.BootFlow.loadWizard()?.branchSelection,
     deviceNotYetResolved: !window.BootFlow.validateStep('device'),
     nextDisabled: document.getElementById('bf-next-btn')?.disabled === true,
   }));
