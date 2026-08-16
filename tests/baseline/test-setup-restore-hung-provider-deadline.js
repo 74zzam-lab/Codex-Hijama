@@ -7,7 +7,6 @@
  */
 const assert = require('assert');
 const path = require('path');
-const Module = require('module');
 
 const root = path.join(__dirname, '..', '..');
 const { createByteProgressWatchdog } = require(path.join(root, 'electron/byte-progress-watchdog.js'));
