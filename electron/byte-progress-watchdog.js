@@ -67,7 +67,7 @@ function createByteProgressWatchdog(options = {}) {
         disarm();
         return;
       }
-      if (Date.now() - lastRealByteAt > stallMs) {
+      if (Date.now() - lastRealByteAt >= stallMs) {
         const err = new Error('cloud_download_stalled');
         err.code = 'cloud_download_stalled';
         err.watchdog = getState();

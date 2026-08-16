@@ -269,14 +269,19 @@ async function getStatus() {
   }
 }
 
-async function findFolder(oauth2, name, parentId) {
+async function findFolder(oauth2, name, parentId, options = {}) {
   const q = [
     "mimeType='application/vnd.google-apps.folder'",
     `name='${name.replace(/'/g, "\\'")}'`,
     'trashed=false',
     parentId ? `'${parentId}' in parents` : "'root' in parents"
   ].join(' and ');
-  const res = await driveApi.listFiles(oauth2, { q, fields: 'files(id,name)', pageSize: 1 });
+  const res = await driveApi.listFiles(oauth2, {
+    q,
+    fields: 'files(id,name)',
+    pageSize: 1,
+    signal: options.signal,
+  });
   return res.files?.[0]?.id || null;
 }
 
@@ -291,12 +296,13 @@ async function findOrCreateFolder(oauth2, name, parentId) {
   return created.id;
 }
 
-async function resolveFolderPath(oauth2, parts, { create = false } = {}) {
+async function resolveFolderPath(oauth2, parts, { create = false, signal } = {}) {
   let parentId = null;
   for (const part of parts) {
+    if (signal?.aborted) throw driveApi.abortError(signal);
     parentId = create
       ? await findOrCreateFolder(oauth2, part, parentId)
-      : await findFolder(oauth2, part, parentId);
+      : await findFolder(oauth2, part, parentId, { signal });
     if (!parentId) return null;
   }
   return parentId;
@@ -360,9 +366,12 @@ async function uploadBuffer(oauth2, buffer, remotePath, mimeType, opts = {}) {
 async function downloadByPath(oauth2, remotePath, options = {}) {
   const parts = remotePath.split('/').filter(Boolean);
   const fileName = parts.pop();
+  const signal = options.signal;
+  if (signal?.aborted) throw driveApi.abortError(signal);
   // Read path must NOT create folders (side-effect free discovery).
-  const parentId = await resolveFolderPath(oauth2, parts, { create: false });
+  const parentId = await resolveFolderPath(oauth2, parts, { create: false, signal });
   if (parts.length && !parentId) return null;
+  if (signal?.aborted) throw driveApi.abortError(signal);
   const q = [
     `name='${fileName.replace(/'/g, "\\'")}'`,
     'trashed=false',
@@ -371,7 +380,8 @@ async function downloadByPath(oauth2, remotePath, options = {}) {
   const res = await driveApi.listFiles(oauth2, {
     q,
     fields: 'files(id,name,size,modifiedTime,md5Checksum)',
-    pageSize: 1
+    pageSize: 1,
+    signal,
   });
   const file = res.files?.[0];
   if (!file?.id) return null;
@@ -456,7 +466,9 @@ async function downloadSyncFile(filename, _provider, folder) {
 
 async function downloadBackup(remotePath, _provider, options = {}) {
   try {
-    const { oauth2 } = await getAuthedClient();
+    const signal = options.signal;
+    if (signal?.aborted) throw driveApi.abortError(signal);
+    const { oauth2 } = await driveApi.raceAbort(getAuthedClient(), signal);
     const res = await downloadByPath(oauth2, remotePath, options);
     if (!res) return { ok: false, message: 'الملف غير موجود', status: 404, httpStatus: 404 };
     if (res.streamedPath) {

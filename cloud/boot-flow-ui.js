@@ -2474,7 +2474,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       if (!result?.ok) {
         const err = result?.diagnostics?.error || 'discovery_failed';
         setStatusFromErr(
-          { code: err, error: err, message: err },
+          { code: err, error: err, message: `فشل الاكتشاف — ${err}` },
           err,
           {
             stepId: 'discovery',
@@ -2495,10 +2495,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       renderChecklist(getDisplayWizard(loadWizard()));
       return { ok: true, discovery: result };
     } catch (e) {
-      setStatusFromErr(e, e?.code || e?.error || 'discovery_failed', {
-        stepId: 'discovery',
-        retryHandler: () => runDiscoveryGate({ forceRefresh: true }),
-      });
+      const code = e?.code || e?.error || 'discovery_failed';
+      setStatusFromErr(
+        { ...(e && typeof e === 'object' ? e : {}), code, error: code, message: `فشل الاكتشاف — ${e?.message || code}` },
+        code,
+        {
+          stepId: 'discovery',
+          retryHandler: () => runDiscoveryGate({ forceRefresh: true }),
+        },
+      );
       return { ok: false, error: String(e && e.message || e), retryable: true };
     } finally {
       discoveryInFlight = false;

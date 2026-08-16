@@ -121,7 +121,7 @@
       outcome: OUTCOME.RETRYABLE,
       retryable: true,
       code: 'TDW-BOOT-RBAC-SESSION',
-      message: 'تعذر إكمال خطوة الإعداد لأن جلسة التشغيل غير جاهزة بعد. أعد فتح الإعداد وحاول مرة أخرى — إن استمرت المشكلة فهذا خلل في مسار الإعداد وليس في حساب Google.',
+      message: 'تعذر بدء فحص البيانات السحابية لأن جلسة الإعداد لم تكتمل بعد. أعد المحاولة من نفس الشاشة — إن استمر الخطأ فهذا خلل في مسار الإعداد وليس في حساب Google.',
     },
     rbac_session_unavailable: {
       outcome: OUTCOME.USER_ACTION_REQUIRED,
@@ -359,8 +359,18 @@
   }
 
   function lookupPolicy(code) {
-    const key = String(code || '').toLowerCase().replace(/^tdw-boot-[a-z0-9-]+-/i, '').replace(/-/g, '_');
-    const direct = CODE_POLICY[String(code || '')] || CODE_POLICY[key];
+    const raw = String(code || '');
+    const lower = raw.toLowerCase();
+    // Accept both snake codes and displayed TDW forms:
+    // rbac_session_required ↔ TDW-BOOT-RBAC_SESSION_REQUIRED ↔ TDW-BOOT-RBAC-SESSION
+    const stripped = lower.replace(/^tdw[-_]?boot[-_]?/, '').replace(/-/g, '_');
+    const key = stripped.replace(/^tdw_boot_/, '');
+    const byPolicyCode = Object.values(CODE_POLICY).find((p) => String(p.code || '').toLowerCase() === lower);
+    const direct = CODE_POLICY[raw]
+      || CODE_POLICY[lower]
+      || CODE_POLICY[key]
+      || CODE_POLICY[stripped]
+      || byPolicyCode;
     if (direct) return direct;
     if (/cancel|abort|user.?denied/.test(key)) {
       return { outcome: OUTCOME.CANCELLED, cancelled: true, code: `TDW-BOOT-${key.toUpperCase().slice(0, 24)}` };

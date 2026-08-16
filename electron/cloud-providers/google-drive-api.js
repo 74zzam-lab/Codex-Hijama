@@ -19,10 +19,31 @@ function abortError(signal) {
   return err;
 }
 
+/** Reject as soon as AbortSignal aborts — covers awaits that ignore signal (token refresh, lookups). */
+function raceAbort(promise, signal) {
+  if (!signal) return promise;
+  if (signal.aborted) return Promise.reject(abortError(signal));
+  return new Promise((resolve, reject) => {
+    const onAbort = () => {
+      cleanup();
+      reject(abortError(signal));
+    };
+    const cleanup = () => {
+      try { signal.removeEventListener('abort', onAbort); } catch { /* ignore */ }
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    Promise.resolve(promise).then(
+      (value) => { cleanup(); resolve(value); },
+      (error) => { cleanup(); reject(error); },
+    );
+  });
+}
+
 async function driveFetch(oauth2, url, options = {}) {
   const signal = options.signal;
   if (signal?.aborted) throw abortError(signal);
-  const token = await getAccessToken(oauth2);
+  const token = await raceAbort(getAccessToken(oauth2), signal);
+  if (signal?.aborted) throw abortError(signal);
   const res = await fetch(url, {
     ...options,
     signal,
@@ -60,7 +81,7 @@ function buildMultipartBody(metadata, mimeType, data) {
   };
 }
 
-async function listFiles(oauth2, { q, fields, pageSize = 100, pageToken, orderBy }) {
+async function listFiles(oauth2, { q, fields, pageSize = 100, pageToken, orderBy, signal }) {
   const params = new URLSearchParams({
     q,
     fields: fields || 'files(id,name,size,modifiedTime,md5Checksum,mimeType),nextPageToken',
@@ -69,7 +90,7 @@ async function listFiles(oauth2, { q, fields, pageSize = 100, pageToken, orderBy
   });
   if (pageToken) params.set('pageToken', pageToken);
   if (orderBy) params.set('orderBy', orderBy);
-  return driveFetch(oauth2, `${DRIVE}/files?${params}`);
+  return driveFetch(oauth2, `${DRIVE}/files?${params}`, signal ? { signal } : {});
 }
 
 async function createFolder(oauth2, metadata) {
@@ -242,5 +263,7 @@ module.exports = {
   downloadFileWithProgress,
   deleteFile,
   getAbout,
-  getUserEmail
+  getUserEmail,
+  raceAbort,
+  abortError,
 };

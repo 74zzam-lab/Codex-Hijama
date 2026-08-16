@@ -77,6 +77,18 @@ async function check(name, operation) {
     assert.match(n.message, /جلسة/);
   });
 
+  await check('BUG-1 TDW-BOOT-RBAC_SESSION_REQUIRED aliases to policy message', async () => {
+    loadFresh('cloud/bootstrap-failure-policy-contract.js');
+    const n = global.BootstrapFailurePolicyContract.normalizeFailure(
+      { error: 'TDW-BOOT-RBAC_SESSION_REQUIRED' },
+      { stepId: 'discovery' },
+    );
+    assert.match(n.code, /RBAC/i);
+    assert.doesNotMatch(n.message, /غير متوقع/);
+    assert.strictEqual(n.userActionRequired, false);
+    assert.strictEqual(n.retryable, true);
+  });
+
   await check('BUG-2 Main ByteProgressWatchdog aborts after stall without first byte', async () => {
     const { createByteProgressWatchdog } = loadFresh('electron/byte-progress-watchdog.js');
     const events = [];
@@ -112,6 +124,7 @@ async function check(name, operation) {
     const api = fs.readFileSync(path.join(root, 'electron/cloud-providers/google-drive-api.js'), 'utf8');
     assert.match(api, /signal/);
     assert.match(api, /abortError/);
+    assert.match(api, /raceAbort/);
     const ipc = fs.readFileSync(path.join(root, 'electron/backup-v2-ipc.js'), 'utf8');
     assert.match(ipc, /createByteProgressWatchdog/);
     assert.match(ipc, /signal:\s*watchdog\.signal/);
@@ -119,6 +132,27 @@ async function check(name, operation) {
     const drive = fs.readFileSync(path.join(root, 'electron/cloud-providers/google-drive.js'), 'utf8');
     assert.match(drive, /stalled/);
     assert.match(drive, /options\.signal/);
+    assert.match(drive, /raceAbort\(getAuthedClient/);
+  });
+
+  await check('BUG-2 raceAbort settles hung pre-download await when watchdog aborts', async () => {
+    const api = loadFresh('electron/cloud-providers/google-drive-api.js');
+    const { createByteProgressWatchdog } = loadFresh('electron/byte-progress-watchdog.js');
+    const wd = createByteProgressWatchdog({ stallMs: 60 });
+    wd.arm();
+    const hung = new Promise(() => { /* never settles */ });
+    const started = Date.now();
+    let err = null;
+    try {
+      await api.raceAbort(hung, wd.signal);
+    } catch (e) {
+      err = e;
+    }
+    const elapsed = Date.now() - started;
+    assert.ok(err, 'raceAbort must reject');
+    assert.match(String(err.code || err.message), /stall|abort/i);
+    assert.ok(elapsed < 500, `abort must settle quickly, got ${elapsed}ms`);
+    assert.strictEqual(wd.getState().aborted, true);
   });
 
   await check('BUG-2 provider abort maps to structured cloud_download_stalled', async () => {
