@@ -350,8 +350,17 @@ async function run() {
   const om = await orgMismatch.PublicationGateService.publishLicense(orgMismatch.PublicationGateService.readLocalContext());
   check(!om.ok, '34 org target mismatch');
 
+  // Publication runs after the branch step, so an EXISTING journey must carry
+  // the operator's explicit branch selection (no implicit sole-branch resolve).
+  const explicitBranchSelection = {
+    branchId: 'BR-1', provenance: 'user', organizationId: 'CTR-S13', at: '2026-08-16T09:00:00.000Z',
+  };
   const existing = baseEnv({
-    wizard: { path: 'existing', cloudDiscovery: { result: { status: 'existing_business_found' } } },
+    wizard: {
+      path: 'existing',
+      branchSelection: explicitBranchSelection,
+      cloudDiscovery: { result: { status: 'existing_business_found' } },
+    },
   });
   existing._remoteStore.set('NajjarTech/CTR-S13/License/license.json', JSON.stringify(existing._snap.license));
   const exPub = await existing.PublicationGateService.runSetupPublication();
@@ -359,7 +368,12 @@ async function run() {
   check(!exPub?.artifacts?.settings?.skippedPublish === false || exPub?.artifacts?.settings?.skippedPublish === true || !exPub.artifacts?.settings, '38b existing skips full settings republish');
 
   const useExisting = baseEnv({
-    wizard: { path: 'new', forkDecision: 'use_existing', cloudDiscovery: { result: { status: 'existing_business_found' } } },
+    wizard: {
+      path: 'new',
+      forkDecision: 'use_existing',
+      branchSelection: explicitBranchSelection,
+      cloudDiscovery: { result: { status: 'existing_business_found' } },
+    },
   });
   useExisting._remoteStore.set('NajjarTech/CTR-S13/License/license.json', JSON.stringify(useExisting._snap.license));
   const ue = await useExisting.PublicationGateService.runSetupPublication();

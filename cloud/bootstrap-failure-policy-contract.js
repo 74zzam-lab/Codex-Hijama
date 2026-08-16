@@ -199,6 +199,61 @@
       code: 'TDW-BOOT-MAIN-UNREPORTED',
       message: 'فشلت عملية داخلية في العملية الرئيسية دون سبب مُبلَّغ. راجع ملف التشخيص ثم أعد المحاولة.',
     },
+    // Structured setup-restore codes returned by the Main process.
+    backup_password_invalid: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RESTORE-PASSWORD',
+      message: 'كلمة مرور النسخة غير صحيحة.',
+    },
+    backup_download_forbidden: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RESTORE-FORBIDDEN',
+      message: 'لا يملك حساب Google الحالي صلاحية الوصول إلى ملف النسخة.',
+    },
+    backup_file_not_found: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RESTORE-NOT-FOUND',
+      message: 'ملف النسخة لم يعد موجودًا على Google Drive.',
+    },
+    backup_download_stalled: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-RESTORE-STALLED',
+      message: 'توقف تنزيل النسخة ولم تصل بيانات جديدة. تحقق من الاتصال ثم أعد المحاولة.',
+    },
+    backup_size_mismatch: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-RESTORE-SIZE-MISMATCH',
+      message: 'اكتمل التنزيل لكن حجم الملف لا يطابق النسخة المسجلة.',
+    },
+    backup_checksum_failed: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-RESTORE-CHECKSUM',
+      message: 'فشل التحقق من سلامة النسخة.',
+    },
+    backup_decrypt_failed: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RESTORE-DECRYPT',
+      message: 'تعذر فك تشفير النسخة.',
+    },
+    backup_archive_invalid: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RESTORE-ARCHIVE',
+      message: 'ملف النسخة غير صالح أو تالف.',
+    },
+    backup_sqlite_integrity_failed: {
+      outcome: OUTCOME.FATAL,
+      fatal: true,
+      code: 'TDW-BOOT-RESTORE-SQLITE-INTEGRITY',
+      message: 'تم فك النسخة لكن قاعدة البيانات المستعادة لم تجتز فحص السلامة.',
+    },
     branch_selection_required: {
       outcome: OUTCOME.USER_ACTION_REQUIRED,
       userActionRequired: true,

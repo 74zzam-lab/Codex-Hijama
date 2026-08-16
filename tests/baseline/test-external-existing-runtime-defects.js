@@ -149,9 +149,9 @@ async function main() {
   await check('BUG-EXT-013 a single branch is never auto-selected', () => {
     // The older working build required an explicit bind click even with one
     // branch; auto-returning the sole branch is the reported defect.
-    assert.doesNotMatch(bootSrc, /if \(branches\.length === 1\) return String\(branches\[0\]\.id/);
-    assert.match(bootSrc, /function getSelectedBranchId\(\)\s*\{\s*return currentBranchSelection\(\)\?\.branchId \|\| '';/);
-    assert.match(bootSrc, /function branchStepResolved\(\)[\s\S]{0,240}return !!currentBranchSelection\(\);/);
+    // EXISTING must never resolve from a sole branch; NEW creates its branch.
+    assert.match(bootSrc, /function getSelectedBranchId\(\)[\s\S]{0,320}if \(isExistingCustomerPath\(\)\) return '';/);
+    assert.match(bootSrc, /function branchStepResolved\(\)[\s\S]{0,420}if \(isExistingCustomerPath\(\)\) return !!currentBranchSelection\(\);/);
   });
 
   await check('BUG-EXT-013 local data_discovery echo is not cloud authority', () => {

@@ -1,23 +1,23 @@
 {
-  "generatedAt": "2026-08-15T12:03:27.825Z",
-  "totalReachableRawCodes": 83,
+  "generatedAt": "2026-08-16T10:32:03.620Z",
+  "totalReachableRawCodes": 91,
   "genericFallbacksRemaining": 0,
-  "falseRedPaths": 0,
   "policy": {
-    "redOnlyForFailingOperation": "USER_ACTION_REQUIRED and CANCELLED are never rendered red",
-    "ipcFidelity": "Main encodes cause via [TDWERR code=...]; renderer decodes before classification",
+    "red": "RETRYABLE or FATAL operational failure only",
+    "notRed": "REQUIRED / USER_ACTION_REQUIRED / CANCELLED / in-progress",
+    "ipcFidelity": "Main returns a structured result; no Electron wrapper collapse",
     "unclassified": "free text can never become a diagnostic code"
   },
   "outcomeCounts": {
-    "RETRYABLE": 34,
+    "RETRYABLE": 37,
+    "USER_ACTION_REQUIRED": 43,
     "CANCELLED": 3,
-    "USER_ACTION_REQUIRED": 39,
-    "FATAL": 7
+    "FATAL": 8
   },
-  "redCount": 41,
-  "userActionCount": 39,
+  "redCount": 45,
+  "userActionCount": 43,
   "cancelledCount": 3,
-  "fatalCount": 7,
+  "fatalCount": 8,
   "codes": [
     {
       "rawCode": "activation_defaults_failed",
@@ -31,6 +31,17 @@
       "messageAr": "تعذّر تطبيق إعدادات التفعيل الافتراضية. أعد المحاولة."
     },
     {
+      "rawCode": "backup_archive_invalid",
+      "diagnosticCode": "TDW-BOOT-RESTORE-ARCHIVE",
+      "outcome": "USER_ACTION_REQUIRED",
+      "red": false,
+      "retryable": false,
+      "userActionRequired": true,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "ملف النسخة غير صالح أو تالف."
+    },
+    {
       "rawCode": "backup_cancelled",
       "diagnosticCode": "TDW-BOOT-RESTORE-CANCEL",
       "outcome": "CANCELLED",
@@ -42,6 +53,61 @@
       "messageAr": "أُلغيت العملية. لم تتغيّر بياناتك المحلية."
     },
     {
+      "rawCode": "backup_checksum_failed",
+      "diagnosticCode": "TDW-BOOT-RESTORE-CHECKSUM",
+      "outcome": "RETRYABLE",
+      "red": true,
+      "retryable": true,
+      "userActionRequired": false,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "فشل التحقق من سلامة النسخة."
+    },
+    {
+      "rawCode": "backup_decrypt_failed",
+      "diagnosticCode": "TDW-BOOT-RESTORE-DECRYPT",
+      "outcome": "USER_ACTION_REQUIRED",
+      "red": false,
+      "retryable": false,
+      "userActionRequired": true,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "تعذر فك تشفير النسخة."
+    },
+    {
+      "rawCode": "backup_download_forbidden",
+      "diagnosticCode": "TDW-BOOT-RESTORE-FORBIDDEN",
+      "outcome": "USER_ACTION_REQUIRED",
+      "red": false,
+      "retryable": false,
+      "userActionRequired": true,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "لا يملك حساب Google الحالي صلاحية الوصول إلى ملف النسخة."
+    },
+    {
+      "rawCode": "backup_download_stalled",
+      "diagnosticCode": "TDW-BOOT-RESTORE-STALLED",
+      "outcome": "RETRYABLE",
+      "red": true,
+      "retryable": true,
+      "userActionRequired": false,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "توقف تنزيل النسخة ولم تصل بيانات جديدة. تحقق من الاتصال ثم أعد المحاولة."
+    },
+    {
+      "rawCode": "backup_file_not_found",
+      "diagnosticCode": "TDW-BOOT-RESTORE-NOT-FOUND",
+      "outcome": "USER_ACTION_REQUIRED",
+      "red": false,
+      "retryable": false,
+      "userActionRequired": true,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "ملف النسخة لم يعد موجودًا على Google Drive."
+    },
+    {
       "rawCode": "backup_password_invalid",
       "diagnosticCode": "TDW-BOOT-RESTORE-PASSWORD",
       "outcome": "USER_ACTION_REQUIRED",
@@ -50,7 +116,7 @@
       "userActionRequired": true,
       "fatal": false,
       "cancelled": false,
-      "messageAr": "تعذّر فك تشفير النسخة. تأكّد من كلمة مرور النسخة ثم أعد المحاولة."
+      "messageAr": "كلمة مرور النسخة غير صحيحة."
     },
     {
       "rawCode": "backup_password_required",
@@ -62,6 +128,28 @@
       "fatal": false,
       "cancelled": false,
       "messageAr": "أدخل كلمة مرور النسخة الاحتياطية (Backup V2) لهذا الجهاز الجديد."
+    },
+    {
+      "rawCode": "backup_size_mismatch",
+      "diagnosticCode": "TDW-BOOT-RESTORE-SIZE-MISMATCH",
+      "outcome": "RETRYABLE",
+      "red": true,
+      "retryable": true,
+      "userActionRequired": false,
+      "fatal": false,
+      "cancelled": false,
+      "messageAr": "اكتمل التنزيل لكن حجم الملف لا يطابق النسخة المسجلة."
+    },
+    {
+      "rawCode": "backup_sqlite_integrity_failed",
+      "diagnosticCode": "TDW-BOOT-RESTORE-SQLITE-INTEGRITY",
+      "outcome": "FATAL",
+      "red": true,
+      "retryable": false,
+      "userActionRequired": false,
+      "fatal": true,
+      "cancelled": false,
+      "messageAr": "تم فك النسخة لكن قاعدة البيانات المستعادة لم تجتز فحص السلامة."
     },
     {
       "rawCode": "bootstrap_unavailable",

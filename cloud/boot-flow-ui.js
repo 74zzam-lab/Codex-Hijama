@@ -148,6 +148,7 @@
   let checklistStepError = null;
   let failureContextSnapshot = { googleEmail: null, branchId: null, restoreChoice: null, organizationId: null };
   let lastGateRetryHandler = null;
+  let renderGeneration = 0;
 
   function isCriticalOpInFlight() {
     if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight
@@ -594,49 +595,33 @@
   }
 
   /**
-   * The device already completed registration in THIS organization. That is a
-   * real prior user action, so it keeps a resumed/restarted journey valid without
-   * re-selecting. It is deliberately NOT enough on a device that has not
-   * registered yet — an existing customer on a new device must never inherit an
-   * old device's branch silently.
-   */
-  function deviceBoundBranchSelection() {
-    const cfg = global.DeviceConfig?.load?.() || {};
-    const branchId = String(cfg.lockedBranchId || '').trim();
-    if (!branchId || !cfg.deviceUuid || !cfg.deviceName) return null;
-    const orgId = currentOrganizationId();
-    const cfgOrg = String(cfg.centerId || '').trim();
-    if (orgId && cfgOrg && orgId !== cfgOrg) return null;
-    if (!authoritativeBootstrapBranches().some((b) => String(b.id) === branchId)) return null;
-    return { branchId, provenance: 'device_bound', organizationId: cfgOrg || orgId || null };
-  }
-
-  /**
-   * Validated branch selection or null. Provenance is the authority: only a real
-   * user click ('user') or a branch this journey created ('created') counts.
-   * `completedSteps` is NOT accepted as proof — it is derived state and was the
-   * reason a stale wizard could mark the gate DONE with no user action.
+   * Validated branch selection or null.
+   *
+   * Only a current-context user action counts. Explicitly NOT accepted as proof:
+   * a sole eligible branch, a bare pendingBranchId/selectedBranchId,
+   * DeviceConfig.lockedBranchId, or `completedSteps` history. The selection is
+   * bound to organizationId + googleAccountKey + branchId and dies when any of
+   * them changes.
    */
   function currentBranchSelection() {
     const w = loadWizard();
     const sel = w.branchSelection;
-    if (!sel || typeof sel !== 'object') return deviceBoundBranchSelection();
+    if (!sel || typeof sel !== 'object') return null;
     const branchId = String(sel.branchId || '').trim();
     const provenance = String(sel.provenance || '');
-    if (!branchId || (provenance !== 'user' && provenance !== 'created')) {
-      return deviceBoundBranchSelection();
-    }
+    if (!branchId || (provenance !== 'user' && provenance !== 'created')) return null;
     const orgId = currentOrganizationId();
-    if (orgId && sel.organizationId && String(sel.organizationId) !== orgId) return deviceBoundBranchSelection();
+    if (orgId && sel.organizationId && String(sel.organizationId) !== orgId) return null;
     const account = googleAccountKey();
-    if (account && sel.googleAccountKey && String(sel.googleAccountKey) !== account) {
-      return deviceBoundBranchSelection();
-    }
+    if (account && sel.googleAccountKey && String(sel.googleAccountKey) !== account) return null;
     const branches = authoritativeBootstrapBranches();
-    if (branches.length && !branches.some((b) => String(b.id) === branchId)) {
-      return deviceBoundBranchSelection();
-    }
-    return { branchId, provenance, organizationId: sel.organizationId || orgId || null };
+    if (branches.length && !branches.some((b) => String(b.id) === branchId)) return null;
+    return {
+      branchId,
+      provenance,
+      organizationId: sel.organizationId || orgId || null,
+      googleAccountKey: sel.googleAccountKey || account || null,
+    };
   }
 
   function recordBranchSelection(branchId, provenance) {
@@ -741,12 +726,20 @@
   }
 
   /**
-   * The branch this device will use. Never falls back to "the only branch" —
-   * auto-returning a sole branch is what let device registration proceed with
-   * BR-MAIN that the operator never chose.
+   * The branch this device will use.
+   *
+   * On the EXISTING path this never falls back to "the only branch" —
+   * auto-returning a sole branch is what let device registration proceed with a
+   * BR-MAIN the operator never chose. On the NEW path the branch is created by
+   * the operator inside this journey, so an existing sole branch is itself the
+   * product of an explicit action.
    */
   function getSelectedBranchId() {
-    return currentBranchSelection()?.branchId || '';
+    const selection = currentBranchSelection();
+    if (selection) return selection.branchId;
+    if (isExistingCustomerPath()) return '';
+    const branches = authoritativeBootstrapBranches();
+    return branches.length === 1 ? String(branches[0].id || '') : '';
   }
 
   /**
@@ -949,14 +942,20 @@
   }
 
   /**
-   * Branch gate. The older working build completed this step only after the
+   * Branch gate.
+   *
+   * EXISTING: the older working build completed this step only after the
    * operator clicked to bind the device to a branch — including when exactly one
-   * branch existed. That requirement is preserved here: a provable selection is
-   * always needed, regardless of how many branches were recovered.
+   * branch existed. A provable current-context selection is therefore always
+   * required, regardless of how many branches were recovered.
+   *
+   * NEW: the branch is created by the operator during this journey, so its
+   * existence already carries the explicit action.
    */
   function branchStepResolved() {
     if (!hasBranch()) return false;
-    return !!currentBranchSelection();
+    if (isExistingCustomerPath()) return !!currentBranchSelection();
+    return !!getSelectedBranchId();
   }
 
   function hasOwnerPasswordAccount() {
@@ -2077,16 +2076,72 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (pct) pct.textContent = `${model.progress.percent}% — ${model.progress.done}/${model.progress.total}`;
   }
 
+  /**
+   * State the step model needs to decide which conditional steps apply.
+   * Derived from the same gates the checklist uses, so all consumers agree.
+   */
+  function stepModelState(w) {
+    w = w || loadWizard();
+    return {
+      path: w.path,
+      forkDecision: w.forkDecision,
+      currentStepId: currentStepId(w),
+      needsPathFork: needsPathForkDecision(),
+      pathDecisionResolved: hasPathDecisionResolved(),
+      ownerAuthResolved: ownerAuthStepResolved(),
+      ownerAuthRequired: hasOwnerPasswordAccount() && !ownerAuthStepResolved(),
+    };
+  }
+
+  /** Resolve the step id for a wizard without recursing through the model state. */
+  function currentStepId(w) {
+    w = w || loadWizard();
+    const sequence = stepsFor(w.path);
+    const idx = Number(w.currentStep);
+    return sequence[Number.isFinite(idx) ? Math.min(Math.max(idx, 0), sequence.length - 1) : 0] || sequence[0] || null;
+  }
+
+  function stepModel() {
+    return global.BootstrapStepModel;
+  }
+
+  function applicableSteps(w) {
+    w = w || loadWizard();
+    return stepModel()?.getApplicableSteps?.(w.path, stepModelState(w)) || stepsFor(w.path);
+  }
+
+  /** Single description of the current frame — used by every renderer. */
+  function describeCurrentStep(w) {
+    w = w || getDisplayWizard(loadWizard());
+    const model = stepModel();
+    const stepId = currentStepId(w);
+    if (!model?.describeStep) {
+      const steps = stepsFor(w.path);
+      return {
+        path: w.path,
+        stepId,
+        stepNumber: steps.indexOf(stepId) + 1,
+        totalSteps: steps.length,
+        applicableSteps: steps,
+        nextStepId: steps[steps.indexOf(stepId) + 1] || null,
+        previousStepId: steps[steps.indexOf(stepId) - 1] || null,
+      };
+    }
+    return model.describeStep(w.path, stepModelState(w), stepId);
+  }
+
   function renderProgress(w) {
     w = getDisplayWizard(w);
-    const steps = stepsFor(w.path);
+    const frame = describeCurrentStep(w);
+    const steps = frame.applicableSteps;
+    const currentIdx = steps.indexOf(frame.stepId);
     const host = document.getElementById('bf-progress');
     const stepper = document.getElementById('bf-stepper');
     if (host) {
       host.innerHTML = steps.map((s, i) => {
         let cls = 'bf-dot';
         if (w.completedSteps.includes(s)) cls += ' done';
-        else if (i === w.currentStep) cls += ' current';
+        else if (i === currentIdx) cls += ' current';
         return `<div class="${cls}" title="${STEP_LABELS[s] || s}"></div>`;
       }).join('');
     }
@@ -2094,8 +2149,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       stepper.innerHTML = steps.map((s, i) => {
         let state = 'pending';
         if (w.completedSteps.includes(s)) state = 'done';
-        else if (i === w.currentStep) state = 'current';
-        const cur = i === w.currentStep ? 'step' : undefined;
+        else if (i === currentIdx) state = 'current';
+        const cur = i === currentIdx ? 'step' : undefined;
         const short = STEP_SHORT[s] || STEP_LABELS[s] || s;
         const full = STEP_LABELS[s] || s;
         return `<li data-state="${state}" title="${full}" ${cur ? 'aria-current="step"' : ''}>${short}</li>`;
@@ -2103,11 +2158,11 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     }
     renderChecklist(w);
     const meta = document.getElementById('bf-step-meta');
-    if (meta) meta.textContent = `الخطوة ${w.currentStep + 1} من ${steps.length}`;
+    if (meta) meta.textContent = `الخطوة ${frame.stepNumber || 1} من ${frame.totalSteps}`;
     const label = document.getElementById('bf-step-label');
-    if (label) label.textContent = STEP_LABELS[steps[w.currentStep]] || '';
+    if (label) label.textContent = STEP_LABELS[frame.stepId] || '';
     const hint = document.getElementById('bf-step-hint');
-    if (hint) hint.textContent = STEP_HINTS[steps[w.currentStep]] || '';
+    if (hint) hint.textContent = STEP_HINTS[frame.stepId] || '';
     const title = document.getElementById('bf-wizard-title');
     if (title) title.textContent = w.path === PATHS.NEW ? 'إعداد عميل جديد' : 'جهاز / عميل حالي';
   }
@@ -2116,12 +2171,12 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const nav = document.getElementById('bf-step-nav');
     if (!nav) return;
     nav.innerHTML = '';
-    const steps = stepsFor(w.path);
-    const step = steps[w.currentStep];
+    const frame = describeCurrentStep(getDisplayWizard(w));
+    const step = frame.stepId;
     const prev = document.createElement('button');
     prev.type = 'button';
     prev.className = 'btn btn-ghost btn-sm';
-    prev.textContent = w.currentStep > 0 ? '◀ السابق' : '◀ مرحباً بك';
+    prev.textContent = frame.previousStepId ? '◀ السابق' : '◀ مرحباً بك';
     prev.onclick = () => prevStep();
     nav.appendChild(prev);
 
@@ -2138,6 +2193,31 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     next.disabled = !validateStep(step);
     next.onclick = () => advanceWizard();
     nav.appendChild(next);
+  }
+
+  /**
+   * Render one frame from a single wizard snapshot and bump the generation, so
+   * a late async callback from a previous step can detect that it is stale
+   * before touching the DOM. Prevents header/body/checklist showing different
+   * steps.
+   */
+  function renderAll(w) {
+    w = getDisplayWizard(w || loadWizard());
+    renderGeneration += 1;
+    renderProgress(w);
+    renderStepUI(w);
+    renderNavButtons(w);
+    return renderGeneration;
+  }
+
+  function currentRenderGeneration() {
+    return renderGeneration;
+  }
+
+  function isRenderCurrent(generation, stepId) {
+    if (generation !== renderGeneration) return false;
+    if (stepId && currentStepId() !== stepId) return false;
+    return true;
   }
 
   function addBtn(host, label, cls, handler, disabled) {
@@ -3079,8 +3159,12 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const orgs = result.organizationCandidates?.length || 0;
           const lics = result.licenseCandidates?.length || 0;
           const backups = result.backupCandidates?.length || 0;
-          const branches = result.branchCandidates?.length || 0;
-          summaryHost.textContent = `الحالة: ${result.status || '—'} · مؤسسات: ${orgs} · تراخيص: ${lics} · نسخ: ${backups} · فروع: ${branches}`;
+          // Show unique cloud-authorized branches, not raw evidence rows. The
+          // raw list holds one entry per piece of evidence (including the
+          // local data_discovery echo), which is why a single branch used to
+          // be reported as "فروع: 2".
+          const uniqueBranches = eligibleBranchCount();
+          summaryHost.textContent = `الحالة: ${result.status || '—'} · مؤسسات: ${orgs} · تراخيص: ${lics} · نسخ: ${backups} · فروع: ${uniqueBranches}`;
         };
         addBtn(actions, discoveryInFlight ? '⏳ جارٍ الاكتشاف...' : '🔍 إعادة الفحص', 'btn-primary', async () => {
           if (discoveryInFlight) return;
@@ -3516,18 +3600,32 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const pctLabel = snap.indeterminate ? '…' : `${snap.percent || 0}%`;
           const barWidth = snap.indeterminate ? '100%' : `${snap.percent || 0}%`;
           const barPulse = snap.indeterminate ? 'animation:bf-indeterminate 1.2s ease-in-out infinite alternate' : '';
+          // Overall restore progress and file download are reported separately.
+          // Weighted stage progress must never be shown where it reads as
+          // network download progress (this is what rendered a fake 13%).
+          const bytesDone = Number(snap.downloadedBytes) || 0;
+          const bytesTotal = Number(snap.totalBytes) || 0;
+          const isDownloadStage = snap.stageId === 'download_db' || snap.stageId === 'download_state';
+          let downloadLine = '';
+          if (isDownloadStage || bytesDone > 0) {
+            if (bytesDone <= 0) {
+              downloadLine = `<div class="bf-source-meta" style="margin-top:4px">تنزيل الملف: بدء تنزيل النسخة...${bytesTotal ? ` (الحجم المتوقع ${Discovery.formatBytes(bytesTotal)})` : ''}</div>`;
+            } else {
+              const bytePct = bytesTotal ? Math.min(100, Math.round((bytesDone / bytesTotal) * 100)) : null;
+              downloadLine = `<div class="bf-source-meta" style="margin-top:4px">تنزيل الملف: <span dir="ltr">${Discovery.formatBytes(bytesDone)}${bytesTotal ? ` / ${Discovery.formatBytes(bytesTotal)}` : ''}</span>${bytePct != null ? ` — ${bytePct}%` : ''}</div>`;
+            }
+          }
           progressHost.innerHTML = `<div class="bf-restore-progress" dir="rtl">
             <div style="display:flex;justify-content:space-between;gap:8px;font-size:12px">
-              <span>${stageLine}</span>
+              <span>التقدم الكلي: ${stageLine}</span>
               <strong dir="ltr">${pctLabel}</strong>
             </div>
             <div class="bar"><i style="width:${barWidth};opacity:${snap.indeterminate ? 0.45 : 1};${barPulse}"></i></div>
+            ${downloadLine}
             <div class="bf-source-meta" style="margin-top:6px">
               المنقضي: ${Math.round((snap.elapsedMs || 0) / 1000)}ث
               ${snap.budgetMs ? ` / ~${Math.round(snap.budgetMs / 1000)}ث` : ''}
-              ${snap.foundCount ? ` · وُجد: ${snap.foundCount}` : ''}
-              ${snap.downloadedBytes ? ` · منزّل: ${Discovery.formatBytes(snap.downloadedBytes)}` : ''}
-              ${snap.totalBytes ? ` / ${Discovery.formatBytes(snap.totalBytes)}` : ''}<br>
+              ${snap.foundCount ? ` · وُجد: ${snap.foundCount}` : ''}<br>
               آخر نشاط: ${snap.lastActivity || '—'}
               ${snap.diagnosticId ? `<br>Diagnostic ID: <code dir="ltr">${snap.diagnosticId}</code>` : ''}
             </div>
@@ -3957,10 +4055,21 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     renderStepUI(w);
   }
 
+  /**
+   * Back moves to the previous APPLICABLE step, never `currentStep - 1`, which
+   * could land on a conditional step that is not part of this journey. Going
+   * back is navigation only: it never rewrites committed data and never clears
+   * a committed choice.
+   */
   function prevStep() {
     const w = loadWizard();
     if (!w.path) return;
-    if (w.currentStep <= 0) {
+    const model = stepModel();
+    const state = stepModelState(w);
+    const previousId = model?.getPreviousStep
+      ? model.getPreviousStep(w.path, state, currentStepId(w))
+      : stepsFor(w.path)[w.currentStep - 1] || null;
+    if (!previousId) {
       w.path = null;
       w.currentStep = 0;
       saveWizard(w);
@@ -3968,18 +4077,17 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       setStatus('');
       return;
     }
-    w.currentStep -= 1;
+    w.currentStep = stepsFor(w.path).indexOf(previousId);
     w.reviewStepIndex = w.currentStep;
     saveWizard(w);
-    renderProgress(w);
-    renderStepUI(w);
+    renderAll(w);
     setStatus('');
   }
 
   async function advanceWizard() {
     let w = loadWizard();
     const steps = stepsFor(w.path);
-    const step = steps[w.currentStep];
+    const step = currentStepId(w);
     if (!validateStep(step)) {
       if (isStepOperationInFlight(step) || (step === 'discovery' && discoveryInFlight)) {
         setStatus('⏳ انتظر اكتمال العملية الجارية قبل المتابعة', false);
@@ -3992,16 +4100,24 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       setStatusFromErr({ message: 'step_required' }, 'step_required', { stepId: step });
       return;
     }
-    if (w.currentStep >= steps.length - 1) {
+    const model = stepModel();
+    const nextId = model?.getNextStep
+      ? model.getNextStep(w.path, stepModelState(w), step)
+      : steps[steps.indexOf(step) + 1] || null;
+    if (!nextId) {
       const completed = await completeBootstrapTransition({ close: true });
       if (!completed?.ok) {
         setStatus('⚠️ لم تكتمل جميع متطلبات الإعداد', true);
       }
       return;
     }
-    w = completeCurrentStep(w);
-    renderProgress(w);
-    renderStepUI(w);
+    // Advance to the next APPLICABLE step; never to `currentStep + 1`, and
+    // never using historical completedSteps as the reason to skip a gate.
+    if (!w.completedSteps.includes(step)) w.completedSteps.push(step);
+    delete w.reviewStepIndex;
+    w.currentStep = steps.indexOf(nextId);
+    w = saveWizard(w);
+    renderAll(w);
     setStatus('');
   }
 
@@ -4211,6 +4327,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     LEGACY_EXISTING_STEPS_PRE_STAGE11,
     LEGACY_EXISTING_STEPS_PRE_STAGE12,
     LEGACY_EXISTING_STEPS_PRE_STAGE16,
+    describeCurrentStep,
+    currentStepId,
+    advanceWizard,
+    prevStep,
+    applicableSteps,
+    stepModelState,
+    renderAll,
+    currentRenderGeneration,
+    isRenderCurrent,
     branchStepResolved,
     isBranchExplicitlySelected,
     currentBranchSelection,

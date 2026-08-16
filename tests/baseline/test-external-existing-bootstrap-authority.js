@@ -459,8 +459,9 @@ function branchTestsPart3() {
 function branchTestsPart4() {
   console.log('\n-- BUG-ORG/BRANCH: legitimate resume --');
 
-  // 9. A device that already completed registration in THIS org stays valid
-  //    across restart without re-selecting (matches old build's device bind).
+  // 9. DeviceConfig inference must NEVER satisfy the branch gate, even when the
+  //    device is already registered in this organization. Only a persisted
+  //    user selection survives a restart.
   {
     const ctx = bootEnv({
       licenseBranches: [{ id: 'BR-MAIN', active: true }, { id: 'BR-2', active: true }],
@@ -471,14 +472,29 @@ function branchTestsPart4() {
       wizard: { branchSelection: undefined },
     });
     const BF = ctx.BootFlow;
-    check(BF.validateStep('branch_select') === true,
-      'already-registered device keeps branch resolved after restart');
-    check(BF.getSelectedBranchId() === 'BR-2', 'resumed branch comes from the device registration');
-
-    // ...but not when that device belongs to a different organization.
-    ctx._snap.deviceConfig.centerId = 'SOME-OTHER-ORG';
     check(BF.validateStep('branch_select') === false,
-      'device bound to another organization does not resolve the branch gate');
+      'registered device (DeviceConfig inference) does NOT satisfy the branch gate');
+    check(BF.getSelectedBranchId() === '', 'no branch inferred from DeviceConfig');
+  }
+
+  // 9b. Restart preserves a real user selection (persisted in the wizard).
+  {
+    const ctx = bootEnv({
+      licenseBranches: [{ id: 'BR-MAIN', active: true }, { id: 'BR-2', active: true }],
+      wizard: {
+        branchSelection: {
+          branchId: 'BR-2',
+          provenance: 'user',
+          organizationId: 'NJR-CLINIC-628E0049',
+          googleAccountKey: 'owner@example.com',
+          at: '2026-08-16T09:00:00.000Z',
+        },
+      },
+    });
+    const BF = ctx.BootFlow;
+    check(BF.validateStep('branch_select') === true, 'restart preserves a real user selection');
+    check(BF.getSelectedBranchId() === 'BR-2', 'restored selection is the branch the user chose');
+    check(BF.currentBranchSelection()?.provenance === 'user', 'provenance stays user across restart');
   }
 
   // 10. Legacy wizard state cannot forge a selection.

@@ -133,7 +133,15 @@
     return false;
   }
 
+  /**
+   * Delegates to the authoritative step model so the checklist, the header
+   * ("الخطوة X من Y"), Next/Back and resume all filter conditional steps the
+   * same way. Divergence here was the source of the step-numbering drift.
+   */
   function visibleStepsForPath(ctx) {
+    const model = global.BootstrapStepModel;
+    const path = isExistingPath(ctx) ? 'existing' : 'new';
+    if (model?.getApplicableSteps) return model.getApplicableSteps(path, ctx);
     const base = isExistingPath(ctx) ? EXISTING_CHECKLIST_STEPS.slice() : NEW_CHECKLIST_STEPS.slice();
     return base.filter((stepId) => {
       if (stepId === 'path_decision') return shouldShowPathDecision(ctx);
