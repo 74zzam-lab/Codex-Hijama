@@ -2,19 +2,11 @@
    Communication Gateway — Providers, Queue, Templates, UI
    ═══════════════════════════════════════════════════════════ */
 
-const settings = new Proxy({}, {
-  get(_, p) {
-    const s = typeof window !== 'undefined' ? window.settings : null;
-    if (!s) throw new ReferenceError('settings is not defined');
-    return s[p];
-  },
-  set(_, p, v) {
-    const s = typeof window !== 'undefined' ? window.settings : null;
-    if (!s) throw new ReferenceError('settings is not defined');
-    s[p] = v;
-    return true;
-  },
-});
+function getCommSettings() {
+  const s = typeof window !== 'undefined' ? window.settings : null;
+  if (!s) throw new ReferenceError('settings is not defined');
+  return s;
+}
 
 const COMM_BUILTIN_LABELS = {
   '4jawaly': '4jawaly — فورجوالي',
@@ -81,7 +73,7 @@ async function commitCommunicationState(key, value) {
 
 function getCommunicationConfigPayload() {
   ensureCommunicationSettings();
-  const communication = JSON.parse(JSON.stringify(settings.communication || {}));
+  const communication = JSON.parse(JSON.stringify(getCommSettings().communication || {}));
   communication.webhookSecret = '';
   communication.providers = (communication.providers || []).map((provider) => {
     const safe = { ...provider };
@@ -96,19 +88,19 @@ async function migrateCommunicationSecretsToVault() {
   ensureCommunicationSettings();
   const api = getCommElectron()?.communication;
   if (!api?.saveCredentials) return { ok: false, error: 'secure_vault_unavailable' };
-  const providers = (settings.communication.providers || [])
+  const providers = (getCommSettings().communication.providers || [])
     .filter((provider) => provider?.apiKey || provider?.secret)
     .map((provider) => ({ id: provider.id, apiKey: provider.apiKey || '', secret: provider.secret || '' }));
-  const webhookSecret = settings.communication.webhookSecret || '';
+  const webhookSecret = getCommSettings().communication.webhookSecret || '';
   if (providers.length || webhookSecret) {
     const saved = await api.saveCredentials({ providers, webhookSecret });
     if (!saved?.ok) return saved;
-    for (const provider of settings.communication.providers || []) {
+    for (const provider of getCommSettings().communication.providers || []) {
       delete provider.apiKey;
       delete provider.secret;
     }
-    settings.communication.webhookSecret = '';
-    await commitCommunicationState('settings', settings);
+    getCommSettings().communication.webhookSecret = '';
+    await commitCommunicationState('settings', getCommSettings());
   }
   commCredentialStatus = await api.getCredentialStatus?.() || commCredentialStatus;
   return { ok: true, migrated: providers.length + (webhookSecret ? 1 : 0) };
@@ -117,26 +109,26 @@ async function migrateCommunicationSecretsToVault() {
 function ensureCommunicationSettings() {
   if (!window.settings) return;
   if (typeof ensureExtSettings === 'function') ensureExtSettings();
-  if (!settings.communication) {
-    settings.communication = JSON.parse(JSON.stringify(defaultCommunicationConfig));
+  if (!getCommSettings().communication) {
+    getCommSettings().communication = JSON.parse(JSON.stringify(defaultCommunicationConfig));
   } else {
-    settings.communication = {
+    getCommSettings().communication = {
       ...JSON.parse(JSON.stringify(defaultCommunicationConfig)),
-      ...settings.communication,
-      queue: { ...defaultCommunicationConfig.queue, ...(settings.communication.queue || {}) },
-      templates: { ...defaultCommunicationTemplates, ...(settings.communication.templates || {}) },
-      activeProviders: { ...defaultCommunicationConfig.activeProviders, ...(settings.communication.activeProviders || {}) },
-      integrations: { ...defaultCommunicationConfig.integrations, ...(settings.communication.integrations || {}) },
-      providers: settings.communication.providers || [],
+      ...getCommSettings().communication,
+      queue: { ...defaultCommunicationConfig.queue, ...(getCommSettings().communication.queue || {}) },
+      templates: { ...defaultCommunicationTemplates, ...(getCommSettings().communication.templates || {}) },
+      activeProviders: { ...defaultCommunicationConfig.activeProviders, ...(getCommSettings().communication.activeProviders || {}) },
+      integrations: { ...defaultCommunicationConfig.integrations, ...(getCommSettings().communication.integrations || {}) },
+      providers: getCommSettings().communication.providers || [],
     };
   }
   migrateMessagingApiToCommunication();
 }
 
 function migrateMessagingApiToCommunication() {
-  const legacy = settings.messagingApi;
+  const legacy = getCommSettings().messagingApi;
   if (!legacy) return;
-  const hasProviders = (settings.communication.providers || []).length > 0;
+  const hasProviders = (getCommSettings().communication.providers || []).length > 0;
   if (hasProviders) return;
   const migrated = [];
   if (legacy.whatsapp?.apiUrl || legacy.whatsapp?.apiKey) {
@@ -166,17 +158,17 @@ function migrateMessagingApiToCommunication() {
     });
   }
   if (migrated.length) {
-    settings.communication.providers = migrated;
-    if (migrated[0]) settings.communication.activeProviders.whatsapp = migrated[0].id;
-    if (migrated[1]) settings.communication.activeProviders.sms = migrated[1].id;
-    else if (migrated[0]?.channels?.includes('sms')) settings.communication.activeProviders.sms = migrated[0].id;
+    getCommSettings().communication.providers = migrated;
+    if (migrated[0]) getCommSettings().communication.activeProviders.whatsapp = migrated[0].id;
+    if (migrated[1]) getCommSettings().communication.activeProviders.sms = migrated[1].id;
+    else if (migrated[0]?.channels?.includes('sms')) getCommSettings().communication.activeProviders.sms = migrated[0].id;
   }
 }
 
 function applyTemplate(templateKey, channel, vars) {
   ensureCommunicationSettings();
-  const tpl = settings.communication.templates?.[templateKey]?.[channel] ||
-    settings.communication.templates?.[templateKey]?.whatsapp || '';
+  const tpl = getCommSettings().communication.templates?.[templateKey]?.[channel] ||
+    getCommSettings().communication.templates?.[templateKey]?.whatsapp || '';
   if (!tpl) return '';
   return tpl.replace(/\{(\w+)\}/g, (_, k) => (vars[k] != null ? String(vars[k]) : ''));
 }
@@ -238,7 +230,7 @@ async function loadCommunicationSettingsUI() {
 
 function loadCommTemplatesUI() {
   ensureCommunicationSettings();
-  const t = settings.communication.templates || {};
+  const t = getCommSettings().communication.templates || {};
   ['booking', 'reminder', 'otp', 'loyalty'].forEach((key) => {
     const wa = document.getElementById('comm-tpl-' + key + '-wa');
     const sms = document.getElementById('comm-tpl-' + key + '-sms');
@@ -250,22 +242,22 @@ function loadCommTemplatesUI() {
 function updateCommTemplatesFromUI() {
   ensureCommunicationSettings();
   ['booking', 'reminder', 'otp', 'loyalty'].forEach((key) => {
-    if (!settings.communication.templates[key]) settings.communication.templates[key] = {};
-    settings.communication.templates[key].whatsapp = document.getElementById('comm-tpl-' + key + '-wa')?.value.trim() || '';
-    settings.communication.templates[key].sms = document.getElementById('comm-tpl-' + key + '-sms')?.value.trim() || '';
+    if (!getCommSettings().communication.templates[key]) getCommSettings().communication.templates[key] = {};
+    getCommSettings().communication.templates[key].whatsapp = document.getElementById('comm-tpl-' + key + '-wa')?.value.trim() || '';
+    getCommSettings().communication.templates[key].sms = document.getElementById('comm-tpl-' + key + '-sms')?.value.trim() || '';
   });
 }
 
 async function saveCommTemplates() {
   if (typeof requirePermission === 'function' && !requirePermission('settings.edit', 'حفظ القوالب')) return;
   updateCommTemplatesFromUI();
-  await commitCommunicationState('settings', settings);
+  await commitCommunicationState('settings', getCommSettings());
   notify('✅ تم حفظ قوالب الرسائل');
 }
 
 function loadCommIntegrationsUI() {
   ensureCommunicationSettings();
-  const ints = settings.communication.integrations || {};
+  const ints = getCommSettings().communication.integrations || {};
   ['payment', 'email', 'calendar', 'invoices'].forEach((k) => {
     const en = document.getElementById('comm-int-' + k + '-enabled');
     const prov = document.getElementById('comm-int-' + k + '-provider');
@@ -277,22 +269,22 @@ function loadCommIntegrationsUI() {
   const qDelay = document.getElementById('comm-queue-delay');
   const whPort = document.getElementById('comm-webhook-port');
   const whSec = document.getElementById('comm-webhook-secret');
-  if (qEn) qEn.checked = settings.communication.queue?.enabled !== false;
-  if (qBatch) qBatch.value = settings.communication.queue?.batchSize ?? 5;
-  if (qDelay) qDelay.value = settings.communication.queue?.delayMs ?? 400;
-  if (whPort) whPort.value = settings.communication.webhookPort ?? 17890;
-  if (whSec) whSec.value = settings.communication.webhookSecret || '';
+  if (qEn) qEn.checked = getCommSettings().communication.queue?.enabled !== false;
+  if (qBatch) qBatch.value = getCommSettings().communication.queue?.batchSize ?? 5;
+  if (qDelay) qDelay.value = getCommSettings().communication.queue?.delayMs ?? 400;
+  if (whPort) whPort.value = getCommSettings().communication.webhookPort ?? 17890;
+  if (whSec) whSec.value = getCommSettings().communication.webhookSecret || '';
 }
 
 async function saveCommunicationSettings() {
   if (typeof requirePermission === 'function' && !requirePermission('settings.edit', 'حفظ التكاملات')) return;
   ensureCommunicationSettings();
-  settings.communication.activeProviders.whatsapp = document.getElementById('comm-active-wa')?.value || '';
-  settings.communication.activeProviders.sms = document.getElementById('comm-active-sms')?.value || '';
-  settings.communication.queue.enabled = !!document.getElementById('comm-queue-enabled')?.checked;
-  settings.communication.queue.batchSize = parseInt(document.getElementById('comm-queue-batch')?.value, 10) || 5;
-  settings.communication.queue.delayMs = parseInt(document.getElementById('comm-queue-delay')?.value, 10) || 400;
-  settings.communication.webhookPort = parseInt(document.getElementById('comm-webhook-port')?.value, 10) || 17890;
+  getCommSettings().communication.activeProviders.whatsapp = document.getElementById('comm-active-wa')?.value || '';
+  getCommSettings().communication.activeProviders.sms = document.getElementById('comm-active-sms')?.value || '';
+  getCommSettings().communication.queue.enabled = !!document.getElementById('comm-queue-enabled')?.checked;
+  getCommSettings().communication.queue.batchSize = parseInt(document.getElementById('comm-queue-batch')?.value, 10) || 5;
+  getCommSettings().communication.queue.delayMs = parseInt(document.getElementById('comm-queue-delay')?.value, 10) || 400;
+  getCommSettings().communication.webhookPort = parseInt(document.getElementById('comm-webhook-port')?.value, 10) || 17890;
   const webhookSecret = document.getElementById('comm-webhook-secret')?.value.trim() || '';
   if (webhookSecret) {
     const saved = await getCommElectron()?.communication?.saveCredentials?.({ webhookSecret, providers: [] });
@@ -302,13 +294,13 @@ async function saveCommunicationSettings() {
     }
     commCredentialStatus = saved;
   }
-  settings.communication.webhookSecret = '';
+  getCommSettings().communication.webhookSecret = '';
   ['payment', 'email', 'calendar', 'invoices'].forEach((k) => {
-    settings.communication.integrations[k].enabled = !!document.getElementById('comm-int-' + k + '-enabled')?.checked;
-    settings.communication.integrations[k].provider = document.getElementById('comm-int-' + k + '-provider')?.value.trim() || '';
+    getCommSettings().communication.integrations[k].enabled = !!document.getElementById('comm-int-' + k + '-enabled')?.checked;
+    getCommSettings().communication.integrations[k].provider = document.getElementById('comm-int-' + k + '-provider')?.value.trim() || '';
   });
   updateCommTemplatesFromUI();
-  await commitCommunicationState('settings', settings);
+  await commitCommunicationState('settings', getCommSettings());
   await initCommunicationGateway();
   if (typeof updateMessagingBridgeStatus === 'function') updateMessagingBridgeStatus();
   notify('✅ تم حفظ إعدادات التكاملات');
@@ -318,7 +310,7 @@ function renderCommProvidersList() {
   const el = document.getElementById('comm-providers-list');
   if (!el) return;
   ensureCommunicationSettings();
-  const list = settings.communication.providers || [];
+  const list = getCommSettings().communication.providers || [];
   if (!list.length) {
     el.innerHTML = '<div style="padding:16px;color:var(--text-light);font-size:13px;text-align:center">لا يوجد مزود — اضغط «إضافة مزود»</div>';
     return;
@@ -350,7 +342,7 @@ function renderCommProvidersList() {
 
 function renderCommActiveProviderSelects() {
   ensureCommunicationSettings();
-  const list = settings.communication.providers || [];
+  const list = getCommSettings().communication.providers || [];
   const opts = '<option value="">— يدوي / deeplink —</option>' +
     list.map((p) => `<option value="${p.id}">${p.name || p.slug}${p.enabled === false ? ' (موقوف)' : ''}</option>`).join('');
   ['comm-active-wa', 'comm-active-sms'].forEach((id) => {
@@ -358,8 +350,8 @@ function renderCommActiveProviderSelects() {
     if (!el) return;
     el.innerHTML = opts;
     el.value = id === 'comm-active-wa'
-      ? (settings.communication.activeProviders.whatsapp || '')
-      : (settings.communication.activeProviders.sms || '');
+      ? (getCommSettings().communication.activeProviders.whatsapp || '')
+      : (getCommSettings().communication.activeProviders.sms || '');
   });
 }
 
@@ -373,7 +365,7 @@ function openCommProviderModal(id) {
       `<option value="${b.id}">${COMM_BUILTIN_LABELS[b.id] || b.nameAr || b.name}</option>`
     ).join('') + '<option value="manual">يدوي (wa.me / SMS)</option>';
   }
-  const p = id ? settings.communication.providers.find((x) => x.id === id) : null;
+  const p = id ? getCommSettings().communication.providers.find((x) => x.id === id) : null;
   document.getElementById('comm-prov-name').value = p?.name || '';
   if (slugSel) slugSel.value = p?.slug || 'custom';
   document.getElementById('comm-prov-base').value = p?.baseUrl || '';
@@ -436,10 +428,10 @@ async function saveCommProviderModal() {
     }
     commCredentialStatus = saved;
   }
-  const idx = settings.communication.providers.findIndex((x) => x.id === entry.id);
-  if (idx >= 0) settings.communication.providers[idx] = entry;
-  else settings.communication.providers.push(entry);
-  await commitCommunicationState('settings', settings);
+  const idx = getCommSettings().communication.providers.findIndex((x) => x.id === entry.id);
+  if (idx >= 0) getCommSettings().communication.providers[idx] = entry;
+  else getCommSettings().communication.providers.push(entry);
+  await commitCommunicationState('settings', getCommSettings());
   closeCommProviderModal();
   renderCommProvidersList();
   renderCommActiveProviderSelects();
@@ -449,11 +441,11 @@ async function saveCommProviderModal() {
 async function deleteCommProvider(id) {
   if (!confirm('حذف هذا المزود؟')) return;
   ensureCommunicationSettings();
-  settings.communication.providers = settings.communication.providers.filter((p) => p.id !== id);
-  Object.keys(settings.communication.activeProviders).forEach((k) => {
-    if (settings.communication.activeProviders[k] === id) settings.communication.activeProviders[k] = '';
+  getCommSettings().communication.providers = getCommSettings().communication.providers.filter((p) => p.id !== id);
+  Object.keys(getCommSettings().communication.activeProviders).forEach((k) => {
+    if (getCommSettings().communication.activeProviders[k] === id) getCommSettings().communication.activeProviders[k] = '';
   });
-  await commitCommunicationState('settings', settings);
+  await commitCommunicationState('settings', getCommSettings());
   try { await getCommElectron()?.communication?.deleteCredentials?.(id); } catch { /* metadata deletion still applies */ }
   renderCommProvidersList();
   renderCommActiveProviderSelects();
@@ -462,7 +454,7 @@ async function deleteCommProvider(id) {
 
 async function testCommProviderById(id) {
   ensureCommunicationSettings();
-  const p = settings.communication.providers.find((x) => x.id === id);
+  const p = getCommSettings().communication.providers.find((x) => x.id === id);
   if (!p) return;
   await testCommProviderObject(p);
 }
@@ -640,7 +632,7 @@ function patchMessagingBridge() {
 
   MessagingBridge.sendWhatsApp = async function (phone, text, meta) {
     ensureCommunicationSettings();
-    const hasApi = (settings.communication.providers || []).some((p) =>
+    const hasApi = (getCommSettings().communication.providers || []).some((p) =>
       p.enabled !== false && (p.channels || []).includes('whatsapp') && p.slug !== 'manual' && (p.apiKey || p.baseUrl));
     if (hasApi || getCommElectron()?.communication) {
       return sendViaCommunicationGateway('whatsapp', phone, text, meta);
@@ -650,7 +642,7 @@ function patchMessagingBridge() {
 
   MessagingBridge.sendSMS = async function (phone, text, meta) {
     ensureCommunicationSettings();
-    const hasApi = (settings.communication.providers || []).some((p) =>
+    const hasApi = (getCommSettings().communication.providers || []).some((p) =>
       p.enabled !== false && (p.channels || []).includes('sms') && p.slug !== 'manual' && (p.apiKey || p.baseUrl));
     if (hasApi || getCommElectron()?.communication) {
       return sendViaCommunicationGateway('sms', phone, text, meta);
@@ -678,6 +670,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 800);
 });
 
-// Legacy aliases for settings tab
+// Legacy aliases for getCommSettings() tab
 function loadMessagingApiSettingsUI() { loadCommunicationSettingsUI(); }
 function saveMessagingApiSettings() { return saveCommunicationSettings(); }

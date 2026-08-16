@@ -176,19 +176,6 @@ const HIJAMA_INVENTORY_SEED = [
 ];
 
 const _db = () => window.DB || { get: (k, d) => d, set: () => Promise.resolve({ ok: false }) };
-const settings = new Proxy({}, {
-  get(_, p) {
-    const s = typeof window !== 'undefined' ? window.settings : null;
-    if (!s) throw new ReferenceError('settings is not defined');
-    return s[p];
-  },
-  set(_, p, v) {
-    const s = typeof window !== 'undefined' ? window.settings : null;
-    if (!s) throw new ReferenceError('settings is not defined');
-    s[p] = v;
-    return true;
-  },
-});
 let inventoryItems = _db().get('inventoryItems', []);
 let inventorySuppliers = _db().get('inventorySuppliers', []);
 let inventoryMovements = _db().get('inventoryMovements', []);

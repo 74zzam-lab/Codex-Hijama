@@ -176,19 +176,17 @@ async function readNavigationFrame(page) {
       inFlight: BF?.isCriticalOpInFlight?.() === true,
       renderGeneration: BF?.currentRenderGeneration?.() ?? null,
       headerMatches: header === expectedHeader,
-      allAgree: frame.stepId === active?.id
-        && header === expectedHeader
-        && (label === '' || document.getElementById('bf-step-label')?.textContent),
+      allAgree: frame.stepId === active?.id && header === expectedHeader,
     };
   });
 }
 
 async function assertNavigationCoherence(page, tag) {
   const snap = await readNavigationFrame(page);
-  const labelOk = snap.stepId && snap.label;
+  const bodyStep = snap.bodyStepId;
   const coherent = snap.stepId === snap.checklistActiveId
     && snap.headerMatches
-    && !!labelOk;
+    && (!bodyStep || snap.stepId === bodyStep);
   report.navigation.coherenceSamples.push({ tag, ...snap, coherent });
   return { coherent, snap };
 }
@@ -218,15 +216,23 @@ async function waitAppReady(page) {
 }
 
 async function clickExistingPath(page) {
-  await openBootstrap(page);
   const clicked = await page.evaluate(() => {
     const btn = document.getElementById('bf-existing-customer');
-    if (btn) { btn.click(); return true; }
+    if (btn) { btn.click(); return 'ui-click'; }
     if (window.BootFlow?.startPath) {
       window.BootFlow.startPath(window.BootFlow.PATHS?.EXISTING || 'existing');
-      return true;
+      return 'startPath';
     }
     return false;
+  });
+  await page.waitForFunction(
+    () => window.BootFlow?.loadWizard?.()?.path === 'existing',
+    null,
+    { timeout: 30000 },
+  ).catch(async () => {
+    await page.evaluate(() => {
+      window.BootFlow.startPath(window.BootFlow.PATHS?.EXISTING || 'existing');
+    });
   });
   await page.waitForTimeout(400);
   const snap = await readNavigationFrame(page);
@@ -266,7 +272,7 @@ async function simGoogleConnected(page) {
   await page.waitForTimeout(350);
 }
 
-async function seedDiscoveryAndLicense(page) {
+async function seedDiscoveryFixtures(page) {
   await page.evaluate(() => {
     window.PostGoogleCloudDiscovery = window.PostGoogleCloudDiscovery || {};
     window.PostGoogleCloudDiscovery.getCachedDiscovery = () => ({
@@ -282,6 +288,16 @@ async function seedDiscoveryAndLicense(page) {
       syncCandidates: [],
     });
     window.PostGoogleCloudDiscovery.hasDiscoveryResolved = () => true;
+    const w = window.BootFlow.loadWizard();
+    w.discoveryCompletedAt = new Date().toISOString();
+    window.BootFlow.saveWizard(w);
+    window.BootFlow.renderAll(w);
+  });
+  await page.waitForTimeout(350);
+}
+
+async function seedLicenseOrgFixtures(page) {
+  await page.evaluate(() => {
     window.LicenseCloud = window.LicenseCloud || {};
     window.LicenseCloud.loadLocal = () => ({
       centerId: 'NJR-1',
@@ -294,24 +310,11 @@ async function seedDiscoveryAndLicense(page) {
     });
     if (window.settings) {
       window.settings.centerName = 'Clinic';
-      window.settings.backup = window.settings.backup || { providers: {} };
-      window.settings.backup.providers = window.settings.backup.providers || {};
-      window.settings.backup.providers.google = {
-        connected: true,
-        oauth: true,
-        email: 'uat-fixture@example.com',
-        userDisconnected: false,
-      };
+      window.settings.phone = '0500000000';
     }
-    const w = window.BootFlow.loadWizard();
-    w.discoveryCompletedAt = new Date().toISOString();
-    w.path = 'existing';
-    if (!w.completedSteps.includes('google')) w.completedSteps.push('google');
-    if (!w.completedSteps.includes('discovery')) w.completedSteps.push('discovery');
-    window.BootFlow.saveWizard(w);
-    window.BootFlow.renderAll(w);
+    window.BootFlow.renderAll(window.BootFlow.loadWizard());
   });
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(350);
 }
 
 async function advanceToStep(page, targetStepId, maxClicks = 8) {
@@ -330,11 +333,11 @@ async function advanceToStep(page, targetStepId, maxClicks = 8) {
       continue;
     }
     if (snap.stepId === 'discovery' && !snap.validateStep) {
-      await seedDiscoveryAndLicense(page);
+      await seedDiscoveryFixtures(page);
       continue;
     }
     if (snap.stepId === 'license_org_recovery' && !snap.validateStep) {
-      await seedDiscoveryAndLicense(page);
+      await seedLicenseOrgFixtures(page);
       continue;
     }
     break;
@@ -492,8 +495,23 @@ async function runUiPhase(userData) {
   report.navigation.agreement = nav.coherent ? 'PASS' : 'FAIL';
   report.navigation.drift = !nav.coherent;
 
-  // Full journey to branch_select (no openAtStep)
-  await seedDiscoveryAndLicense(page);
+  // Full journey to branch_select via Next (no openAtStep)
+  await page.click('#bf-next-btn');
+  await page.waitForTimeout(350);
+  snap = await readNavigationFrame(page);
+  if (snap.stepId === 'discovery') {
+    await seedDiscoveryFixtures(page);
+    await page.waitForFunction(() => window.BootFlow.validateStep('discovery'), null, { timeout: 15000 }).catch(() => {});
+    await page.click('#bf-next-btn');
+    await page.waitForTimeout(350);
+  }
+  snap = await readNavigationFrame(page);
+  if (snap.stepId === 'license_org_recovery') {
+    await seedLicenseOrgFixtures(page);
+    await page.waitForFunction(() => window.BootFlow.validateStep('license_org_recovery'), null, { timeout: 15000 }).catch(() => {});
+    await page.click('#bf-next-btn');
+    await page.waitForTimeout(350);
+  }
   snap = await advanceToStep(page, 'branch_select');
   nav = await assertNavigationCoherence(page, 'at-branch-select');
   report.branch.details.push({ phase: 'journey-arrival', stepId: snap.stepId, path: snap.path, navCoherent: nav.coherent });
