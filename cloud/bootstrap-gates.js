@@ -376,6 +376,10 @@
   }
 
   function getCurrentRuntimeSteps(path) {
+    const model = global.BootstrapStepModel;
+    if (model?.sequenceFor) {
+      return model.sequenceFor(path === PATH_EXISTING ? PATH_EXISTING : PATH_NEW);
+    }
     const BFm = BF();
     if (BFm?.getStepCatalog || BFm?.getStepManifest) {
       const m = (BFm.getStepCatalog || BFm.getStepManifest)();

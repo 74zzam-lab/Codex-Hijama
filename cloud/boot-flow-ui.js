@@ -287,6 +287,10 @@
   }
 
   function stepsFor(path) {
+    const model = global.BootstrapStepModel;
+    if (model?.sequenceFor) {
+      return model.sequenceFor(path === PATHS.EXISTING ? 'existing' : 'new');
+    }
     return path === PATHS.EXISTING ? EXISTING_STEPS : NEW_STEPS;
   }
 

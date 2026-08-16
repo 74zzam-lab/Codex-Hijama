@@ -1,0 +1,126 @@
+{
+  "schema": "bootstrap-state-authority-v1",
+  "generatedAt": "2026-08-16T13:50:00.000Z",
+  "fields": {
+    "googleConnected": {
+      "authoritative": "Main backup:getCloudStatus + safeStorage token + database:setupCommitGoogleConnection projection",
+      "derivedCaches": ["DriveAdapter.isConnected()", "settings.backup.providers.google", "wizard.googleSessionConnected"],
+      "legacyAliases": ["completedSteps includes google", "oauthLockAt"],
+      "writableLocations": ["Main via setupCommitGoogleConnection", "backup:disconnectCloud (setup)"],
+      "invalidation": ["disconnect", "change account", "token refresh failure", "userDisconnected flag"]
+    },
+    "googleAccountIdentity": {
+      "authoritative": "Main OAuth email from getCloudStatus",
+      "derivedCaches": ["settings.backup.providers.google.email", "discovery cache key"],
+      "writableLocations": ["setupCommitGoogleConnection"],
+      "invalidation": ["change account", "disconnect"]
+    },
+    "organizationId": {
+      "authoritative": "__tdw_cloud_license__.centerId + meta.centerId after commit",
+      "derivedCaches": ["CenterId.getStoredCenterId()", "discovery organizationCandidates"],
+      "writableLocations": ["database:setupCommitOrganizationDevice", "license recovery IPC"],
+      "invalidation": ["discovery re-run", "fork change", "Google account change"]
+    },
+    "centerId": {
+      "authoritative": "Same as organizationId",
+      "derivedCaches": ["license.centerId"],
+      "writableLocations": ["setup commits"],
+      "invalidation": ["org recovery", "fork"]
+    },
+    "licenseIdentity": {
+      "authoritative": "__tdw_cloud_license__ signed bundle",
+      "derivedCaches": ["LicenseCloud.loadLocal()", "cache:readLicense"],
+      "writableLocations": ["database:setupCommitActivation", "setupCommitSignedActivation"],
+      "invalidation": ["activation re-commit", "restore"]
+    },
+    "branchCandidates": {
+      "authoritative": "Cloud discovery branchCandidates + license.branches merge at UI",
+      "derivedCaches": ["PostGoogleCloudDiscovery cache"],
+      "writableLocations": ["read-only at discovery; not from lockedBranchId alone"],
+      "invalidation": ["discovery refresh", "Google change"]
+    },
+    "selectedBranch": {
+      "authoritative": "wizard.branchSelection {branchId, provenance, organizationId, googleAccountKey}",
+      "derivedCaches": ["pendingBranchId (non-authoritative)", "selectedBranchId"],
+      "writableLocations": ["recordBranchSelection() user action only on EXISTING"],
+      "invalidation": ["org change", "Google change", "explicit re-select"]
+    },
+    "deviceBinding": {
+      "authoritative": "__tdw_device_config__ {deviceUuid, lockedBranchId, deviceName}",
+      "derivedCaches": ["DeviceRegistry"],
+      "writableLocations": ["database:setupCommitOrganizationDevice", "device register handler"],
+      "invalidation": ["branch change", "device re-register"]
+    },
+    "ownerIdentity": {
+      "authoritative": "OwnerManagement + users table Owner row",
+      "derivedCaches": ["OwnerSeedRetirement markers"],
+      "writableLocations": ["database:setupCommitOwner (NEW only)", "restore hydration"],
+      "invalidation": ["restore", "seed retirement"]
+    },
+    "ownerCredential": {
+      "authoritative": "OwnerManagement.getOwnerState()",
+      "derivedCaches": [],
+      "writableLocations": ["setupCommitOwner (NEW)", "owner auth (EXISTING)"],
+      "invalidation": ["restore overwrite"]
+    },
+    "businessSetup": {
+      "authoritative": "BusinessSetupContract evaluation",
+      "derivedCaches": ["settings center fields"],
+      "writableLocations": ["business setup commit"],
+      "invalidation": ["restore", "publication"]
+    },
+    "restoreDecision": {
+      "authoritative": "wizard.restoreChoice + RestoreReconciliation.loadState()",
+      "derivedCaches": ["meta.bootstrapCompletedAt (retroactive)"],
+      "writableLocations": ["restore UI actions", "reconciliation"],
+      "invalidation": ["re-select restore source"]
+    },
+    "restoreCompleted": {
+      "authoritative": "RestoreReconciliation + hydrate success + backup v2 result",
+      "derivedCaches": ["wizard.restoreVerifiedDatabase"],
+      "writableLocations": ["backup:v2:setupCloudRestore result path"],
+      "invalidation": ["new restore attempt"]
+    },
+    "publicationCompleted": {
+      "authoritative": "PublicationGateService + meta markers",
+      "derivedCaches": [],
+      "writableLocations": ["publication gate run"],
+      "invalidation": ["business setup change"]
+    },
+    "readbackVerified": {
+      "authoritative": "ReadbackVerificationContract",
+      "derivedCaches": [],
+      "writableLocations": ["readback verify IPC"],
+      "invalidation": ["publication re-run"]
+    },
+    "initialSyncCompleted": {
+      "authoritative": "meta.bootstrapCompletedAt + meta.initialSyncCompletion",
+      "derivedCaches": ["wizard.syncDone (NON-AUTHORITATIVE)"],
+      "writableLocations": ["persistInitialSyncCompletion"],
+      "invalidation": ["never from stale wizard.syncDone alone"]
+    },
+    "ready": {
+      "authoritative": "ReadyPureEvaluator.evaluateReadyPure() via SetupStateService",
+      "derivedCaches": ["localStorage BOOT_DONE_KEY", "wizard.setupCompletedAt"],
+      "writableLocations": ["markBootCompleteDurable after evaluateReady true"],
+      "invalidation": ["any gate regression clears BOOT_DONE_KEY"]
+    }
+  },
+  "conflictsResolved": [
+    {
+      "field": "googleConnected",
+      "was": "renderer persistData(settings) + DriveAdapter",
+      "now": "Main-validated setupCommitGoogleConnection only"
+    },
+    {
+      "field": "selectedBranch",
+      "was": "pendingBranchId / lockedBranchId could imply done",
+      "now": "branchSelection.provenance=user required on EXISTING"
+    },
+    {
+      "field": "sync on EXISTING",
+      "was": "coordinator skipped owner_auth",
+      "now": "coordinator requires owner_auth matching validateStep"
+    }
+  ]
+}

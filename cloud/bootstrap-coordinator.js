@@ -33,6 +33,8 @@
   const EXISTING_STEPS = ['language', 'google', 'discovery', 'license_org_recovery', 'branch_select', 'device', 'restore', 'owner_auth', 'sync', 'ready'];
 
   function stepsFor(path) {
+    const model = global.BootstrapStepModel;
+    if (model?.sequenceFor) return model.sequenceFor(path);
     return path === 'existing' ? EXISTING_STEPS : NEW_STEPS;
   }
 
@@ -154,6 +156,7 @@
         if (!BF?.deviceStepResolved?.()) return false;
         if (coord?.userPathChoice === 'existing') {
           if (!BF?.hasRestoreDecision?.()) return false;
+          if (!(BF?.ownerAuthStepResolved?.() || BF?.validateStep?.('owner_auth'))) return false;
           return !!(BF?.hasSyncDone?.() || metaBootstrapCommitted());
         }
         if (!BF?.businessSetupStepResolved?.()) return false;

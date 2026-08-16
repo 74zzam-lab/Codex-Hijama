@@ -298,6 +298,27 @@ function deviceOrderTests() {
     'owner_auth cannot appear before restore');
 }
 
+function coordinatorSyncOwnerAuthTests() {
+  console.log('\n-- coordinator sync gate matches validateStep owner_auth on EXISTING --');
+  const ctx = liveWizard({
+    wizard: {
+      path: 'existing', restoreChoice: 'cloud',
+      branchSelection: { branchId: 'BR-MAIN', provenance: 'user' },
+    },
+    deviceConfig: { lockedBranchId: 'BR-MAIN', deviceUuid: 'dev-1', deviceName: 'Desk' },
+  });
+  const BC = ctx.BootstrapCoordinator;
+  const BF = ctx.BootFlow;
+  const ownerAuthResolved = () => false;
+  BF.ownerAuthStepResolved = ownerAuthResolved;
+  const derived = BC.deriveCompletedSteps('existing');
+  check(!derived.includes('sync'), 'coordinator does not mark sync done without owner_auth');
+  check(BF.validateStep('sync') === false, 'validateStep blocks sync without owner_auth');
+  BF.ownerAuthStepResolved = () => true;
+  const derived2 = BC.deriveCompletedSteps('existing');
+  check(!derived2.includes('sync'), 'coordinator still blocks sync until hasSyncDone');
+}
+
 (async function main() {
   try {
     sequenceTests();
@@ -306,6 +327,7 @@ function deviceOrderTests() {
     await liveConsistencyTests();
     staleRenderTests();
     deviceOrderTests();
+    coordinatorSyncOwnerAuthTests();
   } catch (error) {
     failures.push(`harness crash: ${error && error.stack ? error.stack : error}`);
     console.error(error);

@@ -1,0 +1,226 @@
+{
+  "schema": "bootstrap-button-state-matrix-v1",
+  "paths": ["new", "existing"],
+  "buttons": [
+    {
+      "stepId": "welcome",
+      "buttonId": "bf-path-new",
+      "visibleWhen": "bootstrap open && path unset",
+      "enabledWhen": "always when visible",
+      "disabledReason": null,
+      "action": "select NEW path",
+      "inFlightGuard": false,
+      "successTransition": "language",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "welcome",
+      "buttonId": "bf-path-existing",
+      "visibleWhen": "bootstrap open && path unset",
+      "enabledWhen": "always when visible",
+      "disabledReason": null,
+      "action": "select EXISTING path",
+      "inFlightGuard": false,
+      "successTransition": "language",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "*",
+      "buttonId": "bf-next-btn",
+      "visibleWhen": "current step != ready",
+      "enabledWhen": "validateStep(currentStepId) && !stepInFlight",
+      "disabledReason": "step invariant unmet OR async op in flight",
+      "action": "advanceWizard()",
+      "inFlightGuard": true,
+      "successTransition": "next applicable unresolved step",
+      "failureTransition": "stay; show step error"
+    },
+    {
+      "stepId": "*",
+      "buttonId": "bf-back-btn",
+      "visibleWhen": "bootstrap open",
+      "enabledWhen": "always",
+      "disabledReason": null,
+      "action": "prevStep() — render previous applicable step; keep committed data",
+      "inFlightGuard": false,
+      "successTransition": "previous applicable step",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "google",
+      "buttonId": "bf-google-connect-btn",
+      "visibleWhen": "!hasGoogle()",
+      "enabledWhen": "!oauthInFlight && (NEW implies valid license)",
+      "disabledReason": "oauth in flight or NEW without activation",
+      "action": "runGoogleConnect()",
+      "inFlightGuard": true,
+      "successTransition": "show change/disconnect; Next enabled",
+      "failureTransition": "retryable error; Connect remains"
+    },
+    {
+      "stepId": "google",
+      "buttonId": "bf-google-change-btn",
+      "visibleWhen": "hasGoogle()",
+      "enabledWhen": "!oauthInFlight",
+      "disabledReason": "oauth in flight",
+      "action": "disconnectGoogleDuringSetup() then re-auth",
+      "inFlightGuard": true,
+      "successTransition": "invalidate discovery/org/branch; google reconnect",
+      "failureTransition": "show google_disconnect_failed"
+    },
+    {
+      "stepId": "google",
+      "buttonId": "bf-google-disconnect-btn",
+      "visibleWhen": "hasGoogle()",
+      "enabledWhen": "!oauthInFlight",
+      "disabledReason": "oauth in flight",
+      "action": "disconnectGoogleDuringSetup()",
+      "inFlightGuard": true,
+      "successTransition": "Connect visible again",
+      "failureTransition": "show google_disconnect_failed"
+    },
+    {
+      "stepId": "discovery",
+      "buttonId": "bf-discovery-rescan",
+      "visibleWhen": "discovery step",
+      "enabledWhen": "hasGoogle() && !discoveryInFlight",
+      "disabledReason": "google missing or discovery in flight",
+      "action": "runDiscoveryGate({forceRefresh:true})",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled when hasDiscoveryResolved",
+      "failureTransition": "retryable discovery error"
+    },
+    {
+      "stepId": "branch_select",
+      "buttonId": "bf-branch-confirm",
+      "visibleWhen": "EXISTING branch_select",
+      "enabledWhen": "user selected a branch candidate",
+      "disabledReason": "no explicit branch selection",
+      "action": "recordBranchSelection(provenance=user)",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled → device",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "device",
+      "buttonId": "bf-device-register",
+      "visibleWhen": "device step",
+      "enabledWhen": "branch resolved && !deviceRegisterInFlight",
+      "disabledReason": "branch unresolved or in flight",
+      "action": "register device",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled",
+      "failureTransition": "device limit / error"
+    },
+    {
+      "stepId": "restore",
+      "buttonId": "bf-restore-cloud",
+      "visibleWhen": "cloud backup selectable",
+      "enabledWhen": "selectedCloudPoint && !restoreInFlight",
+      "disabledReason": "no selection or restore in flight",
+      "action": "confirmedCloudRestore()",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled; restoreChoice set",
+      "failureTransition": "Retry visible; cloud_download_stalled terminal ≤45s"
+    },
+    {
+      "stepId": "restore",
+      "buttonId": "bf-restore-local",
+      "visibleWhen": "restore step",
+      "enabledWhen": "!restoreInFlight",
+      "disabledReason": "restore in flight",
+      "action": "reconcile local data source",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "restore",
+      "buttonId": "bf-restore-file",
+      "visibleWhen": "restore step",
+      "enabledWhen": "!restoreInFlight",
+      "disabledReason": "restore in flight",
+      "action": "pick local Backup V2",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "restore",
+      "buttonId": "bf-restore-empty",
+      "visibleWhen": "restore step && empty start allowed",
+      "enabledWhen": "!restoreInFlight",
+      "disabledReason": "restore in flight or owner dead-end",
+      "action": "markRestore(empty)",
+      "inFlightGuard": false,
+      "successTransition": "Next enabled",
+      "failureTransition": "policy refusal"
+    },
+    {
+      "stepId": "owner_auth",
+      "buttonId": "bf-owner-auth",
+      "visibleWhen": "EXISTING owner_auth",
+      "enabledWhen": "password entered && !ownerLoginInFlight",
+      "disabledReason": "empty password or in flight",
+      "action": "setup owner authenticate",
+      "inFlightGuard": true,
+      "successTransition": "Next enabled → sync",
+      "failureTransition": "wrong password USER_ACTION"
+    },
+    {
+      "stepId": "sync",
+      "buttonId": "bf-sync-run",
+      "visibleWhen": "sync step",
+      "enabledWhen": "gates satisfied && !syncInFlight",
+      "disabledReason": "prior gates unmet or in flight",
+      "action": "initial sync",
+      "inFlightGuard": true,
+      "successTransition": "ready",
+      "failureTransition": "retryable sync error"
+    },
+    {
+      "stepId": "ready",
+      "buttonId": "bf-finish",
+      "visibleWhen": "ready step",
+      "enabledWhen": "isBootComplete()",
+      "disabledReason": "bootstrap incomplete",
+      "action": "completeBootstrapTransition",
+      "inFlightGuard": false,
+      "successTransition": "operational app",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "*",
+      "buttonId": "bf-close",
+      "visibleWhen": "bootstrap open",
+      "enabledWhen": "always (policy may confirm)",
+      "disabledReason": null,
+      "action": "dismissBootstrap",
+      "inFlightGuard": false,
+      "successTransition": "closed; resume-safe",
+      "failureTransition": "stay"
+    },
+    {
+      "stepId": "*",
+      "buttonId": "bf-checklist-retry",
+      "visibleWhen": "active step has retryable error",
+      "enabledWhen": "!stepInFlight",
+      "disabledReason": "operation in flight",
+      "action": "retryCurrentGate()",
+      "inFlightGuard": true,
+      "successTransition": "clear error; enable Next if validated",
+      "failureTransition": "keep error"
+    }
+  ],
+  "nextRules": {
+    "enabledWhen": "validateStep(stepId) === true && !inFlight",
+    "mustAgreeWith": ["checklist DONE via validateStep", "coordinator gate RESOLVED", "header/body step id"]
+  },
+  "restoreStall": {
+    "thresholdMs": 45000,
+    "owner": "Main ByteProgressWatchdog + raceAbort(entire downloadCloudBackup)",
+    "blockingAwaitBeforeFix": "cloud-service.downloadCloudBackup → resolveActiveProviderKey → googleDrive.getStatus → driveApi.getUserEmail (no AbortSignal)",
+    "terminalMessageAr": "توقف تنزيل النسخة من Google Drive ولم تصل بيانات جديدة خلال 45 ثانية. تحقق من الاتصال ثم اضغط «إعادة المحاولة».",
+    "forbidBackgroundClaim": true
+  }
+}
