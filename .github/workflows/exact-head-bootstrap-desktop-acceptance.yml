@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || '89a728b0a84e6be0a8f2eb251df84f691c837096' }}
+  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || '4db35f26c68ce6bcdce4791239914f560cd770b5' }}
   EXACT_HEAD_BUILD_ID: exact-gha-${{ github.run_number }}-${{ github.run_attempt }}
 
 jobs:
