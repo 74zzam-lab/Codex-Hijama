@@ -225,18 +225,48 @@ async function waitAppReady(page) {
 }
 
 async function clickExistingPath(page) {
-  const clicked = await page.evaluate(() => {
-    const btn = document.getElementById('bf-existing-customer');
-    if (btn) { btn.click(); return 'ui-click'; }
-    return false;
-  });
-  await page.waitForFunction(
-    () => window.BootFlow?.loadWizard?.()?.path === 'existing',
-    null,
-    { timeout: 30000 },
-  );
+  await page.waitForSelector('#bf-existing-customer', { state: 'visible', timeout: 30000 });
+  let clicked = 'none';
+  try {
+    await page.locator('#bf-existing-customer').click({ timeout: 8000 });
+    clicked = 'playwright-click';
+  } catch {
+    clicked = await page.evaluate(() => {
+      try {
+        window.BootFlow?.startPath?.(window.BootFlow.PATHS?.EXISTING || 'existing');
+        return 'startPath-eval';
+      } catch (error) {
+        return `startPath-error:${error?.message || error}`;
+      }
+    });
+  }
+  try {
+    await page.waitForFunction(
+      () => window.BootFlow?.loadWizard?.()?.path === 'existing',
+      null,
+      { timeout: 30000 },
+    );
+  } catch (error) {
+    const diag = await page.evaluate(() => ({
+      loadWizardPath: window.BootFlow?.loadWizard?.()?.path ?? null,
+      dbPath: window.DB?.get?.('__tdw_boot_wizard__', null)?.path ?? null,
+      localStoragePath: (() => {
+        try {
+          const raw = localStorage.getItem('__tdw_boot_wizard__');
+          return raw ? JSON.parse(raw).path : null;
+        } catch { return 'parse-error'; }
+      })(),
+      sqliteWriteThrough: !!window.DB?.__sqliteWriteThrough,
+      chooseActive: document.getElementById('bf-step-choose-body')?.classList?.contains('active') === true,
+      buttonPresent: !!document.getElementById('bf-existing-customer'),
+      totalSteps: window.BootFlow?.describeCurrentStep?.()?.totalSteps ?? null,
+    }));
+    report.pathPersistence.details.push({ phase: 'existing-click-failure', clicked, ...diag });
+    throw Object.assign(error, { clicked, diagnostics: diag });
+  }
   await page.waitForTimeout(200);
   const snap = await readNavigationFrame(page);
+  report.pathPersistence.details.push({ phase: 'existing-click-success', clicked, path: snap.path, totalSteps: snap.totalSteps });
   return { clicked, snap };
 }
 
