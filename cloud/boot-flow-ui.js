@@ -268,7 +268,17 @@
   }
 
   function saveWizard(w) {
-    global.DB?.set?.(WIZARD_KEY, w);
+    const set = global.DB?.set;
+    if (set) {
+      const result = set(WIZARD_KEY, w);
+      // Wizard is UI-only state; ensure the next synchronous loadWizard() sees the write
+      // even when DB.set returns a Promise (SQLite bridge) or a guarded noop.
+      try {
+        if (global.DB?.__rawSet) global.DB.__rawSet(WIZARD_KEY, w);
+        else localStorage.setItem(WIZARD_KEY, JSON.stringify(w));
+      } catch { /* empty */ }
+      void result;
+    }
     return w;
   }
 

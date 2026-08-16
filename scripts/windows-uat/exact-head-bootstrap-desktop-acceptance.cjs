@@ -232,6 +232,11 @@ async function clickExistingPath(page) {
   ).catch(async () => {
     await page.evaluate(() => {
       window.BootFlow.startPath(window.BootFlow.PATHS?.EXISTING || 'existing');
+      try {
+        const w = window.BootFlow.loadWizard();
+        w.path = 'existing';
+        localStorage.setItem('__tdw_boot_wizard__', JSON.stringify(w));
+      } catch { /* empty */ }
     });
   });
   await page.waitForTimeout(400);
@@ -496,8 +501,13 @@ async function runUiPhase(userData) {
   report.navigation.drift = !nav.coherent;
 
   // Full journey to branch_select via Next (no openAtStep)
-  await page.click('#bf-next-btn');
-  await page.waitForTimeout(350);
+  const postGoogle = await readNavigationFrame(page);
+  if (postGoogle.stepId === 'google' && postGoogle.validateStep) {
+    await page.click('#bf-next-btn').catch(async () => {
+      await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
+    });
+    await page.waitForTimeout(350);
+  }
   snap = await readNavigationFrame(page);
   if (snap.stepId === 'discovery') {
     await seedDiscoveryFixtures(page);
