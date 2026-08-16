@@ -299,6 +299,40 @@
     for (const k of KV_MIRROR) {
       if (data[k] !== undefined) apply(k, data[k]);
     }
+    // Pre-auth Google connection projection (written by setupCommitGoogleConnection
+    // before a centerId exists). Apply onto settings so discovery/hasGoogle work
+    // after restart without an RBAC session.
+    const setupGoogle = data.__tdw_setup_google__;
+    const setupShadow = data.__tdw_setup_settings_shadow__;
+    if (setupShadow?.backup && (!data.settings || typeof data.settings !== 'object')) {
+      apply('settings', setupShadow);
+    } else if (setupGoogle && typeof setupGoogle === 'object') {
+      const current = (data.settings && typeof data.settings === 'object')
+        ? data.settings
+        : (global.settings || {});
+      const next = {
+        ...current,
+        backup: {
+          ...(current.backup || {}),
+          providers: {
+            ...(current.backup?.providers || {}),
+            google: {
+              ...(current.backup?.providers?.google || {}),
+              ...setupGoogle,
+            },
+          },
+          cloudProvider: 'google',
+          cloudEnabled: setupGoogle.connected === true,
+          cloudDb: {
+            ...(current.backup?.cloudDb || {}),
+            enabled: setupGoogle.connected === true
+              ? true
+              : !!(current.backup?.cloudDb || {}).enabled,
+          },
+        },
+      };
+      apply('settings', next);
+    }
 
     publishState(data, res.revision);
     // One-time cutover cleanup. Removal happens only after verified SQLite hydrate;

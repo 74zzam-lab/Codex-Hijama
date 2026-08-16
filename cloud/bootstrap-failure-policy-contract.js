@@ -115,7 +115,20 @@
       message: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
     },
     cloud_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'بدأ الاتصال بـ Google Drive ولكن لم تصل بيانات من الملف. تحقق من الاتصال ثم أعد المحاولة.' },
+    backup_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'بدأ الاتصال بـ Google Drive ولكن لم تصل بيانات من الملف. تحقق من الاتصال ثم أعد المحاولة.' },
     cloud_restore_timeout: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-RESTORE-TIMEOUT', message: 'استغرقت الاستعادة وقتاً أطول من المسموح. أعد المحاولة.' },
+    rbac_session_required: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-RBAC-SESSION',
+      message: 'تعذر إكمال خطوة الإعداد لأن جلسة التشغيل غير جاهزة بعد. أعد فتح الإعداد وحاول مرة أخرى — إن استمرت المشكلة فهذا خلل في مسار الإعداد وليس في حساب Google.',
+    },
+    rbac_session_unavailable: {
+      outcome: OUTCOME.USER_ACTION_REQUIRED,
+      userActionRequired: true,
+      code: 'TDW-BOOT-RBAC-SESSION',
+      message: 'يلزم تسجيل دخول المالك لإكمال هذه الخطوة.',
+    },
 
     // Main-process setup-restore boundaries. Each one is reachable from the
     // Existing-customer restore step and must name its own cause.

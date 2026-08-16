@@ -58,9 +58,20 @@
         };
         s.backup.cloudProvider = 'google';
         s.backup.cloudEnabled = true;
-        const committed = typeof global.persistData === 'function'
-          ? await global.persistData('settings', s)
-          : await global.SqliteBridge?.setAuthoritative?.('settings', s);
+        const commit = typeof global.commitGoogleConnectionForSetup === 'function'
+          ? global.commitGoogleConnectionForSetup
+          : null;
+        const committed = commit
+          ? await commit({
+            connected: true,
+            email: live.email || previous.email || '',
+            hasRefreshToken: !!live.hasRefreshToken,
+            oauth: live.oauth !== false,
+            userDisconnected: false,
+          })
+          : (typeof global.persistData === 'function'
+            ? await global.persistData('settings', s)
+            : await global.SqliteBridge?.setAuthoritative?.('settings', s));
         if (committed?.ok === false) return false;
       }
     } catch { /* empty */ }

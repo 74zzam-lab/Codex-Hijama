@@ -14,12 +14,14 @@ const { BackupV2Scheduler } = require('./backup-v2-scheduler');
 const { copyWithResume, uploadWithResume } = require('./backup-v2-transfer');
 const backupMain = require('./backup');
 const { encodeIpcError } = require('../cloud/ipc-error-envelope');
+const { createByteProgressWatchdog, DEFAULT_STALL_MS } = require('./byte-progress-watchdog');
 const MASTER_SECRET_CREDENTIAL = 'backup-v2-master-secret-v1';
 const SETUP_RESTORE_DIAGNOSTIC_LIMIT = 40;
 
 /** Setup-restore failures the operator can meaningfully retry as-is. */
 const RETRYABLE_SETUP_RESTORE_CODES = new Set([
   'cloud_download_failed',
+  'cloud_download_stalled',
   'backup_download_stalled',
   'cloud_download_incomplete',
   'backup_size_mismatch',
@@ -43,7 +45,8 @@ function classifySetupRestoreFailure(raw, providerStatus) {
   if (status === 429 || (status && status >= 500) || /rate_?limit|timeout|econn|socket|network/.test(text)) {
     return 'cloud_download_failed';
   }
-  if (/stall/.test(text)) return 'backup_download_stalled';
+  if (/stall/.test(text)) return 'cloud_download_stalled';
+  if (/abort/.test(text)) return 'cloud_download_stalled';
   if (/size_mismatch|expected_size|length_mismatch/.test(text)) return 'backup_size_mismatch';
   if (/checksum|sha256|hash_mismatch/.test(text)) return 'backup_checksum_failed';
   if (/password|decrypt|auth_tag|scrypt|authentication_failed/.test(text)) {
@@ -881,18 +884,68 @@ function registerBackupV2Ipc({
     trace.mark('provider_call_started');
     let observedBytes = 0;
     let progressEvents = 0;
-    const downloaded = await backupMain.downloadCloudBackup(normalized, 'google', {
-      destPartialPath: partialPath,
-      totalBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
-      onProgress: (evt) => {
-        progressEvents += 1;
-        const bytes = Number(evt?.downloadedBytes) || 0;
-        if (bytes > observedBytes) observedBytes = bytes;
-        sendDownloadProgress(evt);
-      },
+    let headersReceived = false;
+    let providerHttpStatus = null;
+    const watchdog = createByteProgressWatchdog({
+      stallMs: Number(opts.stallMs) > 0 ? Number(opts.stallMs) : DEFAULT_STALL_MS,
     });
-    const providerStatus = Number(downloaded?.status || downloaded?.httpStatus) || null;
-    trace.setFacts({ downloadedBytes: observedBytes, providerStatus });
+    const watchdogState = watchdog.arm();
+    trace.mark('watchdog_armed', {
+      stallMs: watchdog.stallMs,
+      armedAt: watchdogState.armedAt,
+    });
+    let downloaded;
+    try {
+      downloaded = await backupMain.downloadCloudBackup(normalized, 'google', {
+        destPartialPath: partialPath,
+        totalBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
+        signal: watchdog.signal,
+        onResponseHeaders: (meta) => {
+          headersReceived = true;
+          providerHttpStatus = Number(meta?.httpStatus) || providerHttpStatus;
+          trace.mark('download_headers_received', {
+            httpStatus: providerHttpStatus,
+            contentLength: meta?.contentLength ?? null,
+          });
+        },
+        onProgress: (evt) => {
+          progressEvents += 1;
+          const bytes = Number(evt?.downloadedBytes) || 0;
+          if (bytes > observedBytes) {
+            if (observedBytes <= 0 && bytes > 0) {
+              trace.mark('first_byte', { downloadedBytes: bytes });
+            }
+            observedBytes = bytes;
+            watchdog.touch(bytes);
+          }
+          if (evt?.httpStatus) providerHttpStatus = Number(evt.httpStatus) || providerHttpStatus;
+          sendDownloadProgress(evt);
+        },
+      });
+    } catch (error) {
+      watchdog.disarm();
+      try { if (fs.existsSync(partialPath)) fs.unlinkSync(partialPath); } catch { /* best effort */ }
+      const state = watchdog.getState();
+      const classified = classifySetupRestoreFailure(error, providerHttpStatus)
+        || (state.stalled || state.aborted ? 'cloud_download_stalled' : null)
+        || 'cloud_download_failed';
+      throw trace.fail(classified, {
+        stage: 'provider_call_started',
+        details: {
+          watchdog: state,
+          headersReceived,
+          providerAbortObserved: state.aborted === true,
+        },
+      });
+    }
+    watchdog.disarm();
+    const providerStatus = Number(downloaded?.status || downloaded?.httpStatus || providerHttpStatus) || null;
+    trace.setFacts({
+      downloadedBytes: observedBytes || Number(downloaded?.downloadedBytes) || 0,
+      providerStatus,
+      headersReceived,
+      watchdog: watchdog.getState(),
+    });
     trace.mark('provider_call_returned', {
       providerOk: downloaded?.ok === true,
       progressEvents,
@@ -900,12 +953,21 @@ function registerBackupV2Ipc({
       providerStatus,
       needsReauth: downloaded?.needsReauth === true,
       streamed: !!downloaded?.streamedPath,
+      stalled: downloaded?.stalled === true,
+      aborted: downloaded?.aborted === true,
+      providerAbortObserved: watchdog.getState().aborted === true,
     });
     if (!downloaded?.ok) {
       try { if (fs.existsSync(partialPath)) fs.unlinkSync(partialPath); } catch { /* best effort */ }
       const classified = classifySetupRestoreFailure(downloaded, providerStatus)
+        || (downloaded?.stalled || downloaded?.aborted || downloaded?.code === 'cloud_download_stalled'
+          ? 'cloud_download_stalled'
+          : null)
         || (downloaded?.needsReauth ? 'needs_reauth' : 'cloud_download_failed');
-      throw trace.fail(classified, { stage: 'provider_call_returned', details: downloaded?.message || null });
+      throw trace.fail(classified, {
+        stage: 'provider_call_returned',
+        details: downloaded?.message || null,
+      });
     }
     let buffer = null;
     if (downloaded.streamedPath) {

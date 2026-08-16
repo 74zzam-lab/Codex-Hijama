@@ -328,8 +328,14 @@
     const prefix = normalized.fatal ? 'خطأ حرج'
       : (normalized.userActionRequired ? 'إجراء مطلوب' : 'خطأ');
     const retryHint = normalized.retryable ? ' — يمكن إعادة المحاولة' : '';
+    // One primary owner: meaningful code + one Arabic message + one support ref.
+    // Never append a second generic "unexpected" line when a known rawCode exists.
+    const primaryCode = normalized.rawCode && normalized.rawCode !== 'unknown'
+      && normalized.rawCode !== normalized.code
+      ? `${normalized.code} / ${normalized.rawCode}`
+      : normalized.code;
     const supportRef = normalized.correlationId ? ` — مرجع: ${normalized.correlationId}` : '';
-    return `${prefix} — ${normalized.message}${retryHint}${supportRef}`;
+    return `${prefix} — ${normalized.message} (${primaryCode})${retryHint}${supportRef}`;
   }
 
   function logNormalizedFailure(stepId, normalized) {
@@ -2439,6 +2445,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (discoveryInFlight) {
       return { ok: false, error: 'discovery_in_flight', retryable: true };
     }
+    // First-pass Google→Discovery must run the same Main Google reconciliation
+    // that close/reopen used to trigger via prepareBootstrapResume + ensureConnected.
+    // Without this, a successful OAuth token could leave settings unsynced and a
+    // protected settings write would surface as rbac_session_required.
+    try {
+      await refreshGoogleConnectionState({ acceptLiveReconnect: true });
+    } catch { /* discovery still validates hasGoogle() below */ }
     if (!hasGoogle()) {
       setStatus('⚠️ اربط Google أولاً', true);
       return { ok: false, error: 'google_not_connected', retryable: false };
@@ -2460,7 +2473,14 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       if (!result?.ok) {
         const err = result?.diagnostics?.error || 'discovery_failed';
-        setStatus('❌ فشل الاكتشاف — يمكن إعادة المحاولة. Google ما زال متصلاً.', true);
+        setStatusFromErr(
+          { code: err, error: err, message: err },
+          err,
+          {
+            stepId: 'discovery',
+            retryHandler: () => runDiscoveryGate({ forceRefresh: true }),
+          },
+        );
         return { ok: false, error: err, retryable: result?.diagnostics?.retryable !== false, discovery: result };
       }
       if (result.status === global.PostGoogleCloudDiscovery?.STATUS_EXISTING
@@ -2475,7 +2495,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       renderChecklist(getDisplayWizard(loadWizard()));
       return { ok: true, discovery: result };
     } catch (e) {
-      setStatusFromErr(e, 'discovery_failed', {
+      setStatusFromErr(e, e?.code || e?.error || 'discovery_failed', {
         stepId: 'discovery',
         retryHandler: () => runDiscoveryGate({ forceRefresh: true }),
       });
@@ -2552,8 +2572,16 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         userDisconnected: true,
       };
       settings.backup.cloudEnabled = false;
-      // Pre-auth setup must not invoke a protected generic settings write.
       global.DB?.set?.('settings', settings);
+      if (typeof global.commitGoogleConnectionForSetup === 'function') {
+        await global.commitGoogleConnectionForSetup({
+          connected: false,
+          userDisconnected: true,
+          email: '',
+          hasRefreshToken: false,
+          oauth: false,
+        });
+      }
       const wizard = loadWizard();
       const steps = stepsFor(wizard.path);
       const googleIndex = steps.indexOf('google');

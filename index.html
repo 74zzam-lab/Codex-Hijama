@@ -18106,6 +18106,53 @@ function renderCloudDbBackupUI() {
   if (oauthBtn) oauthBtn.style.display = connected ? 'none' : '';
 }
 
+async function commitGoogleConnectionForSetup(patch) {
+  patch = patch || {};
+  const api = (typeof getCuppingElectron === 'function' ? getCuppingElectron() : null)
+    || window.cuppingElectron
+    || window.tadawi
+    || window.tadawiElectron;
+  const commit = api?.database?.setupCommitGoogleConnection;
+  if (typeof commit !== 'function') {
+    // Non-Electron / legacy fallback — only after auth should persistData be used.
+    if (typeof persistData === 'function' && typeof settings !== 'undefined') {
+      return persistData('settings', settings);
+    }
+    return { ok: false, error: 'setup_google_commit_unavailable' };
+  }
+  const result = await commit({
+    connected: patch.connected === true,
+    userDisconnected: patch.userDisconnected === true,
+    email: patch.email || '',
+    hasRefreshToken: patch.hasRefreshToken === true,
+    oauth: patch.oauth !== false,
+  });
+  if (result?.ok === true) {
+    if (result.settings && typeof result.settings === 'object') {
+      if (typeof settings !== 'undefined') {
+        Object.assign(settings, result.settings);
+        if (result.settings.backup) settings.backup = result.settings.backup;
+      }
+      if (typeof window !== 'undefined') window.settings = settings;
+    } else if (result.google && typeof settings !== 'undefined') {
+      settings.backup = settings.backup || {};
+      settings.backup.providers = settings.backup.providers || {};
+      settings.backup.providers.google = {
+        ...(settings.backup.providers.google || {}),
+        ...result.google,
+      };
+      settings.backup.cloudProvider = 'google';
+      settings.backup.cloudEnabled = result.google.connected === true;
+      settings.backup.cloudDb = {
+        ...(settings.backup.cloudDb || {}),
+        enabled: result.google.connected === true ? true : !!(settings.backup.cloudDb || {}).enabled,
+      };
+    }
+  }
+  return result;
+}
+window.commitGoogleConnectionForSetup = commitGoogleConnectionForSetup;
+
 async function saveGoogleOAuthFromResult(res) {
   if (!res?.ok) return res;
   settings.backup.providers.google = {
@@ -18119,7 +18166,20 @@ async function saveGoogleOAuthFromResult(res) {
   settings.backup.cloudProvider = 'google';
   settings.backup.cloudEnabled = true;
   settings.backup.cloudDb = { ...(settings.backup.cloudDb || {}), enabled: true };
-  await persistData('settings', settings);
+  // Pre-auth bootstrap must never write settings through RBAC-protected
+  // database:command. Main owns the allowlisted Google connection projection.
+  const committed = await commitGoogleConnectionForSetup({
+    connected: true,
+    email: res.email || '',
+    hasRefreshToken: !!res.hasRefreshToken,
+    oauth: true,
+    userDisconnected: false,
+  });
+  if (!committed || committed.ok !== true) {
+    const error = new Error(committed?.error || 'setup_google_commit_failed');
+    error.code = committed?.error || 'setup_google_commit_failed';
+    throw error;
+  }
   if (typeof LicenseIdentity !== 'undefined' && res.email) {
     const bind = await LicenseIdentity.onGoogleConnected(res.email);
     if (!bind.ok) {
@@ -18943,11 +19003,19 @@ async function syncCloudStatusFromElectron(options) {
           userDisconnected: false
         };
         settings.backup.cloudEnabled = true;
-        const committed = await persistData('settings', settings);
+        const committed = await commitGoogleConnectionForSetup({
+          connected: true,
+          email: st.email || p.email || '',
+          hasRefreshToken: !!st.hasRefreshToken,
+          oauth: st.oauth !== false,
+          userDisconnected: false,
+        });
         if (committed?.ok === false) throw new Error(committed.error || 'google_status_commit_failed');
         return { ok: true, connected: true, recovered: true };
       }
-    } catch {}
+    } catch (error) {
+      return { ok: false, connected: false, error: error?.message || 'google_status_refresh_failed' };
+    }
     settings.backup.providers[prov] = {
       ...p,
       connected: false,
@@ -18956,7 +19024,13 @@ async function syncCloudStatusFromElectron(options) {
       userDisconnected: true
     };
     settings.backup.cloudEnabled = false;
-    await persistData('settings', settings);
+    await commitGoogleConnectionForSetup({
+      connected: false,
+      userDisconnected: true,
+      email: '',
+      hasRefreshToken: false,
+      oauth: false,
+    });
     if (typeof renderCloudDbBackupUI === 'function') renderCloudDbBackupUI();
     if (typeof renderBackupCloudStatus === 'function') renderBackupCloudStatus();
     if (typeof renderBackupUI === 'function') renderBackupUI();
@@ -18976,13 +19050,25 @@ async function syncCloudStatusFromElectron(options) {
         userDisconnected: false
       };
       settings.backup.cloudEnabled = true;
-      const committed = await persistData('settings', settings);
+      const committed = await commitGoogleConnectionForSetup({
+        connected: true,
+        email: st.email || settings.backup.providers[prov]?.email || '',
+        hasRefreshToken: !!st.hasRefreshToken,
+        oauth: st.oauth !== false,
+        userDisconnected: false,
+      });
       if (committed?.ok === false) throw new Error(committed.error || 'google_status_commit_failed');
     } else if (p.connected && st && st.connected === false && (st.needsReauth === true || st.oauth === false)) {
       // Only downgrade on authoritative auth loss — never on transient status reads.
       settings.backup.providers[prov] = { ...p, connected: false, email: p.email || '', oauth: false };
       settings.backup.cloudEnabled = false;
-      const committed = await persistData('settings', settings);
+      const committed = await commitGoogleConnectionForSetup({
+        connected: false,
+        userDisconnected: false,
+        email: p.email || '',
+        hasRefreshToken: false,
+        oauth: false,
+      });
       if (committed?.ok === false) throw new Error(committed.error || 'google_status_commit_failed');
     }
   } catch (error) {

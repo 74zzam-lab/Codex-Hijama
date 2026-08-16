@@ -11,10 +11,21 @@ async function getAccessToken(oauth2) {
   return token;
 }
 
+function abortError(signal) {
+  const reason = signal?.reason;
+  if (reason instanceof Error) return reason;
+  const err = new Error(String(reason?.code || reason || 'cloud_download_aborted'));
+  err.code = String(reason?.code || 'cloud_download_aborted');
+  return err;
+}
+
 async function driveFetch(oauth2, url, options = {}) {
+  const signal = options.signal;
+  if (signal?.aborted) throw abortError(signal);
   const token = await getAccessToken(oauth2);
   const res = await fetch(url, {
     ...options,
+    signal,
     headers: {
       Authorization: `Bearer ${token}`,
       ...(options.headers || {})
@@ -22,7 +33,10 @@ async function driveFetch(oauth2, url, options = {}) {
   });
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`drive_api_${res.status}:${text.slice(0, 200)}`);
+    const err = new Error(`drive_api_${res.status}:${text.slice(0, 200)}`);
+    err.code = `drive_api_${res.status}`;
+    err.httpStatus = res.status;
+    throw err;
   }
   if (options.raw) return res;
   if (options.method === 'DELETE' || res.status === 204) return { ok: true };
@@ -109,11 +123,23 @@ async function downloadFileWithProgress(oauth2, fileId, options = {}) {
   const path = require('path');
   const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
   const destPath = options.destPath ? String(options.destPath) : null;
-  const res = await driveFetch(oauth2, `${DRIVE}/files/${fileId}?alt=media`, { raw: true });
+  const signal = options.signal;
+  if (signal?.aborted) throw abortError(signal);
+  const res = await driveFetch(oauth2, `${DRIVE}/files/${fileId}?alt=media`, { raw: true, signal });
   const headerTotal = Number(res.headers.get('content-length'));
   const totalBytes = Number.isFinite(headerTotal) && headerTotal > 0
     ? headerTotal
     : (Number(options.totalBytes) > 0 ? Number(options.totalBytes) : null);
+  const httpStatus = Number(res.status) || 200;
+  if (typeof options.onResponseHeaders === 'function') {
+    try {
+      options.onResponseHeaders({
+        httpStatus,
+        contentLength: headerTotal,
+        totalBytes,
+      });
+    } catch { /* observer only */ }
+  }
   const reader = res.body && typeof res.body.getReader === 'function' ? res.body.getReader() : null;
 
   const emit = (downloadedBytes) => {
@@ -123,20 +149,22 @@ async function downloadFileWithProgress(oauth2, fileId, options = {}) {
         stage: 'downloading',
         downloadedBytes,
         totalBytes,
+        httpStatus,
         percent: totalBytes ? Math.min(100, Math.round((downloadedBytes / totalBytes) * 100)) : null,
       });
     } catch { /* observer only */ }
   };
 
   if (!reader) {
+    if (signal?.aborted) throw abortError(signal);
     const buf = Buffer.from(await res.arrayBuffer());
     emit(buf.length);
     if (destPath) {
       fs.mkdirSync(path.dirname(destPath), { recursive: true });
       fs.writeFileSync(destPath, buf, { mode: 0o600 });
-      return { bytes: buf.length, path: destPath, buffer: null };
+      return { bytes: buf.length, path: destPath, buffer: null, httpStatus };
     }
-    return { bytes: buf.length, path: null, buffer: buf };
+    return { bytes: buf.length, path: null, buffer: buf, httpStatus };
   }
 
   let downloadedBytes = 0;
@@ -148,6 +176,10 @@ async function downloadFileWithProgress(oauth2, fileId, options = {}) {
   }
   try {
     while (true) {
+      if (signal?.aborted) {
+        try { await reader.cancel?.(abortError(signal).message); } catch { /* best effort */ }
+        throw abortError(signal);
+      }
       const { done, value } = await reader.read();
       if (done) break;
       const chunk = Buffer.from(value);
@@ -156,14 +188,21 @@ async function downloadFileWithProgress(oauth2, fileId, options = {}) {
       downloadedBytes += chunk.length;
       emit(downloadedBytes);
     }
+  } catch (error) {
+    if (destPath) {
+      try { if (fd != null) fs.closeSync(fd); fd = null; } catch { /* ignore */ }
+      try { if (fs.existsSync(destPath)) fs.unlinkSync(destPath); } catch { /* best effort */ }
+    }
+    if (signal?.aborted && (!error?.code || error.code === 'ABORT_ERR')) throw abortError(signal);
+    throw error;
   } finally {
     if (fd != null) {
       try { fs.closeSync(fd); } catch { /* ignore */ }
     }
   }
-  if (destPath) return { bytes: downloadedBytes, path: destPath, buffer: null };
+  if (destPath) return { bytes: downloadedBytes, path: destPath, buffer: null, httpStatus };
   const buffer = Buffer.concat(chunks);
-  return { bytes: downloadedBytes, path: null, buffer };
+  return { bytes: downloadedBytes, path: null, buffer, httpStatus };
 }
 
 async function deleteFile(oauth2, fileId) {

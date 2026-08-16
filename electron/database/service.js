@@ -300,6 +300,7 @@ function hydratePreauth() {
   for (const key of [
     '__tdw_cloud_license__', '__tdw_meta__', '__tdw_device_config__',
     'commercial_license_data_v2',
+    '__tdw_setup_google__', '__tdw_setup_settings_shadow__',
   ]) {
     const value = repos.kv.get(key, undefined);
     if (value !== undefined) data[key] = value;
@@ -1105,6 +1106,108 @@ function isBootstrapTargetEmpty() {
     .reduce((sum, table) => sum + db.prepare(`SELECT COUNT(*) AS c FROM ${table}`).get().c, 0);
   const entities = db.prepare('SELECT COUNT(*) AS c FROM p0b_entities').get().c;
   return core === 0 && entities === 0 && listUsersForAuthentication().length === 0;
+}
+
+function commitSetupGoogleConnection(payload = {}) {
+  ensureDb();
+  const connected = payload.connected === true;
+  const userDisconnected = payload.userDisconnected === true;
+  const email = String(payload.email || '').trim().toLowerCase().slice(0, 320);
+  if (connected && userDisconnected) {
+    return { ok: false, error: 'setup_google_state_conflict', rolledBack: true };
+  }
+  if (connected && !email) {
+    return { ok: false, error: 'setup_google_email_required', rolledBack: true };
+  }
+  const google = {
+    connected: connected && !userDisconnected,
+    email: connected && !userDisconnected ? email : '',
+    oauth: connected && !userDisconnected && payload.oauth !== false,
+    hasRefreshToken: connected && !userDisconnected && payload.hasRefreshToken === true,
+    userDisconnected,
+    lastSync: null,
+    updatedAt: new Date().toISOString(),
+  };
+  try {
+    const committedAt = google.updatedAt;
+    let nextSettings = null;
+    const authority = readAuthorityIdentity();
+    const centerId = String(authority.centerId || '').trim();
+    db.transaction(() => {
+      repos.kv.set('__tdw_setup_google__', google);
+      if (centerId) {
+        const settingsRepo = repos.forEntity('settings');
+        const existingRows = settingsRepo.getAll({ centerId, branchId: '__ORG__' });
+        const currentSettings = unwrapEntityValue('settings', existingRows) || {};
+        const backup = { ...(currentSettings.backup || {}) };
+        backup.providers = { ...(backup.providers || {}) };
+        backup.providers.google = {
+          ...(backup.providers.google || {}),
+          ...google,
+        };
+        backup.cloudProvider = 'google';
+        backup.cloudEnabled = google.connected === true;
+        backup.cloudDb = {
+          ...(backup.cloudDb || {}),
+          enabled: google.connected === true ? true : !!(backup.cloudDb || {}).enabled,
+        };
+        nextSettings = { ...currentSettings, backup };
+        const settingsCommit = command({
+          commandId: `setup-google:${crypto.createHash('sha256').update(`${email}|${committedAt}`).digest('hex').slice(0, 24)}`,
+          entity: 'settings',
+          action: 'upsert',
+          record: { id: '__singleton__', value: nextSettings },
+          timestamp: committedAt,
+        }, { centerId, branchId: '__ORG__', actorId: 'setup', deviceId: 'setup', trusted: true });
+        if (settingsCommit?.ok !== true) {
+          const error = new Error(settingsCommit?.error || 'setup_google_settings_commit_failed');
+          error.code = settingsCommit?.error || 'setup_google_settings_commit_failed';
+          throw error;
+        }
+      } else {
+        const shadow = repos.kv.get('__tdw_setup_settings_shadow__', {}) || {};
+        const backup = { ...(shadow.backup || {}) };
+        backup.providers = { ...(backup.providers || {}) };
+        backup.providers.google = {
+          ...(backup.providers.google || {}),
+          ...google,
+        };
+        backup.cloudProvider = 'google';
+        backup.cloudEnabled = google.connected === true;
+        backup.cloudDb = {
+          ...(backup.cloudDb || {}),
+          enabled: google.connected === true ? true : !!(backup.cloudDb || {}).enabled,
+        };
+        nextSettings = { ...shadow, backup };
+        repos.kv.set('__tdw_setup_settings_shadow__', nextSettings);
+      }
+      db.prepare(`
+        INSERT INTO meta(key, value) VALUES('setupGoogleCommittedAt', ?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+      `).run(committedAt);
+    })();
+    return {
+      ...hydratePreauth(),
+      ok: true,
+      setupGoogle: true,
+      committedAt,
+      google,
+      settings: nextSettings,
+      authoritative: true,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error.code || 'setup_google_commit_failed',
+      message: error.message,
+      rolledBack: true,
+    };
+  }
+}
+
+function getSetupGoogleConnection() {
+  ensureDb();
+  return repos.kv.get('__tdw_setup_google__', null);
 }
 
 function commitSetupActivation(payload = {}) {
@@ -2018,6 +2121,8 @@ module.exports = {
   enableSqlitePrimary,
   isBootstrapTargetEmpty,
   commitSetupActivation,
+  commitSetupGoogleConnection,
+  getSetupGoogleConnection,
   getSetupLicenseRemotePath,
   commitSetupBranchOnly,
   commitSetupOrganizationDevice,

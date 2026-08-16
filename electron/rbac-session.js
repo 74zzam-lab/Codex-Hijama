@@ -30,6 +30,7 @@ const CHANNEL_POLICY = Object.freeze({
   'database:setupCommitSignedActivation': { public: true },
   'database:setupCommitOrganizationDevice': { public: true },
   'database:setupCommitOwner': { public: true },
+  'database:setupCommitGoogleConnection': { public: true },
   'database:bootstrapFromLocal': { public: true },
   'database:persistTable': { minRank: 2 },
   'database:persistKv': { minRank: 2 },

@@ -149,6 +149,18 @@ async function check(name, operation) {
         disconnectCloud: async () => { disconnectCalls += 1; return { ok: true }; },
       },
       persistData: async () => ({ ok: true }),
+      commitGoogleConnectionForSetup: async (patch) => {
+        sandbox.settings.backup.providers.google = {
+          ...(sandbox.settings.backup.providers.google || {}),
+          connected: patch.connected === true,
+          email: patch.email || '',
+          oauth: patch.oauth !== false,
+          hasRefreshToken: patch.hasRefreshToken === true,
+          userDisconnected: patch.userDisconnected === true,
+        };
+        sandbox.settings.backup.cloudEnabled = patch.connected === true;
+        return { ok: true, google: sandbox.settings.backup.providers.google, settings: sandbox.settings };
+      },
       renderCloudDbBackupUI: () => {},
       renderBackupCloudStatus: () => {},
       renderBackupUI: () => {},

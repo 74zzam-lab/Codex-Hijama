@@ -377,11 +377,13 @@ async function downloadByPath(oauth2, remotePath, options = {}) {
   if (!file?.id) return null;
   const totalBytes = Number(file.size) || Number(options.totalBytes) || null;
   const destPartialPath = options.destPartialPath ? String(options.destPartialPath) : null;
-  if (destPartialPath || typeof options.onProgress === 'function') {
+  if (destPartialPath || typeof options.onProgress === 'function' || options.signal) {
     const streamed = await driveApi.downloadFileWithProgress(oauth2, file.id, {
       destPath: destPartialPath || null,
       totalBytes,
       onProgress: options.onProgress,
+      onResponseHeaders: options.onResponseHeaders,
+      signal: options.signal,
     });
     const buf = streamed.buffer || (streamed.path ? null : Buffer.alloc(0));
     if (buf && buf.length) {
@@ -392,6 +394,7 @@ async function downloadByPath(oauth2, remotePath, options = {}) {
         buffer: buf,
         streamedPath: streamed.path || null,
         downloadedBytes: streamed.bytes,
+        httpStatus: streamed.httpStatus || null,
       };
     }
     return {
@@ -399,6 +402,7 @@ async function downloadByPath(oauth2, remotePath, options = {}) {
       streamedPath: streamed.path || null,
       downloadedBytes: streamed.bytes,
       buffer: null,
+      httpStatus: streamed.httpStatus || null,
     };
   }
   const buf = await driveApi.downloadFile(oauth2, file.id);
@@ -454,19 +458,45 @@ async function downloadBackup(remotePath, _provider, options = {}) {
   try {
     const { oauth2 } = await getAuthedClient();
     const res = await downloadByPath(oauth2, remotePath, options);
-    if (!res) return { ok: false, message: 'الملف غير موجود' };
+    if (!res) return { ok: false, message: 'الملف غير موجود', status: 404, httpStatus: 404 };
     if (res.streamedPath) {
       return {
         ok: true,
         streamedPath: res.streamedPath,
         downloadedBytes: res.downloadedBytes || 0,
         file: res.file,
+        httpStatus: res.httpStatus || 200,
+        status: res.httpStatus || 200,
       };
     }
     const buf = res.buffer || Buffer.from(String(res.text || ''), 'utf8');
-    return { ok: true, text: res.text, payload: res.text, buffer: buf, file: res.file };
+    return {
+      ok: true,
+      text: res.text,
+      payload: res.text,
+      buffer: buf,
+      file: res.file,
+      httpStatus: res.httpStatus || 200,
+      status: res.httpStatus || 200,
+    };
   } catch (err) {
-    return { ok: false, message: err.message || String(err), needsReauth: needsReauthError(err) };
+    const code = String(err?.code || '');
+    const stalled = code === 'cloud_download_stalled' || /stall/i.test(code) || /stall/i.test(String(err?.message || ''));
+    const aborted = stalled
+      || code === 'cloud_download_aborted'
+      || code === 'ABORT_ERR'
+      || err?.name === 'AbortError'
+      || /aborted/i.test(String(err?.message || ''));
+    return {
+      ok: false,
+      message: err.message || String(err),
+      code: stalled ? 'cloud_download_stalled' : (code || undefined),
+      needsReauth: needsReauthError(err),
+      aborted,
+      stalled,
+      status: err?.httpStatus || null,
+      httpStatus: err?.httpStatus || null,
+    };
   }
 }
 

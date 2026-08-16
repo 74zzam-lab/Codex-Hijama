@@ -38,6 +38,8 @@ const NON_OPERATIONAL_KV_KEYS = Object.freeze([
    '__tdw_branch_idempotency__',
   '__tdw_device_config__', '__tdw_branch_creation_pending__',
   '__tdw_license_activation_state__',
+  '__tdw_setup_google__',
+  '__tdw_setup_settings_shadow__',
   'commercial_license_data_v2', 'commercial_license_audit_v2',
   '__tdw_owner_migration__',
 ]);

@@ -1185,6 +1185,33 @@ handle('database:setupCommitOwner', async (_e, options) => {
     },
   });
 });
+handle('database:setupCommitGoogleConnection', async (_e, options) => {
+  const opts = V.asObject(options || {}, { name: 'options', maxKeys: 12 });
+  const connected = opts.connected === true;
+  const userDisconnected = opts.userDisconnected === true;
+  let email = V.asOptionalString(opts.email, { name: 'email', max: 320 }) || '';
+  let hasRefreshToken = opts.hasRefreshToken === true;
+  let oauth = opts.oauth !== false;
+  if (connected && !userDisconnected) {
+    // Main is the authority for live OAuth. Renderer cannot forge a Google
+    // connection projection without a matching Main token.
+    const live = await backupGetCloudStatus('google');
+    if (!live?.connected || live?.needsReauth) {
+      return { ok: false, error: 'setup_google_main_not_connected', live: { connected: !!live?.connected, needsReauth: !!live?.needsReauth } };
+    }
+    email = String(live.email || email || '').trim();
+    hasRefreshToken = live.hasRefreshToken === true || hasRefreshToken;
+    oauth = live.oauth !== false;
+    if (!email) return { ok: false, error: 'setup_google_email_required' };
+  }
+  return dbService.commitSetupGoogleConnection({
+    connected,
+    userDisconnected,
+    email,
+    hasRefreshToken,
+    oauth,
+  });
+});
 handle('database:bootstrapFromLocal', (_e, snapshot, options) => {
   V.asObject(snapshot, { name: 'snapshot', required: true, maxKeys: 240 });
   return dbService.bootstrapFromLocalSnapshot(snapshot, V.asObject(options || {}));
