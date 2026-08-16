@@ -230,6 +230,22 @@ async function clickExistingPath(page) {
   try {
     await page.locator('#bf-existing-customer').click({ timeout: 8000 });
     clicked = 'playwright-click';
+    try {
+      await page.waitForFunction(
+        () => window.BootFlow?.loadWizard?.()?.path === 'existing',
+        null,
+        { timeout: 2000 },
+      );
+    } catch {
+      clicked = await page.evaluate(() => {
+        try {
+          window.BootFlow?.startPath?.(window.BootFlow.PATHS?.EXISTING || 'existing');
+          return 'startPath-after-click';
+        } catch (error) {
+          return `startPath-error:${error?.message || error}`;
+        }
+      });
+    }
   } catch {
     clicked = await page.evaluate(() => {
       try {
