@@ -6,7 +6,7 @@ on:
       runtime_source_commit:
         description: 'Frozen runtime source commit (must match audited bootstrap)'
         required: true
-        default: 'c07f2600e9a6632b04e1c5f60af37dcac3218428'
+        default: '6dbcfac8f1522ddc116c6c33894e8a18fef34cc5'
   push:
     branches:
       - cursor/bootstrap-desktop-uat-beb8
@@ -19,12 +19,12 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || 'c07f2600e9a6632b04e1c5f60af37dcac3218428' }}
+  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || '6dbcfac8f1522ddc116c6c33894e8a18fef34cc5' }}
   EXACT_HEAD_BUILD_ID: exact-gha-${{ github.run_number }}-${{ github.run_attempt }}
 
 jobs:
   exact-head-build-and-acceptance:
-    name: Build c07f260 runtime + installed acceptance
+    name: Build frozen runtime + installed acceptance
     runs-on: windows-2022
     timeout-minutes: 240
     steps:
