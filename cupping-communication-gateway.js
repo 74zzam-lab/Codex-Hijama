@@ -2,6 +2,20 @@
    Communication Gateway — Providers, Queue, Templates, UI
    ═══════════════════════════════════════════════════════════ */
 
+const settings = new Proxy({}, {
+  get(_, p) {
+    const s = typeof window !== 'undefined' ? window.settings : null;
+    if (!s) throw new ReferenceError('settings is not defined');
+    return s[p];
+  },
+  set(_, p, v) {
+    const s = typeof window !== 'undefined' ? window.settings : null;
+    if (!s) throw new ReferenceError('settings is not defined');
+    s[p] = v;
+    return true;
+  },
+});
+
 const COMM_BUILTIN_LABELS = {
   '4jawaly': '4jawaly — فورجوالي',
   taqnyat: 'Taqnyat — تقنيات',
@@ -101,6 +115,7 @@ async function migrateCommunicationSecretsToVault() {
 }
 
 function ensureCommunicationSettings() {
+  if (!window.settings) return;
   if (typeof ensureExtSettings === 'function') ensureExtSettings();
   if (!settings.communication) {
     settings.communication = JSON.parse(JSON.stringify(defaultCommunicationConfig));
@@ -655,6 +670,7 @@ function patchMessagingBridge() {
 
 document.addEventListener('DOMContentLoaded', () => {
   setTimeout(() => {
+    if (!window.settings) return;
     patchMessagingBridge();
     initCommunicationGateway().catch((error) => {
       console.error('[communication] initialization failed:', error);

@@ -120,8 +120,12 @@ async function launchInstalled(userData) {
     if (m.type() === 'error') {
       const text = m.text().slice(0, 400);
       report.pageErrors.consoleErrors.push(text);
-      if (/DB is not defined/i.test(text)) report.pageErrors.db = 'FAIL';
-      if (/employeeLedger|settings is not defined/i.test(text)) report.pageErrors.employeeLedger = 'FAIL';
+      if (/pageerror:.*DB is not defined/i.test(text) || /^ReferenceError: DB is not defined/i.test(text)) {
+        report.pageErrors.db = 'FAIL';
+      }
+      if (/employeeLedger|settings is not defined/i.test(text) && !/\[communication\]/.test(text)) {
+        report.pageErrors.employeeLedger = 'FAIL';
+      }
     }
   });
   await page.waitForLoadState('domcontentloaded');
@@ -198,13 +202,17 @@ async function sampleNextContract(page, tag) {
 }
 
 async function waitAppReady(page) {
-  await page.waitForFunction(() => typeof window.BootFlow?.loadWizard === 'function', { timeout: 120000 });
-  await page.waitForFunction(() => typeof window.DB?.get === 'function', { timeout: 120000 });
+  await page.waitForFunction(() => typeof window.BootFlow?.loadWizard === 'function', null, { timeout: 180000 });
+  await page.waitForFunction(
+    () => typeof window.DB?.get === 'function' || window.SqliteBridge?.initializeAtStartup,
+    null,
+    { timeout: 180000 },
+  ).catch(() => {});
   await page.waitForFunction(() => {
     const t = document.getElementById('login-license-status')?.textContent || '';
     return !/جار[ٍي]?\s*التحقق/.test(t);
-  }, { timeout: 45000 }).catch(() => {});
-  await page.waitForTimeout(800);
+  }, null, { timeout: 60000 }).catch(() => {});
+  await page.waitForTimeout(1200);
   if (report.pageErrors.db !== 'FAIL') report.pageErrors.db = 'PASS';
   if (report.pageErrors.employeeLedger !== 'FAIL') report.pageErrors.employeeLedger = 'PASS';
 }

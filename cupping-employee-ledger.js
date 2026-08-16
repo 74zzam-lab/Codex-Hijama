@@ -2009,7 +2009,15 @@
   global.extRestoreLedgerData = extRestoreData;
   global.isEmployeeLedgerModuleEnabled = isModuleEnabled;
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', extInit);
-  else extInit();
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scheduleExtInit);
+  else scheduleExtInit();
+
+  function scheduleExtInit() {
+    if (!global.settings) {
+      setTimeout(scheduleExtInit, 150);
+      return;
+    }
+    extInit();
+  }
 
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -176,6 +176,19 @@ const HIJAMA_INVENTORY_SEED = [
 ];
 
 const _db = () => window.DB || { get: (k, d) => d, set: () => Promise.resolve({ ok: false }) };
+const settings = new Proxy({}, {
+  get(_, p) {
+    const s = typeof window !== 'undefined' ? window.settings : null;
+    if (!s) throw new ReferenceError('settings is not defined');
+    return s[p];
+  },
+  set(_, p, v) {
+    const s = typeof window !== 'undefined' ? window.settings : null;
+    if (!s) throw new ReferenceError('settings is not defined');
+    s[p] = v;
+    return true;
+  },
+});
 let inventoryItems = _db().get('inventoryItems', []);
 let inventorySuppliers = _db().get('inventorySuppliers', []);
 let inventoryMovements = _db().get('inventoryMovements', []);
@@ -183,18 +196,18 @@ let systemLogs = _db().get('systemLogs', []);
 let cashDrawerSession = _db().get('cashDrawerSession', null);
 
 function ensureExtSettings() {
-  const settings = typeof window !== 'undefined' ? window.settings : null;
-  if (!settings || typeof settings !== 'object') return;
-  if (!settings.inventory) settings.inventory = JSON.parse(JSON.stringify(defaultInventoryConfig));
-  if (!settings.currency) settings.currency = JSON.parse(JSON.stringify(defaultCurrencyConfig));
-  if (!settings.messagingApi) settings.messagingApi = JSON.parse(JSON.stringify(defaultMessagingApiConfig));
-  if (!settings.cashFloat) settings.cashFloat = JSON.parse(JSON.stringify(defaultCashFloatConfig));
-  const r = settings.currency.rates || {};
+  const s = typeof window !== 'undefined' ? window.settings : null;
+  if (!s || typeof s !== 'object') return;
+  if (!s.inventory) s.inventory = JSON.parse(JSON.stringify(defaultInventoryConfig));
+  if (!s.currency) s.currency = JSON.parse(JSON.stringify(defaultCurrencyConfig));
+  if (!s.messagingApi) s.messagingApi = JSON.parse(JSON.stringify(defaultMessagingApiConfig));
+  if (!s.cashFloat) s.cashFloat = JSON.parse(JSON.stringify(defaultCashFloatConfig));
+  const r = s.currency.rates || {};
   ['USD', 'EUR', 'GBP'].forEach((code) => {
     if (!r[code] || r[code] <= 1) r[code] = defaultCurrencyConfig.rates[code];
   });
   r.SAR = 1;
-  settings.currency.rates = r;
+  s.currency.rates = r;
 }
 
 function getUserPermissions(user) {
