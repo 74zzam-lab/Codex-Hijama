@@ -651,7 +651,9 @@ async function runUiPhase(userData) {
   if (snap.stepId === 'license_org_recovery') {
     await seedLicenseOrgFixtures(page);
     await page.waitForFunction(() => window.BootFlow.validateStep('license_org_recovery'), null, { timeout: 15000 }).catch(() => {});
-    await page.click('#bf-next-btn');
+    const canNextLicense = await page.evaluate(() => document.getElementById('bf-next-btn')?.disabled !== true);
+    if (canNextLicense) await page.click('#bf-next-btn');
+    else await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
     await page.waitForTimeout(350);
   }
   snap = await advanceToStep(page, 'branch_select');

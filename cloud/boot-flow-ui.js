@@ -286,6 +286,7 @@
       bridge.setUiOnly(WIZARD_KEY, payload);
     }
     if (global.DB?.__sqliteWriteThrough) {
+      installWizardDbReadAuthority();
       return payload;
     }
     const set = global.DB?.set;
@@ -296,7 +297,32 @@
       } catch { /* empty */ }
       void result;
     }
+    installWizardDbReadAuthority();
     return payload;
+  }
+
+  /**
+   * DB.get must return the same wizard snapshot as loadWizard() for coordinator/gate
+   * consumers. SqliteBridge installWriteThrough replaces DB.get after BootFlow loads,
+   * so re-apply this wrapper after every hydrate/write-through install.
+   */
+  function installWizardDbReadAuthority() {
+    const store = global.DB;
+    if (!store?.get) return;
+    store.__tdwWizardGetBase = store.get.bind(store);
+    const base = store.__tdwWizardGetBase;
+    store.get = function wizardAuthoritativeGet(k, def) {
+      if (k === WIZARD_KEY) {
+        try {
+          const raw = localStorage.getItem(WIZARD_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+          }
+        } catch { /* empty */ }
+      }
+      return base(k, def);
+    };
   }
 
   function resetWizard(path) {
@@ -4418,6 +4444,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     validateStep,
     loadWizard,
     saveWizard,
+    installWizardDbReadAuthority,
     getDisplayWizard,
     getChecklistUiContext,
     buildChecklistModel: (ctx) => global.BootstrapChecklistContract?.buildChecklistModel?.(ctx || getChecklistUiContext()),
@@ -4507,4 +4534,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     isCriticalOpInFlight,
     version: 'v2-5.14'
   };
+  installWizardDbReadAuthority();
+  if (global.SqliteBridge?.subscribe) {
+    global.SqliteBridge.subscribe(() => installWizardDbReadAuthority());
+  }
 })(typeof window !== 'undefined' ? window : globalThis);

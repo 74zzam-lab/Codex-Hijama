@@ -230,10 +230,30 @@ function prevStepPathTests() {
   check(afterNav.currentStep === 0, `prevStep from google returns to language index (got ${afterNav.currentStep})`);
 }
 
+async function dbGetAuthorityTests() {
+  console.log('\n-- DB.get wizard authority after SqliteBridge hydrate --');
+  const ctx = bootContext();
+  await ctx.SqliteBridge.hydrateIntoMemory();
+  ctx.BootFlow.saveWizard({
+    path: 'existing',
+    currentStep: 0,
+    completedSteps: [],
+    startedAt: new Date().toISOString(),
+    lang: 'ar',
+    restoreChoice: null,
+    syncDone: false,
+    oauthLockAt: null,
+    wizardFlowVersion: ctx.BootFlow.WIZARD_FLOW_VERSION,
+  });
+  const viaDb = ctx.DB.get('__tdw_boot_wizard__', {});
+  check(viaDb.path === 'existing', `DB.get path after hydrate/write-through (got ${viaDb.path})`);
+}
+
 (async () => {
   await sqliteBridgeTests();
   await startPathTests();
   prevStepPathTests();
+  await dbGetAuthorityTests();
   console.log(`\n${passed} passed, ${failures.length} failed`);
   if (failures.length) {
     console.error(failures.join('\n'));

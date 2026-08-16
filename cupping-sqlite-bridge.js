@@ -116,13 +116,10 @@
   /** UI-only keys are Chromium-local; never let a stale in-memory cache shadow them. */
   function seedUiOnlyFromLocalStorage() {
     if (typeof DB === 'undefined') return;
-    const read = DB.__rawGet || DB.get?.bind(DB);
-    if (!read) return;
     for (const k of UI_ONLY_KEYS) {
       try {
-        const sentinel = { __tdw_ui_only_seed__: true };
-        const v = read(k, sentinel);
-        if (v !== sentinel) state.data[k] = v;
+        const raw = localStorage.getItem(k);
+        if (raw) state.data[k] = JSON.parse(raw);
       } catch { /* empty */ }
     }
   }
@@ -601,6 +598,7 @@
     DB.upsertRecord = upsertRecord;
     DB.deleteRecord = deleteRecord;
     DB.restoreLastCommit = restoreLastCommit;
+    try { global.BootFlow?.installWizardDbReadAuthority?.(); } catch { /* empty */ }
   }
 
   async function status() {
