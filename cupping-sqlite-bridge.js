@@ -103,11 +103,33 @@
 
   function rawSet(k, v) {
     if (!UI_ONLY_KEYS.has(k)) return false;
-    if (typeof DB !== 'undefined' && DB.__rawSet) return DB.__rawSet(k, v);
-    if (typeof DB !== 'undefined' && DB.set && !DB.__sqliteWriteThrough) return DB.set(k, v);
-    try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* empty */ }
+    // Never call DB.set here — it may be the sqlite write-through wrapper and recurse.
+    if (typeof DB !== 'undefined' && DB.__rawSet) {
+      DB.__rawSet(k, v);
+    } else {
+      try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* empty */ }
+    }
     state.data[k] = v;
     return true;
+  }
+
+  /** UI-only keys are Chromium-local; never let a stale in-memory cache shadow them. */
+  function seedUiOnlyFromLocalStorage() {
+    if (typeof DB === 'undefined') return;
+    const read = DB.__rawGet || DB.get?.bind(DB);
+    if (!read) return;
+    for (const k of UI_ONLY_KEYS) {
+      try {
+        const sentinel = { __tdw_ui_only_seed__: true };
+        const v = read(k, sentinel);
+        if (v !== sentinel) state.data[k] = v;
+      } catch { /* empty */ }
+    }
+  }
+
+  function setUiOnly(key, value) {
+    if (!UI_ONLY_KEYS.has(key)) return { ok: false, error: 'not_ui_only_key' };
+    return rawSet(key, value) ? { ok: true, uiOnly: true } : { ok: false, error: 'ui_only_write_failed' };
   }
 
   function syncMemory(tableKey, value) {
@@ -346,6 +368,7 @@
 
     state.ready = true;
     installWriteThrough();
+    seedUiOnlyFromLocalStorage();
     return { ok: true, status: state.status, report: res, sqlitePrimary: state.sqlitePrimary };
   }
 
@@ -528,6 +551,14 @@
     const baseRaw = DB.__rawSet;
     const baseRead = DB.__rawGet;
     DB.get = function sqliteAuthoritativeGet(k, def) {
+      // BootFlow wizard path and other UI-only keys must read the Chromium-local
+      // mirror. state.data can hold a stale snapshot from an earlier hydrate while
+      // localStorage already has startPath('existing'|'new').
+      if (UI_ONLY_KEYS.has(k)) {
+        const value = baseRead(k, def);
+        if (value !== def) state.data[k] = value;
+        return value;
+      }
       if (state.sqlitePrimary && Object.prototype.hasOwnProperty.call(state.data, k)) {
         const value = state.data[k];
         return value === undefined ? def : value;
@@ -556,6 +587,7 @@
     };
     DB.__sqliteWriteThrough = true;
     DB.__noOptimisticOperational = true;
+    seedUiOnlyFromLocalStorage();
     DB.commitOperational = commitOperational;
     DB.setAuthoritative = setAuthoritative;
     DB.upsertRecord = upsertRecord;
@@ -576,6 +608,8 @@
   }
 
   global.SqliteBridge = {
+    setUiOnly,
+    seedUiOnlyFromLocalStorage,
     migrateAndEnable,
     initializeAtStartup,
     finalizeSetupData,

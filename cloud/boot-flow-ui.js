@@ -268,18 +268,24 @@
   }
 
   function saveWizard(w) {
+    const payload = (w && typeof w === 'object' && !Array.isArray(w)) ? { ...w } : w;
     const set = global.DB?.set;
     if (set) {
-      const result = set(WIZARD_KEY, w);
+      const result = set(WIZARD_KEY, payload);
       // Wizard is UI-only state; ensure the next synchronous loadWizard() sees the write
       // even when DB.set returns a Promise (SQLite bridge) or a guarded noop.
       try {
-        if (global.DB?.__rawSet) global.DB.__rawSet(WIZARD_KEY, w);
-        else localStorage.setItem(WIZARD_KEY, JSON.stringify(w));
+        if (global.SqliteBridge?.setUiOnly && global.DB?.__sqliteWriteThrough) {
+          global.SqliteBridge.setUiOnly(WIZARD_KEY, payload);
+        } else if (global.DB?.__rawSet) {
+          global.DB.__rawSet(WIZARD_KEY, payload);
+        } else {
+          localStorage.setItem(WIZARD_KEY, JSON.stringify(payload));
+        }
       } catch { /* empty */ }
       void result;
     }
-    return w;
+    return payload;
   }
 
   function resetWizard(path) {
@@ -1775,6 +1781,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 `;
   }
 
+  function wirePathChoiceHandlers(el) {
+    const newBtn = el?.querySelector?.('#bf-new-customer');
+    const existingBtn = el?.querySelector?.('#bf-existing-customer');
+    if (newBtn) newBtn.onclick = () => startPath(PATHS.NEW);
+    if (existingBtn) existingBtn.onclick = () => startPath(PATHS.EXISTING);
+  }
+
   function ensureDOM() {
     injectStyles();
     let el = document.getElementById('bootFlowOverlay');
@@ -1786,7 +1799,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         el = null;
       }
     }
-    if (el) return;
+    if (el) {
+      wirePathChoiceHandlers(el);
+      return;
+    }
     el = document.createElement('div');
     el.id = 'bootFlowOverlay';
     el.className = 'bf-overlay';
@@ -1844,8 +1860,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         </footer>
       </div>`;
     document.body.appendChild(el);
-    el.querySelector('#bf-new-customer').onclick = () => startPath(PATHS.NEW);
-    el.querySelector('#bf-existing-customer').onclick = () => startPath(PATHS.EXISTING);
+    wirePathChoiceHandlers(el);
     el.querySelector('#bf-close-btn')?.addEventListener('click', () => dismissBootstrap());
     el.addEventListener('keydown', onDialogKeydown);
   }

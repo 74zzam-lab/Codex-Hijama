@@ -74,6 +74,7 @@ jobs:
         shell: pwsh
         run: |
           node tests/baseline/test-bootstrap-navigation-model.js
+          node tests/baseline/test-bootstrap-wizard-path-persistence.js
           node tests/baseline/test-bootstrap-desktop-button-restore.js
           node tests/baseline/test-final-runtime-rbac-restore-stall.js
           node tests/baseline/test-setup-restore-hung-provider-deadline.js

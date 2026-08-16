@@ -73,6 +73,15 @@ const report = {
   structuredErrors: 'PENDING',
   startEmpty: 'PENDING',
   closeReopen: 'PENDING',
+  pathPersistence: {
+    existingAfterClick: 'PENDING',
+    existingSequence: 'PENDING',
+    navCyclePath: 'PENDING',
+    closeReopenPath: 'PENDING',
+    restartPath: 'PENDING',
+    newPathSeparate: 'PENDING',
+    details: [],
+  },
   pageErrors: { pageerror: 0, db: 'PENDING', employeeLedger: 'PENDING', consoleErrors: [], unhandledRejections: [] },
   google: 'PENDING',
   realDrive: 'UNVERIFIED',
@@ -219,29 +228,45 @@ async function clickExistingPath(page) {
   const clicked = await page.evaluate(() => {
     const btn = document.getElementById('bf-existing-customer');
     if (btn) { btn.click(); return 'ui-click'; }
-    if (window.BootFlow?.startPath) {
-      window.BootFlow.startPath(window.BootFlow.PATHS?.EXISTING || 'existing');
-      return 'startPath';
-    }
     return false;
   });
   await page.waitForFunction(
     () => window.BootFlow?.loadWizard?.()?.path === 'existing',
     null,
     { timeout: 30000 },
-  ).catch(async () => {
-    await page.evaluate(() => {
-      window.BootFlow.startPath(window.BootFlow.PATHS?.EXISTING || 'existing');
-      try {
-        const w = window.BootFlow.loadWizard();
-        w.path = 'existing';
-        localStorage.setItem('__tdw_boot_wizard__', JSON.stringify(w));
-      } catch { /* empty */ }
-    });
-  });
-  await page.waitForTimeout(400);
+  );
+  await page.waitForTimeout(200);
   const snap = await readNavigationFrame(page);
   return { clicked, snap };
+}
+
+async function assertPathPersistence(page, expectedPath, tag) {
+  const snap = await page.evaluate((path) => {
+    const BF = window.BootFlow;
+    const w = BF?.loadWizard?.() || {};
+    const frame = BF?.describeCurrentStep?.() || {};
+    const seq = path === 'existing'
+      ? (window.BootstrapStepModel?.EXISTING_SEQUENCE || [])
+      : (window.BootstrapStepModel?.sequenceFor?.('new', { path: 'new', needsPathFork: true }) || []);
+    return {
+      path: w.path,
+      totalSteps: frame.totalSteps,
+      sequenceLength: seq.length,
+      stepId: frame.stepId,
+      dbPath: window.DB?.get?.('__tdw_boot_wizard__', {})?.path ?? null,
+      lsPath: (() => {
+        try {
+          const raw = localStorage.getItem('__tdw_boot_wizard__');
+          return raw ? JSON.parse(raw).path : null;
+        } catch { return null; }
+      })(),
+      tag,
+    };
+  }, expectedPath);
+  report.pathPersistence.details.push(snap);
+  return snap.path === expectedPath
+    && snap.dbPath === expectedPath
+    && snap.lsPath === expectedPath;
 }
 
 async function selectLanguage(page) {
@@ -418,12 +443,15 @@ async function runUiPhase(userData) {
   const bootOpen = await page.evaluate(() => document.getElementById('bootFlowOverlay')?.classList.contains('open'));
   recordButton('bootstrap-open', { pass: bootOpen, visible: true, enabled: true, clicked: true, finalState: bootOpen ? 'open' : 'closed' });
 
-  // Path: click Existing via real UI
+  // Path: click Existing via real UI — authoritative persistence gate
   const pathPick = await clickExistingPath(page);
+  report.pathPersistence.existingAfterClick = pathPick.snap.path === 'existing' ? 'PASS' : 'FAIL';
+  report.pathPersistence.existingSequence = pathPick.snap.totalSteps === 10 ? 'PASS' : 'FAIL';
   recordButton('bf-path-existing', {
-    pass: pathPick.snap.path === 'existing' && pathPick.snap.stepId === 'language',
+    pass: pathPick.snap.path === 'existing' && pathPick.snap.stepId === 'language' && pathPick.snap.totalSteps === 10,
     visible: true, enabled: true, clicked: pathPick.clicked, finalState: pathPick.snap.stepId,
   });
+  await assertPathPersistence(page, 'existing', 'after-existing-click');
   recordButton('bf-path-new', { pass: true, visible: false, enabled: false, clicked: false, unverifiedExternal: false, note: 'not exercised in EXISTING acceptance path' });
 
   const viewports = await testViewports(page);
@@ -499,6 +527,7 @@ async function runUiPhase(userData) {
   nav = await assertNavigationCoherence(page, 'after-nav-cycle');
   report.navigation.agreement = nav.coherent ? 'PASS' : 'FAIL';
   report.navigation.drift = !nav.coherent;
+  report.pathPersistence.navCyclePath = (await assertPathPersistence(page, 'existing', 'after-nav-cycle')) ? 'PASS' : 'FAIL';
 
   // Full journey to branch_select via Next (no openAtStep)
   const postGoogle = await readNavigationFrame(page);
@@ -653,9 +682,39 @@ async function runUiPhase(userData) {
   await page.waitForTimeout(300);
   const afterReopen = await readNavigationFrame(page);
   report.closeReopen = { pass: !!beforeClose.path, before: beforeClose.stepId, after: afterReopen.stepId };
+  report.pathPersistence.closeReopenPath = (await assertPathPersistence(page, 'existing', 'after-close-reopen')) ? 'PASS' : 'FAIL';
 
-  report.google = report.branch.pass && report.navigation.agreement === 'PASS' ? 'ACTION_REQUIRED' : 'BLOCKED_PRE_GOOGLE_FAIL';
+  // Full app restart must preserve path
   await app.close();
+  const restart = await launchInstalled(userData);
+  const restartApp = restart.app;
+  const restartPage = restart.page;
+  await waitAppReady(restartPage);
+  await openBootstrap(restartPage);
+  report.pathPersistence.restartPath = (await assertPathPersistence(restartPage, 'existing', 'after-full-restart')) ? 'PASS' : 'FAIL';
+
+  // NEW path is separate and uses its own sequence (fresh isolated profile)
+  const newUserData = path.join(os.tmpdir(), `exact-head-new-path-${buildId}`);
+  fs.mkdirSync(newUserData, { recursive: true });
+  const newLaunch = await launchInstalled(newUserData);
+  await waitAppReady(newLaunch.page);
+  await openBootstrap(newLaunch.page);
+  await newLaunch.page.evaluate(() => document.getElementById('bf-new-customer')?.click());
+  await newLaunch.page.waitForFunction(() => window.BootFlow?.loadWizard?.()?.path === 'new', null, { timeout: 30000 });
+  const newSnap = await readNavigationFrame(newLaunch.page);
+  const newPersist = await assertPathPersistence(newLaunch.page, 'new', 'new-path-separate');
+  report.pathPersistence.newPathSeparate = newPersist && newSnap.totalSteps === 14 ? 'PASS' : 'FAIL';
+  await newLaunch.app.close();
+
+  report.google = report.branch.pass && report.navigation.agreement === 'PASS'
+    && report.pathPersistence.existingAfterClick === 'PASS'
+    && report.pathPersistence.existingSequence === 'PASS'
+    && report.pathPersistence.navCyclePath === 'PASS'
+    && report.pathPersistence.closeReopenPath === 'PASS'
+    && report.pathPersistence.restartPath === 'PASS'
+    && report.pathPersistence.newPathSeparate === 'PASS'
+    ? 'ACTION_REQUIRED' : 'BLOCKED_PRE_GOOGLE_FAIL';
+  await restartApp.close();
 }
 
 async function runRestoreAndStallTests() {
@@ -726,6 +785,12 @@ function finalizeVerdict() {
     report.structuredErrors === 'PASS',
     report.startEmpty === 'PASS',
     report.closeReopen?.pass === true,
+    report.pathPersistence.existingAfterClick === 'PASS',
+    report.pathPersistence.existingSequence === 'PASS',
+    report.pathPersistence.navCyclePath === 'PASS',
+    report.pathPersistence.closeReopenPath === 'PASS',
+    report.pathPersistence.restartPath === 'PASS',
+    report.pathPersistence.newPathSeparate === 'PASS',
     report.pageErrors.pageerror === 0,
     report.pageErrors.db !== 'FAIL',
     report.pageErrors.employeeLedger !== 'FAIL',
