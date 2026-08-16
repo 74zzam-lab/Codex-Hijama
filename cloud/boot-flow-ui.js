@@ -2177,11 +2177,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const nav = document.getElementById('bf-step-nav');
     if (!nav) return;
     nav.innerHTML = '';
-    const frame = describeCurrentStep(getDisplayWizard(w));
+    const display = getDisplayWizard(w);
+    const frame = describeCurrentStep(display);
     const step = frame.stepId;
     const prev = document.createElement('button');
     prev.type = 'button';
     prev.className = 'btn btn-ghost btn-sm';
+    prev.id = 'bf-back-btn';
     prev.textContent = frame.previousStepId ? '◀ السابق' : '◀ مرحباً بك';
     prev.onclick = () => prevStep();
     nav.appendChild(prev);
@@ -2196,7 +2198,17 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     next.className = 'btn btn-primary btn-sm';
     next.id = 'bf-next-btn';
     next.textContent = 'متابعة ▶';
-    next.disabled = !validateStep(step);
+    // Authoritative gate only. Never keep Next disabled when validateStep is true
+    // (checklist DONE / coordinator resolved must agree via validateStep).
+    const stepOk = validateStep(step) === true;
+    const inFlight = isStepOperationInFlight(step)
+      || (step === 'discovery' && discoveryInFlight)
+      || (step === 'google' && oauthInFlight)
+      || (step === 'restore' && restoreInFlight);
+    next.disabled = !stepOk || inFlight;
+    next.title = !stepOk
+      ? (STEP_HINTS[step] || 'أكمل متطلبات هذه الخطوة أولاً')
+      : (inFlight ? 'انتظر اكتمال العملية الجارية' : '');
     next.onclick = () => advanceWizard();
     nav.appendChild(next);
   }
@@ -2493,6 +2505,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       clearTransientBootstrapState({ clearStepError: false, clearStatus: true });
       reconcileBranchSelectionAfterDiscovery();
       renderChecklist(getDisplayWizard(loadWizard()));
+      renderNavButtons(loadWizard());
       return { ok: true, discovery: result };
     } catch (e) {
       const code = e?.code || e?.error || 'discovery_failed';
@@ -2555,6 +2568,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       const w = loadWizard();
       renderProgress(w);
       renderNavButtons(w);
+      // Re-render step actions so Connect→Change/Disconnect swap immediately.
+      renderStepUI(w);
     }
   }
 
@@ -3157,23 +3172,37 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           : '<p>اربط حساب Google الخاص بالمركز. الاكتشاف يتم في الخطوة التالية.</p><div id="bf-google-email" class="bf-lead" dir="ltr"></div>';
         const emailEl = content.querySelector('#bf-google-email');
         const provEmail = global.settings?.backup?.providers?.google?.email || '';
-        if (hasGoogle() && provEmail) emailEl.textContent = '✅ ' + provEmail;
-        const btn = addBtn(actions, oauthInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط Google', 'btn-primary', () => runGoogleConnect(), oauthInFlight || (isNew && !hasValidLicense()));
-        btn.id = 'bf-google-connect-btn';
-        if (hasGoogle()) {
-          addBtn(actions, 'فصل / تغيير حساب Google', 'btn-secondary', async () => {
+        const connected = hasGoogle();
+        if (connected && provEmail) emailEl.textContent = '✅ ' + provEmail;
+        else if (connected) emailEl.textContent = '✅ Google متصل';
+        if (!connected) {
+          const btn = addBtn(actions, oauthInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط Google', 'btn-primary', () => runGoogleConnect(), oauthInFlight || (isNew && !hasValidLicense()));
+          btn.id = 'bf-google-connect-btn';
+        } else {
+          // Connected: never hide account controls behind a stale render.
+          const changeBtn = addBtn(actions, 'تبديل حساب Google', 'btn-secondary', async () => {
+            if (!confirm('فصل حساب Google الحالي وتسجيل حساب آخر؟ لن تُحذف بيانات الترخيص أو SQLite المحلية.')) return;
+            const result = await disconnectGoogleDuringSetup();
+            if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed', { stepId: 'google' });
+            else {
+              renderAll(loadWizard());
+            }
+          });
+          changeBtn.id = 'bf-google-change-btn';
+          const discBtn = addBtn(actions, 'فصل حساب Google', 'btn-ghost', async () => {
             if (!confirm('فصل حساب Google الحالي؟ لن تُحذف بيانات الترخيص أو SQLite المحلية.')) return;
             const result = await disconnectGoogleDuringSetup();
             if (!result?.ok) setStatusFromErr(result, result?.error || 'google_disconnect_failed', { stepId: 'google' });
-            else renderStepUI(loadWizard());
+            else renderAll(loadWizard());
           });
+          discBtn.id = 'bf-google-disconnect-btn';
         }
-        if (hasGoogle()) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
+        if (connected) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
         else if (w.googleSessionConnected && !global.settings?.backup?.providers?.google?.userDisconnected) {
           refreshGoogleConnectionState({ acceptLiveReconnect: true }).then((state) => {
             if (state?.connected || hasGoogle()) {
               setStatus('✅ Google متصل — تابع لخطوة الاكتشاف');
-              renderNavButtons(loadWizard());
+              renderAll(loadWizard());
             }
           });
         }

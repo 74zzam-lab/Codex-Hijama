@@ -886,6 +886,9 @@ function registerBackupV2Ipc({
     let progressEvents = 0;
     let headersReceived = false;
     let providerHttpStatus = null;
+    // Arm BEFORE token refresh / provider resolve / remote lookup / media fetch.
+    // Any hang in that chain must still abort within stallMs.
+    const { raceAbort } = require('./cloud-providers/google-drive-api');
     const watchdog = createByteProgressWatchdog({
       stallMs: Number(opts.stallMs) > 0 ? Number(opts.stallMs) : DEFAULT_STALL_MS,
     });
@@ -896,32 +899,36 @@ function registerBackupV2Ipc({
     });
     let downloaded;
     try {
-      downloaded = await backupMain.downloadCloudBackup(normalized, 'google', {
-        destPartialPath: partialPath,
-        totalBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
-        signal: watchdog.signal,
-        onResponseHeaders: (meta) => {
-          headersReceived = true;
-          providerHttpStatus = Number(meta?.httpStatus) || providerHttpStatus;
-          trace.mark('download_headers_received', {
-            httpStatus: providerHttpStatus,
-            contentLength: meta?.contentLength ?? null,
-          });
-        },
-        onProgress: (evt) => {
-          progressEvents += 1;
-          const bytes = Number(evt?.downloadedBytes) || 0;
-          if (bytes > observedBytes) {
-            if (observedBytes <= 0 && bytes > 0) {
-              trace.mark('first_byte', { downloadedBytes: bytes });
+      downloaded = await raceAbort(
+        backupMain.downloadCloudBackup(normalized, 'google', {
+          destPartialPath: partialPath,
+          totalBytes: Number(opts.expectedSizeBytes) > 0 ? Number(opts.expectedSizeBytes) : null,
+          signal: watchdog.signal,
+          skipProviderResolve: true,
+          onResponseHeaders: (meta) => {
+            headersReceived = true;
+            providerHttpStatus = Number(meta?.httpStatus) || providerHttpStatus;
+            trace.mark('download_headers_received', {
+              httpStatus: providerHttpStatus,
+              contentLength: meta?.contentLength ?? null,
+            });
+          },
+          onProgress: (evt) => {
+            progressEvents += 1;
+            const bytes = Number(evt?.downloadedBytes) || 0;
+            if (bytes > observedBytes) {
+              if (observedBytes <= 0 && bytes > 0) {
+                trace.mark('first_byte', { downloadedBytes: bytes });
+              }
+              observedBytes = bytes;
+              watchdog.touch(bytes);
             }
-            observedBytes = bytes;
-            watchdog.touch(bytes);
-          }
-          if (evt?.httpStatus) providerHttpStatus = Number(evt.httpStatus) || providerHttpStatus;
-          sendDownloadProgress(evt);
-        },
-      });
+            if (evt?.httpStatus) providerHttpStatus = Number(evt.httpStatus) || providerHttpStatus;
+            sendDownloadProgress(evt);
+          },
+        }),
+        watchdog.signal,
+      );
     } catch (error) {
       watchdog.disarm();
       try { if (fs.existsSync(partialPath)) fs.unlinkSync(partialPath); } catch { /* best effort */ }

@@ -99,7 +99,13 @@ async function listCloudBackups(providerId, prefix) {
 
 async function downloadCloudBackup(remotePath, providerId, options = {}) {
   const id = resolveProviderId(providerId);
-  const providerKey = await resolveActiveProviderKey(id);
+  // Setup restore already verified Google connectivity. Skipping getStatus()
+  // here avoids a silent hang in getUserEmail before AbortSignal is observed.
+  let providerKey = id === 'google' ? 'google' : id;
+  if (options.skipProviderResolve !== true) {
+    const { raceAbort } = require('./google-drive-api');
+    providerKey = await raceAbort(resolveActiveProviderKey(id), options.signal);
+  }
   return getProvider(providerKey).downloadBackup(
     remotePath,
     providerKey === 'local-vault' ? 'google' : id,

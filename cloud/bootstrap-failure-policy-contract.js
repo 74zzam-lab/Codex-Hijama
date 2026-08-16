@@ -114,8 +114,18 @@
       code: 'TDW-BOOT-STEP-REQUIRED',
       message: 'أكمل المتطلبات الظاهرة في هذه الخطوة قبل المتابعة.',
     },
-    cloud_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'بدأ الاتصال بـ Google Drive ولكن لم تصل بيانات من الملف. تحقق من الاتصال ثم أعد المحاولة.' },
-    backup_download_stalled: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED', message: 'بدأ الاتصال بـ Google Drive ولكن لم تصل بيانات من الملف. تحقق من الاتصال ثم أعد المحاولة.' },
+    cloud_download_stalled: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED',
+      message: 'توقف تنزيل النسخة من Google Drive ولم تصل بيانات جديدة خلال 45 ثانية. تحقق من الاتصال ثم اضغط «إعادة المحاولة».',
+    },
+    backup_download_stalled: {
+      outcome: OUTCOME.RETRYABLE,
+      retryable: true,
+      code: 'TDW-BOOT-CLOUD-DOWNLOAD-STALLED',
+      message: 'توقف تنزيل النسخة من Google Drive ولم تصل بيانات جديدة خلال 45 ثانية. تحقق من الاتصال ثم اضغط «إعادة المحاولة».',
+    },
     cloud_restore_timeout: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-CLOUD-RESTORE-TIMEOUT', message: 'استغرقت الاستعادة وقتاً أطول من المسموح. أعد المحاولة.' },
     rbac_session_required: {
       outcome: OUTCOME.RETRYABLE,

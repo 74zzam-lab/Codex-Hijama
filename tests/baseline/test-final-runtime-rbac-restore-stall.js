@@ -155,6 +155,14 @@ async function check(name, operation) {
     assert.strictEqual(wd.getState().aborted, true);
   });
 
+  await check('BUG-2 setup restore skips getStatus resolve (getUserEmail hang)', async () => {
+    const ipc = fs.readFileSync(path.join(root, 'electron/backup-v2-ipc.js'), 'utf8');
+    assert.match(ipc, /skipProviderResolve:\s*true/);
+    const svc = fs.readFileSync(path.join(root, 'electron/cloud-providers/cloud-service.js'), 'utf8');
+    assert.match(svc, /skipProviderResolve/);
+    assert.match(svc, /raceAbort\(resolveActiveProviderKey/);
+  });
+
   await check('BUG-2 provider abort maps to structured cloud_download_stalled', async () => {
     const ipc = fs.readFileSync(path.join(root, 'electron/backup-v2-ipc.js'), 'utf8');
     assert.match(ipc, /RETRYABLE_SETUP_RESTORE_CODES[\s\S]*cloud_download_stalled/);

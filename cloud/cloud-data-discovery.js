@@ -520,15 +520,18 @@
     const electronBackup = electronBackupBridge();
     let detachDownloadProgress = null;
     let lastDownloadBytes = 0;
-    const attachDownloadProgress = (remotePath, onActivity) => {
+    const attachDownloadProgress = (remotePath, onByteProgress) => {
       if (!emit || typeof emit !== 'function') return;
       const listenerApi = electronBackup?.onDownloadProgress || b?.onDownloadProgress;
       if (!listenerApi) return;
       listenerApi((payload) => {
         if (remotePath && payload?.remotePath && payload.remotePath !== remotePath) return;
-        try { onActivity?.(); } catch { /* empty */ }
         const downloadedBytes = Number(payload?.downloadedBytes) || 0;
-        lastDownloadBytes = Math.max(lastDownloadBytes, downloadedBytes);
+        // Only real byte growth resets the stall clock — never heartbeats/0-byte events.
+        if (downloadedBytes > lastDownloadBytes) {
+          lastDownloadBytes = downloadedBytes;
+          try { onByteProgress?.(downloadedBytes); } catch { /* empty */ }
+        }
         const totalBytes = Number(payload?.totalBytes) || Number(point?.sizeBytes) || null;
         const ratio = downloadedBytes > 0 && totalBytes
           ? Math.min(0.98, downloadedBytes / totalBytes)
@@ -566,7 +569,14 @@
       let stallTimer = null;
       let operationTimeout = null;
       let lastByteProgressAt = Date.now();
-      const touchByteProgress = () => { lastByteProgressAt = Date.now(); };
+      let lastObservedBytes = 0;
+      const touchByteProgress = (bytes) => {
+        const n = Number(bytes);
+        if (Number.isFinite(n) && n > lastObservedBytes) {
+          lastObservedBytes = n;
+          lastByteProgressAt = Date.now();
+        }
+      };
       attachDownloadProgress(point.path, touchByteProgress);
       const bumpHeartbeat = () => {
         const totalBytes = point?.sizeBytes || null;
@@ -578,6 +588,7 @@
           downloadedBytes: lastDownloadBytes || undefined,
           totalBytes,
           indeterminate: !hasBytes,
+          // Heartbeat must NOT claim background continuation — Main owns terminal abort.
           lastActivity: hasBytes && totalBytes
             ? `تنزيل Backup V2 — ${formatBytes(lastDownloadBytes)} / ${formatBytes(totalBytes)}`
             : 'بانتظار أول بايت من التنزيل…',
@@ -592,6 +603,7 @@
           setupMode: true,
           relaunch: false,
           expectedSizeBytes: point.sizeBytes || null,
+          stallMs: DOWNLOAD_ACTIVITY_STALL_MS,
           ...(typeof global.getBackupV2IdentityMeta === 'function'
             ? global.getBackupV2IdentityMeta()
             : { centerId: identity.centerId, branchId: identity.branchId }),
@@ -605,7 +617,7 @@
         });
         const stallPromise = new Promise((_, reject) => {
           stallTimer = setInterval(() => {
-            if (Date.now() - lastByteProgressAt > DOWNLOAD_ACTIVITY_STALL_MS) {
+            if (Date.now() - lastByteProgressAt >= DOWNLOAD_ACTIVITY_STALL_MS) {
               clearInterval(stallTimer);
               stallTimer = null;
               const err = new Error('cloud_download_stalled');
@@ -666,7 +678,12 @@
           return { ...nativeResult, mode: 'backup_v2_cloud', native: true, needsRestart: false, restartRequired: true };
         }
       }
-      if (!isNativeFormatFailure(nativeResult)) return nativeResult;
+      // Never fall through to an unsignaled legacy download after a stall/timeout —
+      // that path had no AbortSignal and could hang indefinitely.
+      const nativeCode = restoreErrorCode(nativeResult);
+      if (/stall|timeout|abort/i.test(nativeCode) || !isNativeFormatFailure(nativeResult)) {
+        return nativeResult;
+      }
     }
 
     if (!b?.downloadCloudBackup || !point?.path) return { ok: false, error: 'cloud_download_unavailable' };
@@ -792,9 +809,22 @@
 
       watchdog = setInterval(() => {
         const idleMs = Date.now() - lastProgressAt;
+        const noBytes = !(lastDownloadBytes > 0);
+        // Terminal stall: do NOT claim the download may continue in the background.
+        // Bootstrap restore is foreground-only; Main aborts the network op.
+        if (noBytes && idleMs >= DOWNLOAD_ACTIVITY_STALL_MS) {
+          emit(workflow === 'backup_v2' ? 'download_db' : 'download_state', {
+            lastActivity: 'توقف تنزيل النسخة من Google Drive ولم تصل بيانات جديدة خلال 45 ثانية. تحقق من الاتصال ثم اضغط «إعادة المحاولة».',
+            stageRatio: lastStageRatio,
+            downloadedBytes: lastDownloadBytes || undefined,
+            totalBytes: point?.sizeBytes || null,
+            stalled: true,
+          });
+          return;
+        }
         if (idleMs > NO_PROGRESS_WATCHDOG_MS && idleMs < DOWNLOAD_ACTIVITY_STALL_MS) {
           emit(workflow === 'backup_v2' ? 'download_db' : 'download_state', {
-            lastActivity: 'تحذير: لا يوجد تحديث منذ أكثر من 30 ثانية — قد يستمر التنزيل في الخلفية',
+            lastActivity: 'لا يوجد تقدم في التنزيل منذ أكثر من 30 ثانية — إن استمر الصمت ستُلغى العملية تلقائياً.',
             stageRatio: lastStageRatio,
             downloadedBytes: lastDownloadBytes || undefined,
             totalBytes: point?.sizeBytes || null,
