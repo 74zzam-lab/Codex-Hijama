@@ -166,7 +166,7 @@ async function main() {
   await check('BUG-EXT-011 modal width + wizard open retry contract', () => {
     assert.match(bootSrc, /min\(960px/);
     assert.match(bootSrc, /tryOpen/);
-    assert.match(bootSrc, /فصل \/ تغيير حساب Google/);
+    assert.match(bootSrc, /تبديل حساب Google|فصل حساب Google|فصل \/ تغيير حساب Google/);
   });
 
   await check('BUG-EXT-011 modal RTL no clipping contract', () => {

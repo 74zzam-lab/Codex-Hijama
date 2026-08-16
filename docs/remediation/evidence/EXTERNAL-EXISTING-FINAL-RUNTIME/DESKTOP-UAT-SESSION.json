@@ -1,0 +1,35 @@
+{
+  "schema": "bootstrap-desktop-uat-session-v1",
+  "at": "2026-08-16T12:56:00Z",
+  "branch": "cursor/bootstrap-desktop-uat-beb8",
+  "sourceCommit": "a99455c68e9fa7a51e9555d8b0f7f42c3cebc065",
+  "desktopEnvironment": {
+    "os": "Linux cloud agent",
+    "display": ":1",
+    "runtime": "Electron source launch (not Windows installed EXE)",
+    "userData": "/tmp/tdw-desktop-uat-secure-*",
+    "safeStorageAvailable": false
+  },
+  "journey": {
+    "path": "existing",
+    "reached": [
+      "welcome_path",
+      "language",
+      "google"
+    ],
+    "blockedAt": "google",
+    "blocker": "secure_storage_unavailable — OAuth browser callback succeeded but token persist failed closed"
+  },
+  "buttonsObserved": {
+    "pathExisting": "clicked",
+    "languageAr": "completed",
+    "nextOnLanguage": "enabled",
+    "nextOnGoogle": "disabled until connected",
+    "googleConnect": "visible",
+    "googleChange": "hidden (not connected)",
+    "googleDisconnect": "hidden (not connected)",
+    "back": "clicked; navigation limited after display advance"
+  },
+  "realGoogle": "ACTION_REQUIRED_ON_WINDOWS_WITH_SAFESTORAGE",
+  "note": "Linux agent lacks OS keyring; Windows installed EXE uses safeStorage and is the target for full Google→Restore UAT."
+}

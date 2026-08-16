@@ -71,7 +71,8 @@ check('BUG-EXT-002 discovery errors are not pinned to google when connected', ()
 });
 
 check('BUG-EXT-003 google disconnect/switch exposed in bootstrap', () => {
-  assert.match(bootSrc, /فصل \/ تغيير حساب Google/);
+  assert.match(bootSrc, /تبديل حساب Google|فصل حساب Google|فصل \/ تغيير حساب Google/);
+  assert.match(bootSrc, /bf-google-change-btn|disconnectGoogleDuringSetup/);
   assert.match(bootSrc, /disconnectGoogleDuringSetup/);
 });
 

@@ -47,6 +47,12 @@
     oauth_redirect_mismatch: { outcome: OUTCOME.FATAL, fatal: true, code: 'TDW-BOOT-GOOGLE-OAUTH-CONFIG', message: 'إعداد OAuth في هذه النسخة غير مطابق. راجع الدعم الفني — لا يمكن حلها من الجهاز.' },
     oauth_api_disabled: { outcome: OUTCOME.USER_ACTION_REQUIRED, userActionRequired: true, code: 'TDW-BOOT-GOOGLE-API', message: 'واجهة Google Drive غير مُفعّلة لهذا المشروع. فعّلها من حساب Google ثم أعد المحاولة.' },
     oauth_failed: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-GOOGLE-FAIL', message: 'تعذّر إكمال مصادقة Google. أعد المحاولة.' },
+    secure_storage_unavailable: {
+      outcome: OUTCOME.FATAL,
+      fatal: true,
+      code: 'TDW-BOOT-GOOGLE-SECURE-STORAGE',
+      message: 'تعذّر حفظ إذن Google لأن التخزين الآمن لنظام التشغيل غير متاح على هذا الجهاز. شغّل التطبيق على Windows/macOS بجلسة مستخدم عادية (وليس بيئة بدون keyring).',
+    },
     google_not_connected: { outcome: OUTCOME.USER_ACTION_REQUIRED, userActionRequired: true, code: 'TDW-BOOT-GOOGLE-NOT-CONNECTED', message: 'اربط حساب Google أولاً قبل هذه الخطوة.' },
     google_disconnect_failed: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-GOOGLE-DISCONNECT', message: 'تعذّر فصل حساب Google. أعد المحاولة — لن تُحذف بيانات الترخيص.' },
     discovery_failed: { outcome: OUTCOME.RETRYABLE, retryable: true, code: 'TDW-BOOT-DISC-FAIL', message: 'تعذّر إكمال فحص بيانات السحابة. Google ما زال متصلاً — أعد الفحص.' },

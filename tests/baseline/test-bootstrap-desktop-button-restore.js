@@ -53,11 +53,12 @@ check('Google change/disconnect visible when connected; connect hidden', () => {
   assert.match(boot, /bf-google-disconnect-btn/);
   assert.match(boot, /تبديل حساب Google/);
   assert.match(boot, /فصل حساب Google/);
-  const start = boot.indexOf("case 'google': {\n        const isNew");
-  assert.ok(start > 0, 'google renderStepUI case');
-  const end = boot.indexOf("case 'discovery': {", start);
+  // CRLF-tolerant: Windows runners may check out with \r\n.
+  const start = boot.search(/case 'google':\s*\{\s*const isNew/);
+  assert.ok(start >= 0, 'google renderStepUI case');
+  const end = boot.indexOf("case 'discovery':", start);
   const body = boot.slice(start, end);
-  assert.match(body, /if \(!connected\)/);
+  assert.match(body, /if\s*\(\s*!connected\s*\)/);
   assert.match(body, /bf-google-connect-btn/);
 });
 

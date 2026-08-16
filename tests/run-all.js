@@ -69,6 +69,7 @@ const baseline = [
   ['tests/baseline/test-external-existing-runtime-defects.js', 'external-existing:runtime-defects'],
   ['tests/baseline/test-final-runtime-rbac-restore-stall.js', 'external-existing:final-runtime-rbac-restore-stall'],
   ['tests/baseline/test-bootstrap-desktop-button-restore.js', 'external-existing:desktop-button-restore'],
+  ['tests/baseline/test-setup-restore-hung-provider-deadline.js', 'external-existing:hung-provider-deadline'],
   ['tests/baseline/test-post-stage-20-login-license-startup.js', 'post-stage-20:login-license-startup'],
   ['tests/baseline/test-bootstrap-red-message-truthfulness.js', 'post-stage-20:bootstrap-red-message-truthfulness'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],

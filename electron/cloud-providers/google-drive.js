@@ -201,7 +201,9 @@ async function connect() {
   } catch (err) {
     const msg = String(err && (err.message || err));
     let code = 'oauth_failed';
-    if (/EADDRINUSE/i.test(msg)) code = 'oauth_port_in_use';
+    if (err?.code === 'secure_storage_unavailable' || /secure_storage_unavailable/i.test(msg)) {
+      code = 'secure_storage_unavailable';
+    } else if (/EADDRINUSE/i.test(msg)) code = 'oauth_port_in_use';
     else if (/timeout|oauth_timeout/i.test(msg)) code = 'oauth_timeout';
     else if (/access_denied/i.test(msg)) code = 'oauth_access_denied';
     else if (/invalid_grant/i.test(msg)) code = 'oauth_invalid_grant';

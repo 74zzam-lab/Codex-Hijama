@@ -727,7 +727,7 @@ function bugARegressionGuard() {
   const bootSrc = fs.readFileSync(path.join(root, 'cloud/boot-flow-ui.js'), 'utf8');
   check(/googleSessionConnected/.test(bootSrc), 'Google session latch retained');
   check(/acceptLiveReconnect: true/.test(bootSrc), 'live reconnect acceptance retained');
-  check(/فصل \/ تغيير حساب Google/.test(bootSrc), 'Google switch/disconnect action retained');
+  check(/تبديل حساب Google|فصل حساب Google|فصل \/ تغيير حساب Google/.test(bootSrc), 'Google switch/disconnect action retained');
 
   const ctx = bootEnv({ licenseBranches: [{ id: 'BR-MAIN', active: true }] });
   const BF = ctx.BootFlow;
