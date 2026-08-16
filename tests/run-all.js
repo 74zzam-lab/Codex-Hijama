@@ -67,6 +67,7 @@ const baseline = [
   ['tests/baseline/test-stage-20-final-bootstrap-gate.js', 'stage-20:final-bootstrap-gate'],
   ['tests/baseline/test-post-stage-20-external-defects.js', 'post-stage-20:external-defect-remediation'],
   ['tests/baseline/test-external-existing-runtime-defects.js', 'external-existing:runtime-defects'],
+  ['tests/baseline/test-final-runtime-rbac-restore-stall.js', 'external-existing:final-runtime-rbac-restore-stall'],
   ['tests/baseline/test-post-stage-20-login-license-startup.js', 'post-stage-20:login-license-startup'],
   ['tests/baseline/test-bootstrap-red-message-truthfulness.js', 'post-stage-20:bootstrap-red-message-truthfulness'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],
