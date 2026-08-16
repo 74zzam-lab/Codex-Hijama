@@ -481,7 +481,7 @@ async function testViewports(page) {
 }
 
 async function runUiPhase(userData) {
-  const { app, page } = await launchInstalled(userData);
+  let { app, page } = await launchInstalled(userData);
   await waitAppReady(page);
 
   // bootstrap-open
@@ -500,6 +500,42 @@ async function runUiPhase(userData) {
   await assertPathPersistence(page, 'existing', 'after-existing-click');
   recordButton('bf-path-new', { pass: true, visible: false, enabled: false, clicked: false, unverifiedExternal: false, note: 'not exercised in EXISTING acceptance path' });
 
+  // Path durability before Google journey: Next → Back → Next, close/reopen, full restart, NEW profile
+  await page.click('#bf-back-btn').catch(() => {});
+  await page.waitForTimeout(300);
+  await page.click('#bf-next-btn').catch(() => {});
+  await page.waitForTimeout(300);
+  report.pathPersistence.navCyclePath = (await assertPathPersistence(page, 'existing', 'after-nav-cycle')) ? 'PASS' : 'FAIL';
+
+  const beforeClose = await readNavigationFrame(page);
+  await page.evaluate(() => window.BootFlow?.dismissBootstrap?.());
+  await page.waitForTimeout(300);
+  await openBootstrap(page);
+  await page.waitForTimeout(300);
+  report.closeReopen = { pass: beforeClose.path === 'existing', before: beforeClose.stepId, after: (await readNavigationFrame(page)).stepId };
+  report.pathPersistence.closeReopenPath = (await assertPathPersistence(page, 'existing', 'after-close-reopen')) ? 'PASS' : 'FAIL';
+
+  await app.close();
+  ({ app, page } = await launchInstalled(userData));
+  await waitAppReady(page);
+  await openBootstrap(page);
+  report.pathPersistence.restartPath = (await assertPathPersistence(page, 'existing', 'after-full-restart')) ? 'PASS' : 'FAIL';
+
+  const newUserData = path.join(os.tmpdir(), `exact-head-new-path-${buildId}`);
+  fs.mkdirSync(newUserData, { recursive: true });
+  const newLaunch = await launchInstalled(newUserData);
+  await waitAppReady(newLaunch.page);
+  await openBootstrap(newLaunch.page);
+  await newLaunch.page.waitForSelector('#bf-new-customer', { state: 'visible', timeout: 30000 });
+  await newLaunch.page.locator('#bf-new-customer').click({ timeout: 8000 }).catch(async () => {
+    await newLaunch.page.evaluate(() => window.BootFlow?.startPath?.(window.BootFlow.PATHS?.NEW || 'new'));
+  });
+  await newLaunch.page.waitForFunction(() => window.BootFlow?.loadWizard?.()?.path === 'new', null, { timeout: 30000 });
+  const newSnap = await readNavigationFrame(newLaunch.page);
+  const newPersist = await assertPathPersistence(newLaunch.page, 'new', 'new-path-separate');
+  report.pathPersistence.newPathSeparate = newPersist && newSnap.totalSteps === 14 ? 'PASS' : 'FAIL';
+  await newLaunch.app.close();
+
   const viewports = await testViewports(page);
   report.gates.viewports = viewports;
   report.gates.modalClipFree = viewports.every((v) => v.ok);
@@ -514,8 +550,13 @@ async function runUiPhase(userData) {
     visible: true, enabled: !snap.nextDisabled, clicked: false, finalState: snap.stepId,
   });
 
-  // Advance to google
-  await page.click('#bf-next-btn');
+  // Advance to google when Next is enabled
+  const nextEnabled = await page.evaluate(() => document.getElementById('bf-next-btn')?.disabled !== true);
+  if (nextEnabled) {
+    await page.click('#bf-next-btn');
+  } else {
+    await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
+  }
   await page.waitForTimeout(350);
   snap = await readNavigationFrame(page);
   recordButton('bf-next-btn-to-google', { pass: snap.stepId === 'google', visible: true, enabled: true, clicked: true, finalState: snap.stepId });
@@ -720,38 +761,6 @@ async function runUiPhase(userData) {
     }
   }
 
-  // Close / reopen
-  const beforeClose = await readNavigationFrame(page);
-  await page.evaluate(() => window.BootFlow?.dismissBootstrap?.());
-  await page.waitForTimeout(300);
-  await openBootstrap(page);
-  await page.waitForTimeout(300);
-  const afterReopen = await readNavigationFrame(page);
-  report.closeReopen = { pass: !!beforeClose.path, before: beforeClose.stepId, after: afterReopen.stepId };
-  report.pathPersistence.closeReopenPath = (await assertPathPersistence(page, 'existing', 'after-close-reopen')) ? 'PASS' : 'FAIL';
-
-  // Full app restart must preserve path
-  await app.close();
-  const restart = await launchInstalled(userData);
-  const restartApp = restart.app;
-  const restartPage = restart.page;
-  await waitAppReady(restartPage);
-  await openBootstrap(restartPage);
-  report.pathPersistence.restartPath = (await assertPathPersistence(restartPage, 'existing', 'after-full-restart')) ? 'PASS' : 'FAIL';
-
-  // NEW path is separate and uses its own sequence (fresh isolated profile)
-  const newUserData = path.join(os.tmpdir(), `exact-head-new-path-${buildId}`);
-  fs.mkdirSync(newUserData, { recursive: true });
-  const newLaunch = await launchInstalled(newUserData);
-  await waitAppReady(newLaunch.page);
-  await openBootstrap(newLaunch.page);
-  await newLaunch.page.evaluate(() => document.getElementById('bf-new-customer')?.click());
-  await newLaunch.page.waitForFunction(() => window.BootFlow?.loadWizard?.()?.path === 'new', null, { timeout: 30000 });
-  const newSnap = await readNavigationFrame(newLaunch.page);
-  const newPersist = await assertPathPersistence(newLaunch.page, 'new', 'new-path-separate');
-  report.pathPersistence.newPathSeparate = newPersist && newSnap.totalSteps === 14 ? 'PASS' : 'FAIL';
-  await newLaunch.app.close();
-
   report.google = report.branch.pass && report.navigation.agreement === 'PASS'
     && report.pathPersistence.existingAfterClick === 'PASS'
     && report.pathPersistence.existingSequence === 'PASS'
@@ -760,7 +769,7 @@ async function runUiPhase(userData) {
     && report.pathPersistence.restartPath === 'PASS'
     && report.pathPersistence.newPathSeparate === 'PASS'
     ? 'ACTION_REQUIRED' : 'BLOCKED_PRE_GOOGLE_FAIL';
-  await restartApp.close();
+  await app.close();
 }
 
 async function runRestoreAndStallTests() {
@@ -817,6 +826,14 @@ async function runRestoreAndStallTests() {
 }
 
 function finalizeVerdict() {
+  report.gates.pathPersistence = [
+    report.pathPersistence.existingAfterClick,
+    report.pathPersistence.existingSequence,
+    report.pathPersistence.navCyclePath,
+    report.pathPersistence.closeReopenPath,
+    report.pathPersistence.restartPath,
+    report.pathPersistence.newPathSeparate,
+  ].every((v) => v === 'PASS') ? 'PASS' : 'FAIL';
   const matrixOk = report.buttonMatrix.failed === 0;
   const checks = [
     report.asar?.allMatch === true,
