@@ -1,0 +1,7 @@
+# Application source unpacked from the committed bundle zip at install time.
+/app/
+
+# Node / build artifacts (in case source is worked on in-tree)
+node_modules/
+dist/
+*.log

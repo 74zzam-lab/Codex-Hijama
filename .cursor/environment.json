@@ -1,0 +1,4 @@
+{
+  "name": "Hijama Management System",
+  "install": "bash .cursor/install.sh"
+}
