@@ -106,6 +106,7 @@
     if (typeof DB !== 'undefined' && DB.__rawSet) return DB.__rawSet(k, v);
     if (typeof DB !== 'undefined' && DB.set && !DB.__sqliteWriteThrough) return DB.set(k, v);
     try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* empty */ }
+    state.data[k] = v;
     return true;
   }
 
@@ -536,6 +537,7 @@
     DB.set = function sqliteAuthoritativeSet(k, v) {
       if (UI_ONLY_KEYS.has(k)) {
         baseRaw(k, v);
+        state.data[k] = v;
         return Promise.resolve({ ok: true, uiOnly: true });
       }
       const db = api();
