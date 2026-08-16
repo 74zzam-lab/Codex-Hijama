@@ -274,10 +274,10 @@ async function runUiPhase(userData) {
   report.gates.existingStepOrder = JSON.stringify(order) === JSON.stringify(EXISTING_STEPS);
   report.gates.existingSteps = order;
 
-  // Navigation cycles on language (go back to path not applicable) — test next/back on google with sim connected
-  await page.evaluate(async () => {
-    const w = window.BootFlow.loadWizard();
-    window.BootFlow.renderAll(w);
+  // Navigation cycles — Back from google to language, then Next forward
+  await page.evaluate(() => {
+    window.BootFlow.prevStep();
+    window.BootFlow.renderAll(window.BootFlow.loadWizard());
   });
   await page.waitForTimeout(200);
   let backSnap = await readBootstrapFrame(page);
