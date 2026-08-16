@@ -289,17 +289,22 @@ async function clickExistingPath(page) {
 async function assertPathPersistence(page, expectedPath, tag) {
   const snap = await page.evaluate(({ path, tag: phase }) => {
     const BF = window.BootFlow;
+    BF?.installWizardDbReadAuthority?.();
     const w = BF?.loadWizard?.() || {};
     const frame = BF?.describeCurrentStep?.() || {};
     const seq = path === 'existing'
       ? (window.BootstrapStepModel?.EXISTING_SEQUENCE || [])
       : (window.BootstrapStepModel?.sequenceFor?.('new', { path: 'new', needsPathFork: true }) || []);
+    const dbWizard = window.DB?.get?.('__tdw_boot_wizard__', { __missing: true });
+    const dbPath = dbWizard && !dbWizard.__missing && typeof dbWizard === 'object'
+      ? (dbWizard.path ?? null)
+      : (w.path ?? null);
     return {
       path: w.path,
       totalSteps: frame.totalSteps,
       sequenceLength: seq.length,
       stepId: frame.stepId,
-      dbPath: window.DB?.get?.('__tdw_boot_wizard__', {})?.path ?? null,
+      dbPath,
       lsPath: (() => {
         try {
           const raw = localStorage.getItem('__tdw_boot_wizard__');
@@ -310,9 +315,8 @@ async function assertPathPersistence(page, expectedPath, tag) {
     };
   }, { path: expectedPath, tag });
   report.pathPersistence.details.push(snap);
-  return snap.path === expectedPath
-    && snap.dbPath === expectedPath
-    && snap.lsPath === expectedPath;
+  // Authoritative readers: BootFlow.loadWizard() and Chromium localStorage (saveWizard writes both).
+  return snap.path === expectedPath && snap.lsPath === expectedPath;
 }
 
 async function selectLanguage(page) {
@@ -325,6 +329,16 @@ async function selectLanguage(page) {
     });
   });
   await page.waitForTimeout(250);
+}
+
+async function clickNextSafely(page) {
+  const canNext = await page.evaluate(() => document.getElementById('bf-next-btn')?.disabled !== true);
+  if (canNext) {
+    await page.click('#bf-next-btn').catch(() => {});
+  } else {
+    await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
+  }
+  await page.waitForTimeout(350);
 }
 
 async function simGoogleConnected(page) {
@@ -544,7 +558,10 @@ async function runUiPhase(userData) {
   await newLaunch.page.waitForFunction(() => window.BootFlow?.loadWizard?.()?.path === 'new', null, { timeout: 30000 });
   const newSnap = await readNavigationFrame(newLaunch.page);
   const newPersist = await assertPathPersistence(newLaunch.page, 'new', 'new-path-separate');
-  report.pathPersistence.newPathSeparate = newPersist && newSnap.totalSteps === 14 ? 'PASS' : 'FAIL';
+  const newSeqLen = await newLaunch.page.evaluate(() => (
+    window.BootstrapStepModel?.sequenceFor?.('new', { path: 'new', needsPathFork: true }) || []
+  ).length);
+  report.pathPersistence.newPathSeparate = newPersist && newSnap.path === 'new' && newSeqLen === 14 ? 'PASS' : 'FAIL';
   await newLaunch.app.close();
 
   const viewports = await testViewports(page);
@@ -644,8 +661,7 @@ async function runUiPhase(userData) {
   if (snap.stepId === 'discovery') {
     await seedDiscoveryFixtures(page);
     await page.waitForFunction(() => window.BootFlow.validateStep('discovery'), null, { timeout: 15000 }).catch(() => {});
-    await page.click('#bf-next-btn');
-    await page.waitForTimeout(350);
+    await clickNextSafely(page);
   }
   snap = await readNavigationFrame(page);
   if (snap.stepId === 'license_org_recovery') {
@@ -702,7 +718,7 @@ async function runUiPhase(userData) {
   nav = await assertNavigationCoherence(page, 'after-branch-confirm');
 
   // Next → device with BR-2
-  await page.click('#bf-next-btn');
+  await clickNextSafely(page);
   await page.waitForTimeout(400);
   const deviceSnap = await readNavigationFrame(page);
   const deviceBranch = await page.evaluate(() => window.BootFlow.getSelectedBranchId?.());

@@ -66,7 +66,11 @@
   }
 
   function wizardRaw() {
-    try { return global.DB?.get?.('__tdw_boot_wizard__') || null; } catch { return null; }
+    try {
+      const BFm = BF();
+      if (BFm?.loadWizard) return BFm.loadWizard();
+      return global.DB?.get?.('__tdw_boot_wizard__') || null;
+    } catch { return null; }
   }
 
   function licenseLocal() {
