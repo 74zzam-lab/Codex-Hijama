@@ -183,6 +183,8 @@ let systemLogs = _db().get('systemLogs', []);
 let cashDrawerSession = _db().get('cashDrawerSession', null);
 
 function ensureExtSettings() {
+  const settings = typeof window !== 'undefined' ? window.settings : null;
+  if (!settings || typeof settings !== 'object') return;
   if (!settings.inventory) settings.inventory = JSON.parse(JSON.stringify(defaultInventoryConfig));
   if (!settings.currency) settings.currency = JSON.parse(JSON.stringify(defaultCurrencyConfig));
   if (!settings.messagingApi) settings.messagingApi = JSON.parse(JSON.stringify(defaultMessagingApiConfig));
@@ -250,7 +252,7 @@ function getRoleDisplayName(user) {
   return map[user.role] || user.role;
 }
 
-let logCounter = DB.get('logCounter', 0);
+let logCounter = _db().get('logCounter', 0);
 
 const LOG_OP_META = {
   PATIENT_ADDED: { label: 'إضافة مريض', cat: 'المرضى', icon: '🟢' },
@@ -302,8 +304,9 @@ const LOG_CAT_FILTER = {
 };
 
 function nextLogId() {
-  logCounter = (DB.get('logCounter', logCounter) || 0) + 1;
-  DB.set('logCounter', logCounter);
+  const db = _db();
+  logCounter = (db.get('logCounter', logCounter) || 0) + 1;
+  db.set('logCounter', logCounter);
   return 'LOG-' + String(logCounter).padStart(6, '0');
 }
 
@@ -1707,8 +1710,9 @@ function collectUserPermissions() {
 }
 
 async function extInit() {
+  if (!window.settings) return;
   ensureExtSettings();
-  if (settings.inventory.enabled && !inventoryItems.length) await seedHijamaInventory();
+  if (window.settings.inventory?.enabled && !inventoryItems.length) await seedHijamaInventory();
 }
 
 function extBackupData(data) {

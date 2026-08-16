@@ -3137,11 +3137,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   function renderStepUI(w) {
     w = getDisplayWizard(w);
-    const steps = stepsFor(w.path);
-    const step = steps[w.currentStep];
+    const frame = describeCurrentStep(w);
+    const step = frame.stepId;
     const content = document.getElementById('bf-step-content');
     const actions = document.getElementById('bf-step-actions');
     if (!content || !actions) return;
+    try {
+      if (typeof content.setAttribute === 'function') content.setAttribute('data-step-id', step || '');
+      else if (content.dataset) content.dataset.stepId = step || '';
+    } catch { /* DOM stubs in unit tests */ }
     content.innerHTML = '';
     actions.innerHTML = '';
 
@@ -4232,9 +4236,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const idx = steps.indexOf(stepId);
     if (idx >= 0) {
       w.currentStep = idx;
+      w.reviewStepIndex = idx;
       saveWizard(w);
     }
-    return openOverlay(true);
+    openOverlay(true);
+    const fresh = getDisplayWizard(loadWizard());
+    if (fresh.path) renderAll(fresh);
+    return true;
   }
 
   /**

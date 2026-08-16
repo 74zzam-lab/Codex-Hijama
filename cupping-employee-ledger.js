@@ -1475,7 +1475,9 @@
   function loadAutoPrintUI() {
     ensureLedgerSettings();
     const el = document.getElementById('ledger-auto-print-voucher');
-    if (el) el.checked = !!global.settings.employeeLedger.autoPrintVoucher;
+    if (el && global.settings?.employeeLedger) {
+      el.checked = !!global.settings.employeeLedger.autoPrintVoucher;
+    }
   }
 
   function renderPayrollLedgerStrip(d, month, year) {
