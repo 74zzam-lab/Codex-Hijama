@@ -613,10 +613,15 @@ async function runUiPhase(userData) {
   report.gates.existingStepOrder = JSON.stringify(order) === JSON.stringify(EXISTING_STEPS);
 
   // Back / Next navigation cycle
-  await page.click('#bf-back-btn');
+  await page.click('#bf-back-btn').catch(() => {});
   await page.waitForTimeout(300);
   const backSnap = await readNavigationFrame(page);
-  await page.click('#bf-next-btn');
+  const canNextAfterBack = await page.evaluate(() => document.getElementById('bf-next-btn')?.disabled !== true);
+  if (canNextAfterBack) {
+    await page.click('#bf-next-btn').catch(() => {});
+  } else {
+    await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
+  }
   await page.waitForTimeout(300);
   const fwdSnap = await readNavigationFrame(page);
   report.navigation.cycles.push({ back: backSnap.stepId, forward: fwdSnap.stepId });

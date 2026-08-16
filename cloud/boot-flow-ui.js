@@ -282,8 +282,10 @@
       localStorage.setItem(WIZARD_KEY, JSON.stringify(payload));
     } catch { /* empty */ }
     const bridge = global.SqliteBridge;
-    if (bridge?.setUiOnly && global.DB?.__sqliteWriteThrough) {
+    if (bridge?.setUiOnly) {
       bridge.setUiOnly(WIZARD_KEY, payload);
+    }
+    if (global.DB?.__sqliteWriteThrough) {
       return payload;
     }
     const set = global.DB?.set;

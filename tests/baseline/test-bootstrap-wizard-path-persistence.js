@@ -125,6 +125,20 @@ async function sqliteBridgeTests() {
   ctx.SqliteBridge.setUiOnly('__tdw_boot_wizard__', existing);
   const readBack = ctx.DB.get('__tdw_boot_wizard__', { path: null });
   check(readBack.path === 'existing', `DB.get returns localStorage path after setUiOnly (got ${readBack.path})`);
+
+  ctx.BootFlow.saveWizard({
+    path: 'existing',
+    currentStep: 0,
+    completedSteps: [],
+    startedAt: new Date().toISOString(),
+    lang: 'ar',
+    restoreChoice: null,
+    syncDone: false,
+    oauthLockAt: null,
+    wizardFlowVersion: ctx.BootFlow.WIZARD_FLOW_VERSION,
+  });
+  const dbAfterSave = ctx.DB.get('__tdw_boot_wizard__', { path: null });
+  check(dbAfterSave.path === 'existing', `DB.get matches saveWizard path before write-through (got ${dbAfterSave.path})`);
 }
 
 async function startPathTests() {

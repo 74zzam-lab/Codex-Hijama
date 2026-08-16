@@ -555,6 +555,14 @@
       // mirror. state.data can hold a stale snapshot from an earlier hydrate while
       // localStorage already has startPath('existing'|'new').
       if (UI_ONLY_KEYS.has(k)) {
+        try {
+          const raw = localStorage.getItem(k);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            state.data[k] = parsed;
+            return parsed;
+          }
+        } catch { /* empty */ }
         const value = baseRead(k, def);
         if (value !== def) state.data[k] = value;
         return value;
