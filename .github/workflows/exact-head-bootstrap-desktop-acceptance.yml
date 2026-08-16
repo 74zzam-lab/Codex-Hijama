@@ -6,7 +6,7 @@ on:
       runtime_source_commit:
         description: 'Frozen runtime source commit (must match audited bootstrap)'
         required: true
-        default: '4db35f2a8c8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e'
+        default: 'aa114f73c26930c0d87e5cf930295e531e7ee804'
   push:
     branches:
       - cursor/bootstrap-desktop-uat-beb8

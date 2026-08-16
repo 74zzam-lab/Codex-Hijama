@@ -287,7 +287,7 @@ async function clickExistingPath(page) {
 }
 
 async function assertPathPersistence(page, expectedPath, tag) {
-  const snap = await page.evaluate((path) => {
+  const snap = await page.evaluate(({ path, tag: phase }) => {
     const BF = window.BootFlow;
     const w = BF?.loadWizard?.() || {};
     const frame = BF?.describeCurrentStep?.() || {};
@@ -306,9 +306,9 @@ async function assertPathPersistence(page, expectedPath, tag) {
           return raw ? JSON.parse(raw).path : null;
         } catch { return null; }
       })(),
-      tag,
+      tag: phase,
     };
-  }, expectedPath);
+  }, { path: expectedPath, tag });
   report.pathPersistence.details.push(snap);
   return snap.path === expectedPath
     && snap.dbPath === expectedPath
