@@ -9,6 +9,13 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawnSync } = require('child_process');
 
+let asar;
+try {
+  asar = require('@electron/asar');
+} catch {
+  asar = null;
+}
+
 const root = path.join(__dirname, '..', '..');
 const args = process.argv.slice(2);
 function arg(name, fallback = '') {
@@ -53,12 +60,16 @@ function sha(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
-function extractAsar(asar, dest) {
+function extractAsar(asarFile, dest) {
   fs.mkdirSync(dest, { recursive: true });
-  const r = spawnSync('npx', ['--yes', '@electron/asar', 'extract', asar, dest], {
-    cwd: root, encoding: 'utf8', timeout: 120000,
+  if (asar?.extractAll) {
+    asar.extractAll(asarFile, dest);
+    return;
+  }
+  const r = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['--yes', '@electron/asar', 'extract', asarFile, dest], {
+    cwd: root, encoding: 'utf8', timeout: 120000, shell: process.platform === 'win32',
   });
-  if (r.status !== 0) throw new Error(`asar extract failed: ${r.stderr || r.stdout}`);
+  if (r.status !== 0) throw new Error(`asar extract failed: ${r.stderr || r.stdout || r.status}`);
 }
 
 function git(cmd) {

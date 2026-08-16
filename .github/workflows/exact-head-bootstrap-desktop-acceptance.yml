@@ -131,6 +131,7 @@ jobs:
         shell: pwsh
         env:
           RUNTIME_SOURCE_COMMIT: ${{ env.RUNTIME_FROZEN }}
+          EXACT_HEAD_SKIP_STALL_TEST: '0'
         run: |
           $ErrorActionPreference = 'Stop'
           $installDir = Join-Path $env:LOCALAPPDATA "Programs\Hijama Management System"

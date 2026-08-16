@@ -100,9 +100,13 @@ async function launchInstalled(userData) {
 }
 
 async function openBootstrap(page) {
-  await page.evaluate(async () => {
-    if (typeof window.BootFlow?.openBootFlow === 'function') {
-      await window.BootFlow.openBootFlow({ reason: 'exact-head-uat' });
+  await page.evaluate(() => {
+    if (typeof window.BootFlow?.forceOpen === 'function') {
+      window.BootFlow.forceOpen();
+      return true;
+    }
+    if (typeof window.BootFlow?.open === 'function') {
+      window.BootFlow.open();
       return true;
     }
     const overlay = document.getElementById('bootFlowOverlay');
@@ -359,7 +363,6 @@ async function runUiPhase(userData) {
 }
 
 async function runRestoreAndStallTests() {
-  // Local restore fixtures via stage-1 harness (production IPC)
   const stage1 = spawnSync('node', [path.join(root, 'scripts/windows-uat/stage-1-backup-restore-uat.cjs')], {
     cwd: root, encoding: 'utf8', env: { ...process.env, STAGE1_BUILD_ID: buildId },
     timeout: 600000,
@@ -438,15 +441,21 @@ function finalizeVerdict() {
   const asarPath = installedExe
     ? path.join(path.dirname(installedExe), 'resources', 'app.asar')
     : path.join(root, 'dist', 'win-unpacked', 'resources', 'app.asar');
-
-  if (fs.existsSync(asarPath)) {
+  const distAsar = path.join(root, 'dist', 'win-unpacked', 'resources', 'app.asar');
+  const effectiveAsar = fs.existsSync(asarPath) ? asarPath : (fs.existsSync(distAsar) ? distAsar : asarPath);
     const verifyScript = path.join(root, 'scripts/windows-uat/verify-asar-bootstrap-audit.cjs');
     const verifyOut = path.join(evidenceDir, 'ASAR-VERIFY.json');
-    const r = spawnSync('node', [verifyScript, '--asar', asarPath, '--output', verifyOut, '--runtime-commit', report.runtimeSourceCommit], {
+    const r = spawnSync('node', [verifyScript, '--asar', effectiveAsar, '--output', verifyOut, '--runtime-commit', report.runtimeSourceCommit], {
       cwd: root, encoding: 'utf8', timeout: 180000,
     });
-    report.asar = JSON.parse(fs.readFileSync(verifyOut, 'utf8'));
-    if (r.status !== 0) report.asar.verifyExit = r.status;
+    if (fs.existsSync(verifyOut)) {
+      report.asar = JSON.parse(fs.readFileSync(verifyOut, 'utf8'));
+    } else {
+      report.asar = { allMatch: false, error: (r.stderr || r.stdout || 'verify produced no output').slice(0, 2000), asarPath: effectiveAsar };
+    }
+    if (r.status !== 0 && report.asar) report.asar.verifyExit = r.status;
+  } else {
+    report.asar = { allMatch: false, error: `asar not found (installed=${asarPath}, dist=${distAsar})` };
   }
 
   const userData = path.join(os.tmpdir(), `exact-head-uat-${buildId}`);
