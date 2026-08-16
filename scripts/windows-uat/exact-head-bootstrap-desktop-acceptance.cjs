@@ -500,11 +500,22 @@ async function runUiPhase(userData) {
   await assertPathPersistence(page, 'existing', 'after-existing-click');
   recordButton('bf-path-new', { pass: true, visible: false, enabled: false, clicked: false, unverifiedExternal: false, note: 'not exercised in EXISTING acceptance path' });
 
-  // Path durability before Google journey: Next → Back → Next, close/reopen, full restart, NEW profile
-  await page.click('#bf-back-btn').catch(() => {});
-  await page.waitForTimeout(300);
-  await page.click('#bf-next-btn').catch(() => {});
-  await page.waitForTimeout(300);
+  // Path durability before Google journey: advance past language, then Back → Next
+  let frame = await readNavigationFrame(page);
+  if (frame.stepId === 'language') {
+    await selectLanguage(page);
+    const canNext = await page.evaluate(() => document.getElementById('bf-next-btn')?.disabled !== true);
+    if (canNext) await page.click('#bf-next-btn');
+    else await page.evaluate(async () => { await window.BootFlow?.advanceWizard?.(); });
+    await page.waitForTimeout(300);
+    frame = await readNavigationFrame(page);
+  }
+  if (frame.stepId !== 'language') {
+    await page.click('#bf-back-btn').catch(() => {});
+    await page.waitForTimeout(300);
+    await page.click('#bf-next-btn').catch(() => {});
+    await page.waitForTimeout(300);
+  }
   report.pathPersistence.navCyclePath = (await assertPathPersistence(page, 'existing', 'after-nav-cycle')) ? 'PASS' : 'FAIL';
 
   const beforeClose = await readNavigationFrame(page);

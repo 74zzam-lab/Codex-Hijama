@@ -4174,7 +4174,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       ? model.getPreviousStep(w.path, state, currentStepId(w))
       : stepsFor(w.path)[w.currentStep - 1] || null;
     if (!previousId) {
-      w.path = null;
+      // Path choice (NEW/EXISTING) is committed — Back to welcome must not erase it.
       w.currentStep = 0;
       saveWizard(w);
       showStep('bf-step-choose');

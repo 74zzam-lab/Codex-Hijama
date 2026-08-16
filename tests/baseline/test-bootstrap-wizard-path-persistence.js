@@ -176,9 +176,50 @@ async function startPathTests() {
   check(afterSeed.path === 'new', `seedUiOnlyFromLocalStorage restores persisted path (got ${afterSeed.path})`);
 }
 
+function prevStepPathTests() {
+  console.log('\n-- prevStep preserves committed path --');
+  const ctx = bootContext();
+  const BF = ctx.BootFlow;
+  BF.saveWizard({
+    path: 'existing',
+    currentStep: 0,
+    completedSteps: [],
+    startedAt: new Date().toISOString(),
+    lang: 'ar',
+    restoreChoice: null,
+    syncDone: false,
+    oauthLockAt: null,
+    wizardFlowVersion: BF.WIZARD_FLOW_VERSION,
+  });
+  BF.prevStep();
+  const afterBack = BF.loadWizard();
+  check(afterBack.path === 'existing', `prevStep from language keeps path existing (got ${afterBack.path})`);
+  check(
+    ctx.BootstrapStepModel.sequenceFor('existing').length === 10,
+    'stepsFor still returns 10-step EXISTING sequence after prevStep',
+  );
+
+  BF.saveWizard({
+    path: 'existing',
+    currentStep: 1,
+    completedSteps: ['language'],
+    startedAt: new Date().toISOString(),
+    lang: 'ar',
+    restoreChoice: null,
+    syncDone: false,
+    oauthLockAt: null,
+    wizardFlowVersion: BF.WIZARD_FLOW_VERSION,
+  });
+  BF.prevStep();
+  const afterNav = BF.loadWizard();
+  check(afterNav.path === 'existing', `prevStep from google keeps path existing (got ${afterNav.path})`);
+  check(afterNav.currentStep === 0, `prevStep from google returns to language index (got ${afterNav.currentStep})`);
+}
+
 (async () => {
   await sqliteBridgeTests();
   await startPathTests();
+  prevStepPathTests();
   console.log(`\n${passed} passed, ${failures.length} failed`);
   if (failures.length) {
     console.error(failures.join('\n'));
