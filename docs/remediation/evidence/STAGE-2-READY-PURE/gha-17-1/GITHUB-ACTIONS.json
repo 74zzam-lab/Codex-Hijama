@@ -1,0 +1,9 @@
+{
+  "runId": "31688652938",
+  "runNumber": "17",
+  "workflow": "Stage 1+2 Windows Verification",
+  "ref": "refs/heads/cursor/bootstrap-restore-fixes-beb8",
+  "sha": "afa8e290fff539f42d544063567096c3e475c3b7",
+  "serverUrl": "https://github.com",
+  "repository": "74zzam-lab/Codex-Hijama"
+}

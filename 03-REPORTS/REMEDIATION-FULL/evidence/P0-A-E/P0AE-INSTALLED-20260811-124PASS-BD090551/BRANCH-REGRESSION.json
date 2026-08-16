@@ -1,0 +1,7 @@
+{
+  "result":"PASS",
+  "branchAReplaceAll":"Removed branch A only",
+  "branchB":"Preserved",
+  "crossBranchSync":"DENIED",
+  "explicitDeveloperWriteBranch":"PASS"
+}

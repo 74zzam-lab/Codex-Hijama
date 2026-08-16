@@ -1,0 +1,4 @@
+{
+  "beforeFix": "branch_select → populateDriveBootstrapBranchFields(license) → license.branches only → often BR-MAIN",
+  "afterFix": "branch_select → authoritativeBootstrapBranches() → union(license.branches, discovery.branchCandidates) by branchId"
+}

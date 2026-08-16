@@ -1,0 +1,16 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "installedServiceRestart": "PASS — closed and reopened installed SQLite service; Branch B survived, Branch A deletion and failed locked row remained absent.",
+  "installedGuiRestart": "PASS — closed installed app with Alt+F4, relaunched exact installed executable, returned to login UI.",
+  "postRestartDatabase": {
+    "integrity": "ok",
+    "foreignKeyViolations": 0,
+    "schemaVersion": "6",
+    "sqlitePrimary": "true",
+    "localStorageRetained": "false",
+    "p0bAuthorityStatus": "complete",
+    "quarantine": 0,
+    "operationalKvShadowRows": 0
+  }
+}

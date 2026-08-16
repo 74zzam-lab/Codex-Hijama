@@ -1,0 +1,8 @@
+{
+  "trackedHistoricalZips": 0,
+  "trackedSourceBuildZips": 0,
+  "sourceTreeAtRepoRoot": true,
+  "stage12ZipCommittedToGit": false,
+  "zipArtifactOnly": true,
+  "verifyScript": "PASS"
+}

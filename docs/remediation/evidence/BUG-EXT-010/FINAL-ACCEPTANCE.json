@@ -1,0 +1,17 @@
+{
+  "schema": "FINAL-ACCEPTANCE",
+  "at": "2026-08-15T01:14:53.552Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "acceptance": {
+    "fresh": true,
+    "validLicense": true,
+    "race": true,
+    "silent": true,
+    "fiveRestarts": true,
+    "windowLicCheck": true,
+    "pendingClears": true,
+    "maxObservedPendingMs": 524,
+    "lateTimerStable15s": true
+  }
+}

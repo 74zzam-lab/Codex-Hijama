@@ -1,0 +1,7 @@
+{
+  "hiddenOnExisting": [
+    "business_setup",
+    "publication",
+    "readback"
+  ]
+}

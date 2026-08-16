@@ -1,0 +1,8 @@
+{
+  "schema": "INSTALLED-SLOW-LICENSE",
+  "at": "2026-08-15T01:14:32.068Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "note": "covered by fresh settle timing",
+  "freshMaxPendingMs": 524
+}

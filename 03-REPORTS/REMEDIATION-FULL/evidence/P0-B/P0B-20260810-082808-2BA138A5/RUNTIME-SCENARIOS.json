@@ -1,0 +1,18 @@
+{
+  "buildId": "P0B-20260810-082808-2BA138A5",
+  "result": "PASS",
+  "scenarios": [
+    { "id": "EXE-P0B-BOOT", "result": "PASS", "evidence": "Installed executable reached the real login/BootFlow UI without crash." },
+    { "id": "EXE-DAT-003", "result": "PASS", "evidence": "Installed service executed real SQLite typed command plus outbox and returned one result shape." },
+    { "id": "EXE-BR-002", "result": "PASS", "evidence": "Branch A replaceAll removed only Branch A; Branch B row survived." },
+    { "id": "EXE-BR-003", "result": "PASS", "evidence": "Cross-branch sync operation was denied by the installed main service." },
+    { "id": "EXE-DAT-004", "result": "PASS", "evidence": "Installed persistKv rejected operational clientsRegistry." },
+    { "id": "EXE-P0B-DB", "result": "PASS", "evidence": "Runtime DB: schema 6, sqlitePrimary true, integrity ok, quarantine 0." }
+  ],
+  "observedOutsidePhase": {
+    "diagnostic": "TDW-ACT-license_timeout-MSMT2PLA",
+    "phase": "P0-C",
+    "result": "OPEN",
+    "note": "BootFlow catch block forces the license_timeout label for all caught discovery errors; root cause not proven."
+  }
+}

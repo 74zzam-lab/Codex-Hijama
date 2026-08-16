@@ -1,0 +1,14 @@
+{
+  "buildId": "FINALCLEAN-37F3FDE0",
+  "sourceRoot": "D:\\Hijama-Clinic-Production",
+  "installedAsar": "D:\\Hijama-Clinic-Production\\.codex-validation\\installed\\FINALCLEAN-37F3FDE0\\resources\\app.asar",
+  "installedAsarSha256": "05B102C000D0F3A33F99CF46378073E0902565E3C4DED04D2CC74C429DE7064F",
+  "productionFilesChecked": 23,
+  "productionFilesMatched": 23,
+  "packagedManifestNormalizedByElectronBuilder": true,
+  "packagedManifestIdentityMatched": true,
+  "registryFiles": 6,
+  "registryIntegrity": "PASS",
+  "packagedLicenseDataEntries": 0,
+  "result": "PASS"
+}

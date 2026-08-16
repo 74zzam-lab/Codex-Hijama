@@ -1,0 +1,14 @@
+{
+  "markers": [
+    "seedDefaultPassword",
+    "OWNER_SEED_PASSWORD_HASH",
+    "ensureOwnerSeedAccount",
+    "ownerSeedRetired"
+  ],
+  "modules": [
+    "cloud/owner-seed-retirement.js",
+    "cloud/owner-management.js",
+    "index.html",
+    "electron/security/password-auth.js"
+  ]
+}

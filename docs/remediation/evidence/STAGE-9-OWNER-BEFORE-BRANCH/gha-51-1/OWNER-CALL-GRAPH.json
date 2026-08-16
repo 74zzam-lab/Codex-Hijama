@@ -1,0 +1,4 @@
+{
+  "path": "renderStepUI:owner → createOwnerFromWizard → OwnerManagement.createOwner → activateSetupOwnerIdentity → verifySetupOwnerSession",
+  "branchGuard": "createFirstBranchFromForm → newBranchRequiresOwner()"
+}

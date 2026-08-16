@@ -1,0 +1,11 @@
+{
+  "at": "2026-08-13T15:13:02.749Z",
+  "paths": [
+    "crash mid backup/sync/restore → marker + recoverIncompleteOps",
+    "disk full ENOSPC → classifyDiskError stop_write",
+    "low memory → classifyMemoryPressure defer_bulk",
+    "retry → exponential backoff not tight loop",
+    "pendingPushes → MAX 2000 bound"
+  ],
+  "result": "PASS"
+}

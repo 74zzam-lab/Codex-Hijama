@@ -1,0 +1,17 @@
+{
+  "readback_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-READBACK-FAIL"
+  },
+  "readback_stale": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-READBACK-STALE"
+  },
+  "readback_mismatch": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-READBACK-MISMATCH"
+  }
+}

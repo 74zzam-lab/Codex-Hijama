@@ -1,0 +1,6 @@
+{
+  "path": "commitBusinessSetupFromForm → persistData(settings)",
+  "atomicity": "single settings persist",
+  "successRequires": "persist ok + hydrate ok + read-back match",
+  "partialFailure": "throws, gate stays unresolved"
+}

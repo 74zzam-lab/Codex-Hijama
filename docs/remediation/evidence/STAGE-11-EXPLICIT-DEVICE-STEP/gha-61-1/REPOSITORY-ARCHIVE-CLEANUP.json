@@ -1,0 +1,9 @@
+{
+  "trackedHistoricalZipsRemoved": true,
+  "gitignoreRules": [
+    "Tadawi-Stage-*.zip",
+    "Hijama-Management-System-SOURCE-BUILD-*.zip"
+  ],
+  "verifyScript": "scripts/ci/verify-no-tracked-archives.cjs",
+  "zipArtifactOnly": true
+}

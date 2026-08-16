@@ -1,0 +1,8 @@
+{
+  "schema": "BUG-EXT-001-009-REGRESSION",
+  "at": "2026-08-15T01:20:00.000Z",
+  "buildCommit": "aaac538ba575b1e0e4a0928fa797a29f5db72a99",
+  "result": "PASS",
+  "test": "tests/baseline/test-post-stage-20-external-defects.js",
+  "githubRun31843364686": "PASS"
+}

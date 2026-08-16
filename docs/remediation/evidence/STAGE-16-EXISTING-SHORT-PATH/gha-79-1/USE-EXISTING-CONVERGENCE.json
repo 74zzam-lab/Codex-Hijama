@@ -1,0 +1,26 @@
+{
+  "directExisting": [
+    "language",
+    "google",
+    "discovery",
+    "license_org_recovery",
+    "branch_select",
+    "device",
+    "restore",
+    "owner_auth",
+    "sync",
+    "ready"
+  ],
+  "useExistingFork": [
+    "language",
+    "google",
+    "discovery",
+    "license_org_recovery",
+    "branch_select",
+    "device",
+    "restore",
+    "owner_auth",
+    "sync",
+    "ready"
+  ]
+}

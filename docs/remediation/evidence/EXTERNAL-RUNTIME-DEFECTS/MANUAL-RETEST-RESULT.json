@@ -1,0 +1,36 @@
+{
+  "protocolVersion": "1.0",
+  "buildCommit": "013f37e58d4567ad07e1c00bc333094f7323f95b",
+  "retestRound": 1,
+  "platform": "Windows EXE local build",
+  "testedAt": "2026-08-15T06:07:00.000Z",
+  "verdict": "FAIL",
+  "tester": "user-manual",
+  "bugs": {
+    "BUG-EXT-011": {
+      "status": "FAIL",
+      "notes": "Modal too narrow; Google switch/disconnect button not visible; content and footer buttons clipped in RTL layout."
+    },
+    "BUG-EXT-012": {
+      "status": "FAIL",
+      "notes": "After Google connect, discovery checklist row showed red USER_ACTION with TDW-BOOT-ERR-MSTWXEOX-0001 and generic 'تعذّر إكمال العملية' even though discovery later succeeded."
+    },
+    "BUG-EXT-013": {
+      "status": "FAIL",
+      "notes": "With 2 branches from discovery, branch_select marked DONE automatically; BR-MAIN pre-selected without explicit confirm during license_org_recovery step."
+    },
+    "BUG-EXT-014": {
+      "status": "PARTIAL",
+      "notes": "User reached device step; branch auto-selected; second Google OAuth unclear."
+    },
+    "BUG-EXT-015": {
+      "status": "FAIL",
+      "notes": "Cloud restore stuck at 15% on 42.6 KB backup (RST-mstz0ndd-d5dxt); heartbeat showed 'العملية مستمرة' with no byte progress advance."
+    },
+    "wizard-open": {
+      "status": "FAIL",
+      "notes": "Existing customer bootstrap wizard required 3+ attempts before appearing on first launch after build."
+    }
+  },
+  "followUpCommit": "pending-second-round-fixes"
+}

@@ -1,0 +1,13 @@
+{
+  "bugs": [
+    { "id": "BUG-EXT-001", "title": "Bootstrap viewport/content clipping", "severity": "MEDIUM", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-002", "title": "Google success followed by red error state", "severity": "CRITICAL", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-003", "title": "Missing Google disconnect/account switch", "severity": "MEDIUM", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-004", "title": "Discovered branches lost / BR-MAIN fallback", "severity": "CRITICAL", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-005", "title": "Discovery rescan non-responsive", "severity": "HIGH", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-006", "title": "NEW path reaches Owner Auth instead of Owner Creation", "severity": "CRITICAL", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-007", "title": "Back navigation inconsistent/non-responsive", "severity": "HIGH", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-008", "title": "Real cloud Restore stalls around 21%", "severity": "P0", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" },
+    { "id": "BUG-EXT-009", "title": "Google connected state lost mid-bootstrap", "severity": "P0", "status": "FIXED_AUTOMATED_MANUAL_RETEST_REQUIRED" }
+  ]
+}

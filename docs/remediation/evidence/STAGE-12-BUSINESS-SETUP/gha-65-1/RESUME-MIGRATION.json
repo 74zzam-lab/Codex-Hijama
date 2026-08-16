@@ -1,0 +1,5 @@
+{
+  "v11ToV12": "business_setup step inserted; auto-complete when SoT resolved",
+  "legacyReadyProfiles": "skip business_setup when centerName+phone authoritative",
+  "profileBranchDeviceResolved": "resume to business_setup if SoT incomplete"
+}

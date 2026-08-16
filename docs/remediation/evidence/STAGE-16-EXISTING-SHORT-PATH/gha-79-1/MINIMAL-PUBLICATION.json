@@ -1,0 +1,4 @@
+{
+  "scope": "license identity + device/outbox metadata",
+  "waivedWhenRecovered": true
+}

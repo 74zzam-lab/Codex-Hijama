@@ -1,0 +1,5 @@
+{
+  "NEW_start_new": "path=new, forkDecision=start_new → owner creation step (not owner_auth)",
+  "EXISTING": "path=existing OR forkDecision=use_existing → owner_auth after restore",
+  "fix": "preferOwnerCreation when isNewFreshStartPath() && !ownerCredentialCommitted()"
+}
