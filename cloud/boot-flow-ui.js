@@ -454,7 +454,7 @@
     el.setAttribute('role', isError ? 'alert' : 'status');
     if (!isError && msg && String(msg).includes('✅')) {
       const w = getDisplayWizard(loadWizard());
-      const step = stepsFor(w.path)[w.currentStep];
+      const step = currentStepId(w);
       if (checklistStepError?.stepId === step) {
         checklistStepError = null;
         lastGateRetryHandler = null;
@@ -548,8 +548,8 @@
       checklistStepError = null;
       lastGateRetryHandler = null;
     }
-    const steps = stepsFor(w.path);
-    const currentStepId = steps[w.currentStep] || steps[0] || null;
+    const frame = describeCurrentStep(w);
+    const currentStepId = frame.stepId;
     if (checklistStepError?.stepId && validateStep(checklistStepError.stepId)) {
       checklistStepError = null;
       lastGateRetryHandler = null;
@@ -598,7 +598,7 @@
 
   async function retryCurrentGate() {
     const w = getDisplayWizard(loadWizard());
-    const step = stepsFor(w.path)[w.currentStep];
+    const step = currentStepId(w);
     if (!checklistStepError || checklistStepError.stepId !== step || !checklistStepError.retryable) {
       return { ok: false, error: 'retry_not_available' };
     }
@@ -1794,6 +1794,7 @@ body.bf-active #login-drive-bootstrap-panel,
 body.bf-active #lic-drive-bootstrap-panel{display:none!important}
 body.bf-active #licenseScreen:not(.hidden){z-index:100040!important}
 body.bf-active #cloudConnectModal.open{z-index:100039!important}
+body.bf-active #backupPasswordModal.open{z-index:100060!important}
 body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 .bf-source-card{border:1px solid var(--border,#e5e7eb);border-radius:12px;padding:12px 14px;background:var(--surface,#f8fafc);display:grid;gap:6px;text-align:start}
 .bf-source-card[data-status="ready"]{border-color:#86efac;background:#f0fdf4}
@@ -1906,7 +1907,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (ev.key === 'Escape') {
       // Safe close only when not in critical in-flight
       if (oauthInFlight || licenseActivateInFlight || branchCreateInFlight || branchBindInFlight || ownerLoginInFlight || ownerCreateInFlight() || restoreInFlight || syncInFlight) {
-        setStatus('⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق', true);
+        setStatus('⚠️ عملية جارية — انتظر أو أكمل قبل الإغلاق', false);
         ev.preventDefault();
         return;
       }
@@ -2148,6 +2149,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (pct) pct.textContent = `${model.progress.percent}% — ${model.progress.done}/${model.progress.total}`;
   }
 
+  /** Raw step id from stored index — no conditional re-mapping. */
+  function rawStepIdFromIndex(w) {
+    w = w || loadWizard();
+    const sequence = stepsFor(w.path);
+    const idx = Number(w.currentStep);
+    const safeIdx = Number.isFinite(idx) ? Math.min(Math.max(idx, 0), sequence.length - 1) : 0;
+    return sequence[safeIdx] || sequence[0] || null;
+  }
+
   /**
    * State the step model needs to decide which conditional steps apply.
    * Derived from the same gates the checklist uses, so all consumers agree.
@@ -2157,7 +2167,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     return {
       path: w.path,
       forkDecision: w.forkDecision,
-      currentStepId: currentStepId(w),
+      currentStepId: rawStepIdFromIndex(w),
       needsPathFork: needsPathForkDecision(),
       pathDecisionResolved: hasPathDecisionResolved(),
       ownerAuthResolved: ownerAuthStepResolved(),
@@ -2165,12 +2175,17 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     };
   }
 
-  /** Resolve the step id for a wizard without recursing through the model state. */
+  /** Resolve the step id for a wizard — uses BootstrapStepModel when available. */
   function currentStepId(w) {
     w = w || loadWizard();
-    const sequence = stepsFor(w.path);
+    const path = w.path;
     const idx = Number(w.currentStep);
-    return sequence[Number.isFinite(idx) ? Math.min(Math.max(idx, 0), sequence.length - 1) : 0] || sequence[0] || null;
+    const safeIdx = Number.isFinite(idx) ? Math.min(Math.max(idx, 0), stepsFor(path).length - 1) : 0;
+    const model = stepModel();
+    if (model?.resolveStepIdFromIndex) {
+      return model.resolveStepIdFromIndex(path, safeIdx, stepModelState(w));
+    }
+    return rawStepIdFromIndex(w);
   }
 
   function stepModel() {
@@ -2304,6 +2319,19 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     return true;
   }
 
+  /** Capture render generation + step before an async operation mutates the DOM. */
+  function captureRenderContext(stepId) {
+    return { generation: renderGeneration, stepId: stepId || currentStepId() };
+  }
+
+  function guardedRender(ctx, fn) {
+    if (!ctx || isRenderCurrent(ctx.generation, ctx.stepId)) {
+      fn();
+      return true;
+    }
+    return false;
+  }
+
   function addBtn(host, label, cls, handler, disabled) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -2356,6 +2384,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   async function runLicenseOrgRecovery(options) {
     options = options || {};
+    const renderCtx = captureRenderContext('license_org_recovery');
     const w = loadWizard();
     if (!hasDiscoveryResolved()) {
       return { ok: false, error: 'discovery_required' };
@@ -2408,7 +2437,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       clearChecklistStepError('google');
     }
     reconcileBranchSelectionAfterDiscovery();
-    renderChecklist(getDisplayWizard(loadWizard()));
+    guardedRender(renderCtx, () => {
+      renderChecklist(getDisplayWizard(loadWizard()));
+    });
     return { ok: true, recovered: true, activationConsumeDelta: meta.existingShortPathRecovery.activationConsumeDelta };
   }
 
@@ -2520,6 +2551,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
   async function runDiscoveryGate(options) {
     options = options || {};
+    const renderCtx = captureRenderContext('discovery');
     if (discoveryInFlight) {
       return { ok: false, error: 'discovery_in_flight', retryable: true };
     }
@@ -2531,7 +2563,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       await refreshGoogleConnectionState({ acceptLiveReconnect: true });
     } catch { /* discovery still validates hasGoogle() below */ }
     if (!hasGoogle()) {
-      setStatus('⚠️ اربط Google أولاً', true);
+      setStatus('⚠️ اربط Google أولاً', false);
       return { ok: false, error: 'google_not_connected', retryable: false };
     }
     discoveryInFlight = true;
@@ -2570,8 +2602,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       clearChecklistStepError('discovery');
       clearTransientBootstrapState({ clearStepError: false, clearStatus: true });
       reconcileBranchSelectionAfterDiscovery();
-      renderChecklist(getDisplayWizard(loadWizard()));
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderChecklist(getDisplayWizard(loadWizard()));
+        renderNavButtons(loadWizard());
+      });
       return { ok: true, discovery: result };
     } catch (e) {
       const code = e?.code || e?.error || 'discovery_failed';
@@ -2586,19 +2620,22 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: String(e && e.message || e), retryable: true };
     } finally {
       discoveryInFlight = false;
-      renderProgress(loadWizard());
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderProgress(loadWizard());
+        renderNavButtons(loadWizard());
+      });
     }
   }
 
   async function runGoogleConnect() {
+    const renderCtx = captureRenderContext('google');
     if (oauthInFlight) {
       setStatus('⏳ ربط Google جارٍ بالفعل — انتظر');
       return { ok: false, error: 'oauth_in_flight' };
     }
     const wizardPath = loadWizard().path;
     if (wizardPath === PATHS.NEW && !hasValidLicense()) {
-      setStatus('⚠️ أكمل التفعيل أولاً قبل ربط Google', true);
+      setStatus('⚠️ أكمل التفعيل أولاً قبل ربط Google', false);
       return { ok: false, error: 'activation_required_before_google' };
     }
     oauthInFlight = true;
@@ -2631,11 +2668,13 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: String(e && e.message || e) };
     } finally {
       oauthInFlight = false;
-      const w = loadWizard();
-      renderProgress(w);
-      renderNavButtons(w);
-      // Re-render step actions so Connect→Change/Disconnect swap immediately.
-      renderStepUI(w);
+      guardedRender(renderCtx, () => {
+        const w = loadWizard();
+        renderProgress(w);
+        renderNavButtons(w);
+        // Re-render step actions so Connect→Change/Disconnect swap immediately.
+        renderStepUI(w);
+      });
     }
   }
 
@@ -2781,7 +2820,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: 'in_flight' };
     }
     if (newBranchRequiresOwner()) {
-      setStatus('⚠️ يجب إنشاء/اعتماد حساب المالك قبل إنشاء أول فرع', true);
+      setStatus('⚠️ يجب إنشاء/اعتماد حساب المالك قبل إنشاء أول فرع', false);
       return { ok: false, error: 'owner_required_before_branch' };
     }
     if (hasBranch() && getSelectedBranchId()) {
@@ -2800,7 +2839,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const centerName = String(global.settings?.centerName || global.LicenseCloud?.loadLocal?.()?.centerName || '').trim();
     const banned = ['مركز الحجامة', 'الفرع الرئيسي', 'Hijama Center', 'Main Branch', centerName].filter(Boolean);
     if (banned.some((b) => b && nameAr === b)) {
-      setStatus('⚠️ أدخل اسماً مخصصاً للفرع — لا تستخدم اسم المركز أو القيمة الافتراضية', true);
+      setStatus('⚠️ أدخل اسماً مخصصاً للفرع — لا تستخدم اسم المركز أو القيمة الافتراضية', false);
       return { ok: false, error: 'branch_name_placeholder' };
     }
     branchCreateInFlight = true;
@@ -2808,7 +2847,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     try {
       const doc = global.LicenseCloud?.loadLocal?.();
       if (!doc?.centerId) {
-        setStatus('⚠️ لا يوجد ترخيص/مؤسسة صالحة لإنشاء فرع', true);
+        setStatus('⚠️ لا يوجد ترخيص/مؤسسة صالحة لإنشاء فرع', false);
         return { ok: false, error: 'no_center' };
       }
       const committed = await commitSetupOrganizationDevice({
@@ -2843,18 +2882,18 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (branchBindInFlight) {
       return { ok: false, error: 'in_flight' };
     }
+    const renderCtx = captureRenderContext('branch_select');
     const branchId = String(document.getElementById('bf-branch-id')?.value || '').trim();
     if (!branchId) {
-      setStatus('⚠️ اختر الفرع', true);
+      setStatus('⚠️ اختر الفرع', false);
       return { ok: false, error: 'branch_required' };
     }
     branchBindInFlight = true;
     try {
       const lic = global.LicenseCloud?.loadLocal?.() || {};
-      const branch = authoritativeBootstrapBranches(lic).find((b) => b && String(b.id) === branchId)
-        || (lic.branches || []).find((b) => b && String(b.id) === branchId);
+      const branch = authoritativeBootstrapBranches(lic).find((b) => b && String(b.id) === branchId);
       if (!branch) {
-        setStatus('⚠️ الفرع غير موجود في الترخيص', true);
+        setStatus('⚠️ الفرع غير موجود في الترخيص', false);
         return { ok: false, error: 'branch_not_found' };
       }
       const w = recordBranchSelection(branchId, 'user');
@@ -2862,11 +2901,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       saveWizard(w);
       clearChecklistStepError('branch_select');
       setStatus('✅ تم اختيار الفرع — تابع إلى تسجيل الجهاز');
-      renderChecklist(getDisplayWizard(loadWizard()));
+      guardedRender(renderCtx, () => {
+        renderChecklist(getDisplayWizard(loadWizard()));
+      });
       return { ok: true, branchId, provenance: 'user' };
     } finally {
       branchBindInFlight = false;
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+      });
     }
   }
 
@@ -2875,7 +2918,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: 'device_registration_in_flight' };
     }
     if (!hasBranch() || !getSelectedBranchId()) {
-      setStatus('⚠️ يجب اختيار/إنشاء فرع قبل تسجيل الجهاز', true);
+      setStatus('⚠️ يجب اختيار/إنشاء فرع قبل تسجيل الجهاز', false);
       return { ok: false, error: 'branch_required_before_device' };
     }
     if (deviceStepResolved()) {
@@ -2885,7 +2928,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     const deviceName = String(document.getElementById('bf-device-name')?.value || '').trim();
     const branchId = getSelectedBranchId();
     if (!deviceName) {
-      setStatus('⚠️ أدخل اسم هذا الجهاز', true);
+      setStatus('⚠️ أدخل اسم هذا الجهاز', false);
       return { ok: false, error: 'device_name_required' };
     }
     deviceRegisterInFlight = true;
@@ -2927,7 +2970,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: 'business_setup_in_flight' };
     }
     if (!deviceStepResolved()) {
-      setStatus('⚠️ يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز', true);
+      setStatus('⚠️ يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز', false);
       return { ok: false, error: 'device_required_before_business_setup' };
     }
     if (businessSetupStepResolved()) {
@@ -2994,7 +3037,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: 'publication_in_flight' };
     }
     if (!businessSetupStepResolved()) {
-      setStatus('⚠️ يجب إكمال بيانات المركز قبل النشر', true);
+      setStatus('⚠️ يجب إكمال بيانات المركز قبل النشر', false);
       return { ok: false, error: 'business_setup_required_before_publication' };
     }
     if (publicationStepResolved() && readbackStepResolved()) {
@@ -3109,7 +3152,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     }
     const busy = global.OwnerManagement?.getSystemBusyReason?.();
     if (busy === 'restore' || busy === 'sync' || busy === 'license_refresh') {
-      setStatus('⚠️ انتظر انتهاء ' + busy + ' قبل إنشاء Owner', true);
+      setStatus('⚠️ انتظر انتهاء ' + busy + ' قبل إنشاء Owner', false);
       return { ok: false, error: 'system_busy', busy };
     }
     setStatus('⏳ جارٍ إنشاء حساب المالك...');
@@ -3269,14 +3312,16 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         }
         if (connected) setStatus(isNew ? '✅ Google متصل — تابع لخطوة الاكتشاف' : '✅ Google متصل — تابع لخطوة الاكتشاف');
         else if (w.googleSessionConnected && !global.settings?.backup?.providers?.google?.userDisconnected) {
+          const googleRenderCtx = captureRenderContext('google');
           refreshGoogleConnectionState({ acceptLiveReconnect: true }).then((state) => {
+            if (!isRenderCurrent(googleRenderCtx.generation, googleRenderCtx.stepId)) return;
             if (state?.connected || hasGoogle()) {
               setStatus('✅ Google متصل — تابع لخطوة الاكتشاف');
               renderAll(loadWizard());
             }
           });
         }
-        else if (isNew && !hasValidLicense()) setStatus('أكمل التفعيل في الخطوة السابقة أولاً', true);
+        else if (isNew && !hasValidLicense()) setStatus('أكمل التفعيل في الخطوة السابقة أولاً', false);
         break;
       }
       case 'discovery': {
@@ -3321,7 +3366,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         } else if (hasGoogle()) {
           clearChecklistStepError('discovery');
           setStatus('🔍 جارٍ اكتشاف بيانات السحابة (read-only)...', false);
+          const discoveryRenderCtx = captureRenderContext('discovery');
           runDiscoveryGate().then((r) => {
+            if (!isRenderCurrent(discoveryRenderCtx.generation, discoveryRenderCtx.stepId)) return;
             if (statusHost) {
               statusHost.textContent = r.ok ? '✅ اكتمل الاكتشاف' : ('❌ ' + (r.error || 'discovery_failed'));
             }
@@ -3383,7 +3430,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           addBtn(actions, 'استخدام البيانات الموجودة', 'btn-primary', async () => {
             const r = commitForkUseExisting(selectedId);
             if (!r?.ok) {
-              setStatus('⚠️ اختر المؤسسة/الترخيص الصحيح أولاً', true);
+              setStatus('⚠️ اختر المؤسسة/الترخيص الصحيح أولاً', false);
               if (statusHost) statusHost.textContent = 'يلزم اختيار مرشح واحد قبل المتابعة.';
               return;
             }
@@ -3427,9 +3474,9 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const r = await runLicenseOrgRecovery({ forceDriveRescan: true });
           if (!r?.ok) {
             if (r?.error === 'existing_business_not_found') {
-              setStatus('⚠️ لم تُعثر على مؤسسة موجودة — يمكنك العودة واختيار بدء إعداد جديد', true);
+              setStatus('⚠️ لم تُعثر على مؤسسة موجودة — يمكنك العودة واختيار بدء إعداد جديد', false);
             } else if (r?.error === 'existing_candidate_ambiguous') {
-              setStatus('⚠️ أكثر من مؤسسة — اختر المرشح من خطوة المسار أولاً', true);
+              setStatus('⚠️ أكثر من مؤسسة — اختر المرشح من خطوة المسار أولاً', false);
             } else {
               setStatusFromErr(r, r?.error || 'existing_license_recovery_failed');
             }
@@ -3481,7 +3528,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           <div class="form-group"><label>اسم المؤسسة</label><input class="form-control" id="bf-org-name" value="${String(cname).replace(/"/g, '&quot;')}"></div>`;
         addBtn(actions, '💾 تأكيد المؤسسة', 'btn-primary', async () => {
           const name = String(document.getElementById('bf-org-name')?.value || '').trim();
-          if (!name) { setStatus('⚠️ أدخل اسم المؤسسة', true); return; }
+          if (!name) { setStatus('⚠️ أدخل اسم المؤسسة', false); return; }
           try {
             await commitSetupOrganizationDevice({ centerName: name });
           } catch (error) {
@@ -3497,7 +3544,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       case 'branch': {
         if (newBranchRequiresOwner()) {
           content.innerHTML = '<p class="tdw-field-error">يجب إكمال خطوة حساب المالك قبل إنشاء أول فرع.</p>';
-          setStatus('⚠️ أنشئ حساب المالك أولاً', true);
+          setStatus('⚠️ أنشئ حساب المالك أولاً', false);
           break;
         }
         if (hasBranch() && getSelectedBranchId()) {
@@ -3543,7 +3590,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       case 'device': {
         if (!hasBranch() || !getSelectedBranchId()) {
           content.innerHTML = '<p class="tdw-field-error">يجب اختيار/إنشاء فرع قبل تسجيل الجهاز.</p>';
-          setStatus('⚠️ الفرع مطلوب أولاً', true);
+          setStatus('⚠️ الفرع مطلوب أولاً', false);
           break;
         }
         if (deviceStepResolved()) {
@@ -3563,7 +3610,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       case 'business_setup': {
         if (!deviceStepResolved()) {
           content.innerHTML = '<p class="tdw-field-error">يجب إكمال تسجيل الجهاز قبل إعداد بيانات المركز.</p>';
-          setStatus('⚠️ الجهاز مطلوب أولاً', true);
+          setStatus('⚠️ الجهاز مطلوب أولاً', false);
           break;
         }
         const snap = readBusinessSetupState();
@@ -3588,7 +3635,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       case 'publication': {
         if (!businessSetupStepResolved()) {
           content.innerHTML = '<p class="tdw-field-error">يجب إكمال بيانات المركز قبل النشر إلى السحابة.</p>';
-          setStatus('⚠️ بيانات المركز مطلوبة أولاً', true);
+          setStatus('⚠️ بيانات المركز مطلوبة أولاً', false);
           break;
         }
         const pub = readPublicationState();
@@ -3611,7 +3658,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         const owner = getUsableOwnerAccount();
         if (!hasOwnerPasswordAccount()) {
           content.innerHTML = '<p class="tdw-field-error">لا يوجد مالك مسترد بعد — أكمل الاستعادة أولاً.</p>';
-          setStatus('⚠️ existing_owner_auth_required', true);
+          setStatus('⚠️ existing_owner_auth_required', false);
           break;
         }
         if (setupOwnerSessionReady()) {
@@ -3625,7 +3672,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           const account = content.querySelector('#bf-owner-account');
           if (account) account.textContent = String(owner?.username || owner?.fullName || 'Owner');
           addBtn(actions, ownerLoginInFlight ? '⏳ جارٍ التحقق...' : '🔐 تحقق من حساب المالك', 'btn-primary', () => authenticateExistingOwnerFromWizard(), ownerLoginInFlight);
-          setStatus('يجب التحقق من كلمة مرور المالك قبل المزامنة', true);
+          setStatus('يجب التحقق من كلمة مرور المالك قبل المزامنة', false);
         }
         break;
       }
@@ -3661,7 +3708,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
             const account = content.querySelector('#bf-owner-account');
             if (account) account.textContent = String(owner?.username || owner?.fullName || 'Owner');
             addBtn(actions, ownerLoginInFlight ? '⏳ جارٍ التحقق...' : '🔐 تحقق من حساب المالك', 'btn-primary', () => authenticateExistingOwnerFromWizard(), ownerLoginInFlight);
-            setStatus('يجب التحقق من كلمة مرور المالك قبل بدء المزامنة', true);
+            setStatus('يجب التحقق من كلمة مرور المالك قبل بدء المزامنة', false);
           }
         } else if (st === 'OWNER_CREATION_IN_PROGRESS') {
           content.innerHTML = '<p>⏳ إنشاء المالك جارٍ — لا تبدأ عملية ثانية.</p>';
@@ -3784,7 +3831,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
 
         const runDiscovery = async (forceRescan = false) => {
           if (restoreInFlight) {
-            setStatus('⚠️ عملية جارية — انتظر', true);
+            setStatus('⚠️ عملية جارية — انتظر', false);
             return;
           }
           if (!Discovery?.discoverAllSources) {
@@ -3907,7 +3954,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
               && !cloud.partialScan && !cloud.truncated && !cloud.timedOut) {
             selectedRestoreButton = addBtn(cloudCard.actions, 'استعادة هذه البيانات المحددة', 'btn-primary', async () => {
               if (!selectedCloudPoint) {
-                setStatus('⚠️ اختر نسخة من القائمة أولاً', true);
+                setStatus('⚠️ اختر نسخة من القائمة أولاً', false);
                 return;
               }
               if (restoreInFlight || Discovery.isRestoreLocked?.()) {
@@ -4084,7 +4131,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
           }</div>`;
         addBtn(actions, '▶️ بدء المزامنة الأولية', 'btn-primary', async () => {
           if (syncInFlight || ownerCreateInFlight()) {
-            setStatus('⚠️ عملية جارية — انتظر', true);
+            setStatus('⚠️ عملية جارية — انتظر', false);
             return;
           }
           syncInFlight = true;
@@ -4126,7 +4173,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         // Single terminal CTA — no duplicate finish / login / restart buttons.
         addBtn(actions, '🔄 إعادة تشغيل البرنامج وتطبيق الإعداد', 'btn-primary', async () => {
           if (!isBootComplete()) {
-            setStatus('⚠️ لم تكتمل جميع المتطلبات', true);
+            setStatus('⚠️ لم تكتمل جميع المتطلبات', false);
             return;
           }
           const finalized = await global.SqliteBridge?.finalizeSetupData?.();
@@ -4239,7 +4286,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     if (!nextId) {
       const completed = await completeBootstrapTransition({ close: true });
       if (!completed?.ok) {
-        setStatus('⚠️ لم تكتمل جميع متطلبات الإعداد', true);
+        setStatus('⚠️ لم تكتمل جميع متطلبات الإعداد', false);
       }
       return;
     }

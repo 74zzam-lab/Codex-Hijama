@@ -160,7 +160,8 @@ async function check(name, operation) {
     assert.match(ipc, /skipProviderResolve:\s*true/);
     const svc = fs.readFileSync(path.join(root, 'electron/cloud-providers/cloud-service.js'), 'utf8');
     assert.match(svc, /skipProviderResolve/);
-    assert.match(svc, /raceAbort\(resolveActiveProviderKey/);
+    assert.match(svc, /resolveActiveProviderKey\(id,\s*\{\s*signal:\s*options\.signal\s*\}\)/);
+    assert.match(fs.readFileSync(path.join(root, 'electron/cloud-providers/registry.js'), 'utf8'), /options\.signal/);
   });
 
   await check('BUG-2 provider abort maps to structured cloud_download_stalled', async () => {

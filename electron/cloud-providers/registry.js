@@ -33,14 +33,21 @@ function resolveProviderId(id) {
   return PROVIDERS[key] ? key : 'none';
 }
 
-async function resolveActiveProviderKey(id) {
-  if (id === 'google') {
-    const oauthStatus = await googleDrive.getStatus();
-    if (oauthStatus.connected) return 'google';
-    if (localVault.getAccount('google')?.email) return 'local-vault';
-    return 'google';
+async function resolveActiveProviderKey(id, options = {}) {
+  const run = async () => {
+    if (id === 'google') {
+      const oauthStatus = await googleDrive.getStatus();
+      if (oauthStatus.connected) return 'google';
+      if (localVault.getAccount('google')?.email) return 'local-vault';
+      return 'google';
+    }
+    return id;
+  };
+  if (options.signal) {
+    const { raceAbort } = require('./google-drive-api');
+    return raceAbort(run(), options.signal);
   }
-  return id;
+  return run();
 }
 
 function getProvider(id) {

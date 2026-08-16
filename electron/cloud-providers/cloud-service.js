@@ -103,8 +103,7 @@ async function downloadCloudBackup(remotePath, providerId, options = {}) {
   // here avoids a silent hang in getUserEmail before AbortSignal is observed.
   let providerKey = id === 'google' ? 'google' : id;
   if (options.skipProviderResolve !== true) {
-    const { raceAbort } = require('./google-drive-api');
-    providerKey = await raceAbort(resolveActiveProviderKey(id), options.signal);
+    providerKey = await resolveActiveProviderKey(id, { signal: options.signal });
   }
   return getProvider(providerKey).downloadBackup(
     remotePath,

@@ -88,7 +88,7 @@ check('setup restore skips provider getStatus resolve and races whole download',
   assert.match(ipc, /raceAbort\(/);
   const svc = fs.readFileSync(path.join(root, 'electron/cloud-providers/cloud-service.js'), 'utf8');
   assert.match(svc, /skipProviderResolve/);
-  assert.match(svc, /raceAbort\(resolveActiveProviderKey/);
+  assert.match(svc, /resolveActiveProviderKey\(id,\s*\{\s*signal:\s*options\.signal\s*\}\)/);
 });
 
 check('stall policy Arabic terminal message', () => {
