@@ -250,38 +250,47 @@
   }
 
   function loadWizard() {
-    const w = global.DB?.get?.(WIZARD_KEY, {
-      path: null,
-      currentStep: 0,
-      completedSteps: [],
-      startedAt: null,
-      lang: global.UxI18n?.getLang?.() || 'ar',
-      restoreChoice: null,
-      syncDone: false,
-      oauthLockAt: null,
-      wizardFlowVersion: 0,
-    }) || {
-      path: null, currentStep: 0, completedSteps: [], startedAt: null, lang: 'ar', restoreChoice: null, syncDone: false,
-      wizardFlowVersion: 0,
-    };
-    return normalizeWizardFlowState(w);
+    let raw = null;
+    try {
+      const stored = localStorage.getItem(WIZARD_KEY);
+      if (stored) raw = JSON.parse(stored);
+    } catch { /* empty */ }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+      raw = global.DB?.get?.(WIZARD_KEY, {
+        path: null,
+        currentStep: 0,
+        completedSteps: [],
+        startedAt: null,
+        lang: global.UxI18n?.getLang?.() || 'ar',
+        restoreChoice: null,
+        syncDone: false,
+        oauthLockAt: null,
+        wizardFlowVersion: 0,
+      }) || {
+        path: null, currentStep: 0, completedSteps: [], startedAt: null, lang: 'ar', restoreChoice: null, syncDone: false,
+        wizardFlowVersion: 0,
+      };
+    }
+    return normalizeWizardFlowState(raw);
   }
 
   function saveWizard(w) {
     const payload = (w && typeof w === 'object' && !Array.isArray(w)) ? { ...w } : w;
+    // UI-only wizard state is Chromium-local. Write it first so loadWizard() cannot
+    // miss a silent DB.set failure before SqliteBridge write-through is installed.
+    try {
+      localStorage.setItem(WIZARD_KEY, JSON.stringify(payload));
+    } catch { /* empty */ }
+    const bridge = global.SqliteBridge;
+    if (bridge?.setUiOnly && global.DB?.__sqliteWriteThrough) {
+      bridge.setUiOnly(WIZARD_KEY, payload);
+      return payload;
+    }
     const set = global.DB?.set;
     if (set) {
       const result = set(WIZARD_KEY, payload);
-      // Wizard is UI-only state; ensure the next synchronous loadWizard() sees the write
-      // even when DB.set returns a Promise (SQLite bridge) or a guarded noop.
       try {
-        if (global.SqliteBridge?.setUiOnly && global.DB?.__sqliteWriteThrough) {
-          global.SqliteBridge.setUiOnly(WIZARD_KEY, payload);
-        } else if (global.DB?.__rawSet) {
-          global.DB.__rawSet(WIZARD_KEY, payload);
-        } else {
-          localStorage.setItem(WIZARD_KEY, JSON.stringify(payload));
-        }
+        if (global.DB?.__rawSet) global.DB.__rawSet(WIZARD_KEY, payload);
       } catch { /* empty */ }
       void result;
     }
