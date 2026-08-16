@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-08-16T10:50:00.000Z",
+  "status": "SOURCE PASS / INSTALLED WINDOWS UNVERIFIED",
+  "runtimeSourceCommit": "b0aceae20f43b3f6158831fa1f5d06a836149a83",
+  "branch": "cursor/external-existing-bootstrap-defects-beb8",
+  "buildWorkflow": "Stage 1+2+...+20 Windows Verification",
+  "buildRunId": 31941943819,
+  "buildRunConclusion": "success",
+  "buildRunHeadSha": "b0aceae20f43b3f6158831fa1f5d06a836149a83",
+  "headEqualsBuildSource": true,
+  "prMergeShaUsedForArtifactName": "95fae9c6d30bf9c640a457ffa6ea4afa90b3b80d",
+  "artifactName": "setup-exe-125-95fae9c6d30bf9c640a457ffa6ea4afa90b3b80d",
+  "exe": {
+    "fileName": "HijamaManagement-Setup-2.0.1.exe",
+    "sizeBytes": 107042370,
+    "sha256": "e4d25b67ca0b650fec5e4094ba39a9dfc4bb3d3ea6c17a923021233e34157cd0"
+  },
+  "previouslyReportedExeSha256": "09705D189DC6899CB2260F40B825D8103EA3628722595FAAA5D49B38CC698B79",
+  "previousExeRelationship": "different build; the earlier EXE was never available in this workspace and could not be verified",
+  "asarVerification": {
+    "asarPath": "resources/app.asar",
+    "note": "The Windows runner checks out with CRLF line endings, so raw SHA-256 differs from the Linux working tree. Comparison is therefore done on CRLF-normalized content, which is byte-identical.",
+    "files": [
+      { "path": "cloud/boot-flow-ui.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/bootstrap-step-model.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/ipc-error-envelope.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/cloud-data-discovery.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/bootstrap-failure-policy-contract.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/bootstrap-checklist-contract.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "cloud/activation-errors.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "electron/backup-v2-ipc.js", "rawShaMatch": false, "normalizedMatch": true },
+      { "path": "index.html", "rawShaMatch": false, "normalizedMatch": true }
+    ],
+    "markersPresentInPackage": [
+      "cloud/bootstrap-step-model.js :: getApplicableSteps",
+      "cloud/bootstrap-step-model.js :: EXISTING_SEQUENCE",
+      "cloud/boot-flow-ui.js :: currentBranchSelection",
+      "cloud/boot-flow-ui.js :: describeCurrentStep",
+      "cloud/boot-flow-ui.js :: renderGeneration",
+      "cloud/boot-flow-ui.js :: existingEmptyStartPolicy",
+      "cloud/boot-flow-ui.js :: بدء تنزيل النسخة",
+      "cloud/ipc-error-envelope.js :: TDWERR",
+      "electron/backup-v2-ipc.js :: toStructuredSetupRestoreFailure",
+      "electron/backup-v2-ipc.js :: classifySetupRestoreFailure",
+      "electron/backup-v2-ipc.js :: createSetupRestoreTrace",
+      "cloud/bootstrap-failure-policy-contract.js :: backup_download_forbidden",
+      "index.html :: bootstrap-step-model.js script tag"
+    ],
+    "oldDefectiveMarkersAbsent": [
+      "cloud/cloud-data-discovery.js :: heartbeatRatio",
+      "cloud/boot-flow-ui.js :: authoritativeBranchCount",
+      "cloud/boot-flow-ui.js :: branchExplicitlySelected = true",
+      "cloud/bootstrap-failure-policy-contract.js :: Error-invoking-remote"
+    ]
+  },
+  "sourceVerification": {
+    "lint": "PASS",
+    "baselineSuites": "132 passed, 0 failed"
+  },
+  "installedWindowsJourney": "UNVERIFIED — awaiting manual retest of this exact EXE"
+}
