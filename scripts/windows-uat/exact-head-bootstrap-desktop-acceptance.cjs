@@ -356,6 +356,7 @@ async function simGoogleConnected(page) {
     };
     const w = window.BootFlow.loadWizard();
     w.googleSessionConnected = true;
+    w.reviewStepIndex = w.currentStep;
     window.BootFlow.saveWizard(w);
     window.BootFlow.renderAll(w);
   });

@@ -2683,6 +2683,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       const w = loadWizard();
       w.googleSessionConnected = true;
       if (!w.completedSteps.includes('google')) w.completedSteps.push('google');
+      w.reviewStepIndex = w.currentStep;
       saveWizard(w);
       setStatus('✅ تم ربط Google' + (res?.email ? ' — ' + res.email : '') + ' — تابع لخطوة الاكتشاف');
       clearChecklistStepError('google');
@@ -2931,17 +2932,17 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       }
       const w = recordBranchSelection(branchId, 'user');
       if (!w.completedSteps.includes('branch_select')) w.completedSteps.push('branch_select');
+      // Stay on branch_select until the operator clicks Next — effectiveStepIndex
+      // would otherwise jump to device while the body still shows this step.
+      w.reviewStepIndex = w.currentStep;
       saveWizard(w);
       clearChecklistStepError('branch_select');
       setStatus('✅ تم اختيار الفرع — تابع إلى تسجيل الجهاز');
-      guardedRender(renderCtx, () => {
-        renderChecklist(getDisplayWizard(loadWizard()));
-      });
       return { ok: true, branchId, provenance: 'user' };
     } finally {
       branchBindInFlight = false;
       guardedRender(renderCtx, () => {
-        renderNavButtons(loadWizard());
+        renderAll(loadWizard());
       });
     }
   }
@@ -3336,8 +3337,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         const emailEl = content.querySelector('#bf-google-email');
         const provEmail = global.settings?.backup?.providers?.google?.email || '';
         const connected = hasGoogle();
-        if (connected && provEmail) emailEl.textContent = '✅ ' + provEmail;
-        else if (connected) emailEl.textContent = '✅ Google متصل';
+        if (emailEl) {
+          if (connected && provEmail) emailEl.textContent = '✅ ' + provEmail;
+          else if (connected) emailEl.textContent = '✅ Google متصل';
+        }
         if (!connected) {
           const btn = addBtn(actions, oauthInFlight ? '⏳ جارٍ الربط...' : '🔗 ربط Google', 'btn-primary', () => runGoogleConnect(), oauthInFlight || (isNew && !hasValidLicense()));
           btn.id = 'bf-google-connect-btn';

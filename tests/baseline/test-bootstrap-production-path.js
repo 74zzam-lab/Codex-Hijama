@@ -203,7 +203,11 @@ function existingJourneyTests() {
     return Promise.resolve(BF.selectExistingBranchOnly());
   }).then((r) => {
     check(r?.ok === true, 'branch confirm handler succeeds');
-    BF.renderAll(ctx.DB.get('__tdw_boot_wizard__'));
+    const pinned = BF.describeCurrentStep();
+    check(pinned.stepId === 'branch_select', `stays on branch_select until Next (${pinned.stepId})`);
+    const bodyStep = ctx.document.getElementById('bf-step-content')?.dataset?.stepId
+      || ctx.document.getElementById('bf-step-content')?.getAttribute?.('data-step-id');
+    check(bodyStep === 'branch_select', `body matches branch_select (${bodyStep})`);
     check(BF.validateStep('branch_select') === true, 'validateStep true after confirm');
     const nextAfter = ctx.document.getElementById('bf-next-btn');
     check(!nextAfter || nextAfter.disabled === false, 'Next enabled after branch confirm');
