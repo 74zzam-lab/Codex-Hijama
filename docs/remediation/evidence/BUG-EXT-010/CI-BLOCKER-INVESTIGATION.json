@@ -1,0 +1,81 @@
+{
+  "schema": "CI-BLOCKER-INVESTIGATION",
+  "at": "2026-08-15T03:38:00.000Z",
+  "runtimeSourceCommit": "9cdbfd359f7c9a7aef3e817507c83e16d2b8cc6e",
+  "currentHead": "ad825a6ee4f25f153bb592ec83cb084183088845",
+  "runtimeChangedAfter9cdbfd3": false,
+  "applicationFixesMadeAfterInstruction": false,
+  "ciEnvironmentFixesMade": false,
+  "workflowFile": ".github/workflows/stage-1-windows-verification.yml",
+  "workflowReview": {
+    "syntaxValid": true,
+    "runsOn": "windows-2022",
+    "jobIfConditions": "none",
+    "environmentGates": "none",
+    "permissions": { "contents": "read", "actions": "write" },
+    "concurrency": "stage-1-windows-${{ github.ref }} cancel-in-progress true",
+    "pullRequestTriggers": "base main listed — PR #22 triggers correctly",
+    "pushBranchGap": "cursor/post-stage-20-external-defects-beb8 not in push branches (non-blocking; PR workflow still fires)",
+    "workflowDispatch": "not configured on Stage 1 workflow",
+    "configurationBugCausingRunnerIdZero": false
+  },
+  "runnerAssignmentTimeline": {
+    "lastAssignedRun": {
+      "id": "31843364686",
+      "headSha": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+      "runnerId": 1000000118,
+      "runnerName": "GitHub Actions 1000000118",
+      "stepsExecuted": 70,
+      "duration": "2h36m",
+      "completedAt": "2026-08-15T00:15:44Z",
+      "note": "Runner assigned; installed smoke failed (pre-fix EXE)"
+    },
+    "firstUnassignedRun": {
+      "id": "31855995142",
+      "headSha": "d0c358222f85b83f7af5f631a8a40b91417179f4",
+      "runnerId": 0,
+      "stepsExecuted": 0,
+      "duration": "5s",
+      "startedAt": "2026-08-15T01:15:09Z"
+    },
+    "subsequentUnassignedRuns": [
+      "31856044590",
+      "31856200185",
+      "31861997904"
+    ]
+  },
+  "ciBlockerRootCause": "External GitHub hosted runner unavailability — jobs created but runner_id=0, zero steps, no logs (BlobNotFound). Pattern consistent with Actions minutes/quota exhaustion or account-level runner restriction after long private-repo Windows run. Not reproducible as workflow syntax/condition failure.",
+  "apiAccessLimits": {
+    "workflowDispatch": "HTTP 403 Resource not accessible by integration",
+    "runRerun": "HTTP 403 Resource not accessible by integration",
+    "selfHostedRunnersList": "HTTP 403",
+    "actionsPermissions": "HTTP 403",
+    "billingUsage": "not accessible from agent token"
+  },
+  "availableWindowsExecutionPaths": {
+    "githubHostedWindows2022": "UNAVAILABLE (runner_id=0 since 2026-08-15T01:15Z)",
+    "selfHostedWindowsRunner": "none visible / not accessible",
+    "windowsVMInCloudAgent": "NO — Linux x86_64 only",
+    "wine": "not installed; not acceptable for installed UAT per policy",
+    "externalUatWindowsWorkflowDispatch": "HTTP 403 from agent"
+  },
+  "preFixExeNotValidForCurrentFix": {
+    "failedExeSource": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+    "missingFromPreFixExe": [
+      "renderer/login-license-early.js",
+      "index.html early-script + mid-parse safety + __realLicCheck",
+      "cupping-ext-modules.js DB guard",
+      "cupping-import-wizard.js DB guard",
+      "cupping-leave-management.js DB guard",
+      "45s installed smoke harness"
+    ]
+  },
+  "localRegressionAtRuntimeSource": {
+    "lint": "PASS",
+    "testPostStage20LoginLicenseStartup": "PASS",
+    "testBootstrapRedMessageTruthfulness": "PASS (75)",
+    "testPostStage20ExternalDefects": "PASS",
+    "installedExeFromCurrentSource": "NOT EXECUTED"
+  },
+  "requiredUnblockAction": "Restore GitHub Actions Windows runner capacity (billing/quota/plan) OR provide self-hosted Windows runner OR manual Windows build from 9cdbfd3"
+}

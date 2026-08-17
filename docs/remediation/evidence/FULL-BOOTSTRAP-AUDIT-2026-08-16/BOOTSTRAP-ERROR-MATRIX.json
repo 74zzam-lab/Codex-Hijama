@@ -1,0 +1,115 @@
+{
+  "schema": "bootstrap-error-matrix-v1",
+  "generatedAt": "2026-08-16T13:50:00.000Z",
+  "source": "cloud/bootstrap-failure-policy-contract.js + restore IPC structured codes",
+  "summary": {
+    "totalPolicies": 72,
+    "genericFallbacks": 2,
+    "genericFallbackCodes": ["TDW-BOOT-UNCLASSIFIED", "TDW-BOOT-MAIN-UNREPORTED"],
+    "falseRedFixed": ["rbac_session_required no longer paired with generic TDW-BOOT-ERR", "discovery success clears rbac red"],
+    "staleRedMitigation": "formatFailureForStatus shows one primary code; success clears stepError"
+  },
+  "criticalEntries": [
+    {
+      "rawCode": "rbac_session_required",
+      "normalizedCode": "TDW-BOOT-RBAC-SESSION",
+      "stepOwner": "google/discovery",
+      "trigger": "Pre-auth protected database:command or settings write",
+      "failureType": "USER_ACTION_REQUIRED",
+      "arabicMessage": "يلزم إكمال خطوة الإعداد الحالية قبل هذا الإجراء. إن استمر الخطأ أعد ربط Google.",
+      "red": false,
+      "retryable": false,
+      "clearCondition": "setupCommitGoogleConnection success + discovery retry",
+      "diagnosticRef": "BFPC lookupPolicy"
+    },
+    {
+      "rawCode": "cloud_download_stalled",
+      "normalizedCode": "TDW-BOOT-CLOUD-DOWNLOAD-STALLED",
+      "stepOwner": "restore",
+      "trigger": "Zero byte progress ≥45s or Main watchdog abort",
+      "failureType": "RETRYABLE",
+      "arabicMessage": "توقف تنزيل النسخة من Google Drive ولم تصل بيانات جديدة خلال 45 ثانية. تحقق من الاتصال ثم اضغط «إعادة المحاولة».",
+      "red": true,
+      "retryable": true,
+      "clearCondition": "successful restore or user retry",
+      "diagnosticRef": "RST-<operationId>"
+    },
+    {
+      "rawCode": "cloud_restore_timeout",
+      "normalizedCode": "TDW-BOOT-CLOUD-RESTORE-TIMEOUT",
+      "stepOwner": "restore",
+      "trigger": "600s whole-operation budget exceeded",
+      "failureType": "RETRYABLE",
+      "arabicMessage": "استغرقت الاستعادة وقتاً أطول من المسموح. أعد المحاولة.",
+      "red": true,
+      "retryable": true,
+      "clearCondition": "new restore attempt",
+      "diagnosticRef": "RST-<operationId>"
+    },
+    {
+      "rawCode": "discovery_failed",
+      "normalizedCode": "TDW-BOOT-DISC-FAIL",
+      "stepOwner": "discovery",
+      "trigger": "Drive discovery exception",
+      "failureType": "RETRYABLE",
+      "arabicMessage": "تعذّر إكمال فحص بيانات السحابة. Google ما زال متصلاً — أعد الفحص.",
+      "red": true,
+      "retryable": true,
+      "clearCondition": "discovery success",
+      "diagnosticRef": null
+    },
+    {
+      "rawCode": "backup_password_invalid",
+      "normalizedCode": "TDW-BOOT-RESTORE-PASSWORD",
+      "stepOwner": "restore",
+      "trigger": "decrypt failure",
+      "failureType": "USER_ACTION_REQUIRED",
+      "arabicMessage": "تعذّر فك تشفير النسخة. تأكّد من كلمة مرور النسخة ثم أعد المحاولة.",
+      "red": false,
+      "retryable": false,
+      "clearCondition": "correct password",
+      "diagnosticRef": "RST-<operationId>"
+    },
+    {
+      "rawCode": "setup_owner_authentication_failed",
+      "normalizedCode": "TDW-BOOT-OWNER-AUTH",
+      "stepOwner": "owner_auth",
+      "trigger": "wrong owner password",
+      "failureType": "USER_ACTION_REQUIRED",
+      "arabicMessage": "كلمة مرور المالك غير صحيحة. أعد المحاولة.",
+      "red": false,
+      "retryable": false,
+      "clearCondition": "successful auth",
+      "diagnosticRef": null
+    },
+    {
+      "rawCode": "sync_push_blocked_pull_only",
+      "normalizedCode": "TDW-BOOT-SYNC-PULL-ONLY",
+      "stepOwner": "sync",
+      "trigger": "EXISTING/replacement device PUSH attempt",
+      "failureType": "FATAL",
+      "arabicMessage": "هذا الجهاز مسموح له بالسحب فقط في هذه المرحلة. لا يمكن الرفع الآن.",
+      "red": true,
+      "retryable": false,
+      "clearCondition": "correct sync direction",
+      "diagnosticRef": null
+    },
+    {
+      "rawCode": "empty_start_no_owner",
+      "normalizedCode": "TDW-BOOT-EMPTY-START-NO-OWNER",
+      "stepOwner": "restore",
+      "trigger": "EXISTING empty start without recoverable owner",
+      "failureType": "USER_ACTION_REQUIRED",
+      "arabicMessage": "لا يمكن بدء قاعدة جديدة دون استرداد حساب المالك.",
+      "red": false,
+      "retryable": false,
+      "clearCondition": "choose restore or recover owner",
+      "diagnosticRef": null
+    }
+  ],
+  "ipcCollapsePrevention": {
+    "mechanism": "ipc-error-envelope.js + backup-v2 structured reject",
+    "preservedFields": ["stage", "code", "operationId", "providerStatus", "downloadedBytes", "expectedBytes", "tempFileSize", "decryptReached", "sqliteReached", "retryable"],
+    "forbidden": "Error invoking remote method without structured capture"
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "gates": [
+    {
+      "gateId": "ACTIVATION_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('ACTIVATION_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "GOOGLE_CONNECTED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('GOOGLE_CONNECTED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "DISCOVERY_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('DISCOVERY_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "ORGANIZATION_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('ORGANIZATION_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "LICENSE_ORG_RECOVERY_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('LICENSE_ORG_RECOVERY_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "OWNER_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('OWNER_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "BRANCH_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('BRANCH_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "DEVICE_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('DEVICE_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "BUSINESS_SETUP_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('BUSINESS_SETUP_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "RESTORE_DECISION_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('RESTORE_DECISION_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "PUBLICATION_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('PUBLICATION_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "READBACK_VERIFIED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('READBACK_VERIFIED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "INITIAL_SYNC_RESOLVED",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('INITIAL_SYNC_RESOLVED')",
+      "writesOnEvaluate": false
+    },
+    {
+      "gateId": "READY",
+      "readOnly": true,
+      "evaluator": "BootstrapGates.evaluateGate('READY')",
+      "writesOnEvaluate": false
+    }
+  ]
+}

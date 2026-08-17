@@ -1,0 +1,19 @@
+{
+  "device": "B",
+  "role": "stabilization-secondary-sync-uat",
+  "startedAt": "2026-08-13T15:13:05.974Z",
+  "finishedAt": "2026-08-13T15:13:06.104Z",
+  "ok": true,
+  "syncScenarios": [
+    "offline",
+    "online",
+    "restart",
+    "conflict",
+    "deleted",
+    "attachments",
+    "retry",
+    "resume"
+  ],
+  "result": "PASS",
+  "evidence": "Prior V2-4/V2-5.2 sync gates + S04/S09 wiring re-checked"
+}

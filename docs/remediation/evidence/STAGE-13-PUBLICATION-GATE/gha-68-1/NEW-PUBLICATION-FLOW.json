@@ -1,0 +1,21 @@
+{
+  "steps": [
+    "language",
+    "license",
+    "google",
+    "discovery",
+    "path_decision",
+    "organization",
+    "owner",
+    "branch",
+    "device",
+    "business_setup",
+    "publication",
+    "restore",
+    "sync",
+    "ready"
+  ],
+  "publicationAfter": "business_setup",
+  "publicationBefore": "restore",
+  "gate": "PUBLICATION_RESOLVED"
+}

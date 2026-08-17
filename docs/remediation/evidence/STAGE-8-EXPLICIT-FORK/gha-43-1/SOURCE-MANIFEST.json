@@ -1,0 +1,10 @@
+{
+  "stage7Baseline": {
+    "sourceCommit": "659e7f8",
+    "evidenceCommit": "962d78f",
+    "githubRun": "31701831883"
+  },
+  "commit": "fd6453cc557cdad625308dc67bedf8ff19b8ed2f",
+  "buildId": "gha-43-1",
+  "at": "2026-08-13T13:23:36.599Z"
+}

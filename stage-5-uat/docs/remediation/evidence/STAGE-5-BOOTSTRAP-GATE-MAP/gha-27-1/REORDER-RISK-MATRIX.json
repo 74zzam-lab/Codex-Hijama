@@ -1,0 +1,30 @@
+{
+  "owner": {
+    "duplicateRisk": "createOwnerFromWizard retries",
+    "locations": [
+      "boot-flow-ui.js createOwnerFromWizard"
+    ],
+    "mitigation": "ensureOwner idempotent contract (Stage 10)"
+  },
+  "branch": {
+    "duplicateRisk": "createFirstBranchFromForm double-submit",
+    "locations": [
+      "commitSetupOrganizationDevice"
+    ],
+    "mitigation": "ensureFirstBranch idempotent"
+  },
+  "device": {
+    "duplicateRisk": "bindExistingBranch retry",
+    "locations": [
+      "setupCommitOrganizationDevice"
+    ],
+    "mitigation": "registry upsert by deviceUuid"
+  },
+  "organization": {
+    "duplicateRisk": "low — centerId from license",
+    "locations": [
+      "organization step commit"
+    ],
+    "mitigation": "centerId immutable from license"
+  }
+}

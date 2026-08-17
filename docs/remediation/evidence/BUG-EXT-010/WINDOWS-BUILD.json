@@ -1,0 +1,14 @@
+{
+  "schema": "WINDOWS-BUILD",
+  "at": "2026-08-15T00:14:44.000Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "githubRun": "31843364686",
+  "result": "PASS",
+  "setupFilename": "HijamaManagement-Setup-2.0.1.exe",
+  "setupSizeBytes": 107027366,
+  "setupSha256": "305c82c509e430170a97e8f1dfedcc9f86fbcca97e892eb6ed97eee5cfb9ee7a",
+  "installedExeSha256": "3a1db7fd94eaa72ae3ecd90cc2089d10bc88e165b7da46ac6dc2efe4e41eca64",
+  "installedExeSizeBytes": 225949696,
+  "windowsVersion": "windows-2022",
+  "note": "Build succeeded on run 31843364686; post-fix build pending GHA runner availability"
+}

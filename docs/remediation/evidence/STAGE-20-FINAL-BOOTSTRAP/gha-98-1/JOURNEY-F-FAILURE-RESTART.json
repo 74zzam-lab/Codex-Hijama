@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "activation": "RETRYABLE no duplicate consume",
+  "google": "CANCELLED/RETRYABLE",
+  "discovery": "no downstream advance",
+  "owner": "count 0 until commit",
+  "branch": "no duplicate",
+  "device": "no duplicate",
+  "businessSetup": "no false completion",
+  "publication": "SoT preserved",
+  "readback": "publication alone not READY",
+  "restore": "no sync on failure",
+  "sync": "READY false, resume",
+  "restartCheckpoints": 13,
+  "upstreamReplay": false,
+  "duplicateEntities": false,
+  "profile": "uat-stage20-failure"
+}

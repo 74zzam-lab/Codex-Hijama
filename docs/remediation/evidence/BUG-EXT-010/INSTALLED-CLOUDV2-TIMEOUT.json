@@ -1,0 +1,18 @@
+{
+  "schema": "INSTALLED-CLOUDV2-TIMEOUT",
+  "at": "2026-08-15T01:14:46.928Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "cloud": {
+    "text": "يلزم تفعيل البرنامج — الدخول للموظفين فقط (قراءة)",
+    "pending": false,
+    "loginHidden": false,
+    "elapsedMs": 12000
+  },
+  "trace": {
+    "pageErrors": [],
+    "unhandledRejections": [],
+    "consoleErrors": []
+  },
+  "profile": "cloudv2-timeout"
+}

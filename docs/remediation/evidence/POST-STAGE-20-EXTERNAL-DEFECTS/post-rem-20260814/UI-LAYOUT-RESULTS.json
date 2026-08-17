@@ -1,0 +1,4 @@
+{
+  "automated": "CSS/layout guards present in boot-flow-ui injectStyles — MANUAL GUI RETEST REQUIRED on 1366×768, 1920×1080, 1024w, DPI 100/125/150%",
+  "checks": ["no horizontal overflow", "checklist + form visible", "RTL margins", "buttons reachable"]
+}

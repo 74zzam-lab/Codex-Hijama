@@ -1,0 +1,4 @@
+{
+  "readyDeviceBootOpens": 0,
+  "policy": "shouldAutoOpenBoot false when READY"
+}

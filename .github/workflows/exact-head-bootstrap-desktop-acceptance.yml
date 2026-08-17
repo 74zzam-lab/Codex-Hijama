@@ -1,0 +1,158 @@
+name: Exact-Head Bootstrap Desktop Acceptance
+
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_source_commit:
+        description: 'Frozen runtime source commit (must match audited bootstrap)'
+        required: true
+        default: '4d489b7b3d525886f555379bf2896728293168f3'
+  push:
+    branches:
+      - cursor/bootstrap-desktop-uat-beb8
+
+concurrency:
+  group: exact-head-bootstrap-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || '4d489b7b3d525886f555379bf2896728293168f3' }}
+  EXACT_HEAD_BUILD_ID: exact-gha-${{ github.run_number }}-${{ github.run_attempt }}
+
+jobs:
+  exact-head-build-and-acceptance:
+    name: Build frozen runtime + installed acceptance
+    runs-on: windows-2022
+    timeout-minutes: 240
+    steps:
+      - name: Checkout evidence branch (scripts)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify runtime tree matches frozen commit
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $runtime = $env:RUNTIME_SOURCE_COMMIT
+          $diff = git diff --name-only $runtime HEAD -- cloud electron index.html
+          if ($diff) {
+            Write-Host "Runtime files differ from frozen commit:"
+            $diff | ForEach-Object { Write-Host "  $_" }
+            throw "Runtime source contaminated — build aborted"
+          }
+          $head = (git rev-parse HEAD).Trim()
+          Write-Host "Evidence HEAD: $head"
+          Write-Host "Frozen runtime source: $runtime"
+          "BUILD_SOURCE_COMMIT=$head" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "RUNTIME_FROZEN=$runtime" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: npm ci
+        shell: pwsh
+        run: |
+          npm ci --ignore-scripts
+          node -e "require('better-sqlite3'); console.log('better-sqlite3 OK')"
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: E2E tests
+        run: npm run test:e2e
+
+      - name: Bootstrap audit regressions
+        shell: pwsh
+        run: |
+          node tests/baseline/test-bootstrap-navigation-model.js
+          node tests/baseline/test-bootstrap-wizard-path-persistence.js
+          node tests/baseline/test-bootstrap-desktop-button-restore.js
+          node tests/baseline/test-bootstrap-production-path.js
+          node tests/baseline/test-bootstrap-delta-closure.js
+          node tests/baseline/test-final-runtime-rbac-restore-stall.js
+          node tests/baseline/test-setup-restore-hung-provider-deadline.js
+
+      - name: Generate packaging inputs
+        shell: pwsh
+        run: |
+          node scripts/generate-oauth-config.mjs
+          node scripts/generate-license-registries.mjs
+          node scripts/generate-brand-assets.mjs
+
+      - name: Build Windows Setup EXE (frozen runtime)
+        id: build
+        shell: pwsh
+        env:
+          ELECTRON_BUILDER_DISABLE_CODE_SIGN_WARNING: 'true'
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sw = [System.Diagnostics.Stopwatch]::StartNew()
+          npm run build:win
+          $sw.Stop()
+          $setup = Get-ChildItem dist\HijamaManagement-Setup-*.exe | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (-not $setup -or $setup.Length -lt 50MB) { throw "Invalid Setup EXE: $($setup.Length)" }
+          $sha = (Get-FileHash -Algorithm SHA256 $setup.FullName).Hash.ToLowerInvariant()
+          $evidenceDir = "docs/remediation/evidence/EXACT-HEAD-DESKTOP-ACCEPTANCE/$env:EXACT_HEAD_BUILD_ID"
+          New-Item -ItemType Directory -Force -Path $evidenceDir | Out-Null
+          $json = [ordered]@{
+            filename = $setup.Name
+            absolutePath = $setup.FullName
+            sizeBytes = $setup.Length
+            sha256 = $sha
+            buildDurationMs = [int]$sw.Elapsed.TotalMilliseconds
+            runtimeSourceCommit = $env:RUNTIME_FROZEN
+            buildSourceCommit = $env:BUILD_SOURCE_COMMIT
+            runtimeFilesMatchFrozen = $true
+            headEqualsBuildSource = $true
+            at = (Get-Date).ToString('o')
+          }
+          $json | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $evidenceDir 'SETUP-EXE.json') -Encoding UTF8
+          "SETUP_SHA256=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "SETUP_PATH=$($setup.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Silent install (isolated userData)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidenceDir = "docs/remediation/evidence/EXACT-HEAD-DESKTOP-ACCEPTANCE/$env:EXACT_HEAD_BUILD_ID"
+          pwsh -File scripts/windows-uat/Install-Stage1-UAT.ps1 `
+            -RepoRoot $PWD `
+            -BuildId $env:EXACT_HEAD_BUILD_ID `
+            -EvidenceDir $evidenceDir
+
+      - name: Exact-head desktop acceptance
+        shell: pwsh
+        env:
+          RUNTIME_SOURCE_COMMIT: ${{ env.RUNTIME_FROZEN }}
+          EXACT_HEAD_SKIP_STALL_TEST: '0'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $installDir = Join-Path $env:LOCALAPPDATA "Programs\Hijama Management System"
+          $installedExe = Join-Path $installDir "Hijama Management System.exe"
+          $evidenceDir = "docs/remediation/evidence/EXACT-HEAD-DESKTOP-ACCEPTANCE/$env:EXACT_HEAD_BUILD_ID"
+          node scripts/windows-uat/exact-head-bootstrap-desktop-acceptance.cjs `
+            --build-id $env:EXACT_HEAD_BUILD_ID `
+            --setup-exe $env:SETUP_PATH `
+            --exe $installedExe `
+            --runtime-commit $env:RUNTIME_SOURCE_COMMIT `
+            --evidence-dir $evidenceDir
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: exact-head-desktop-${{ github.run_number }}
+          path: |
+            docs/remediation/evidence/EXACT-HEAD-DESKTOP-ACCEPTANCE/**/*
+            dist/HijamaManagement-Setup-*.exe
+          retention-days: 14

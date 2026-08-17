@@ -1,0 +1,8 @@
+{
+  "buildId": "P0AE-SOURCE-20260810-122PASS",
+  "result": "UNVERIFIED",
+  "built": false,
+  "path": null,
+  "sha256": null,
+  "reason": "Product owner requested source ZIP only and will perform the Windows build. Existing dist artifacts predate this source and are not evidence."
+}

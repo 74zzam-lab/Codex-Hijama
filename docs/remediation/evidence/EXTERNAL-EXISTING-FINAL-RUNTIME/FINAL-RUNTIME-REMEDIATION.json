@@ -1,0 +1,35 @@
+{
+  "schema": "external-existing-final-runtime-evidence-v1",
+  "at": "2026-08-16T12:15:22.396978Z",
+  "sourceCommit": "be66495846d4fc0f6511e79fad3006561e14c6d9",
+  "buildCommitMerge": "1240649627784e55d574776e53e7d380ad8472ef",
+  "ghaRun": "https://github.com/74zzam-lab/Codex-Hijama/actions/runs/31946037174",
+  "ghaConclusion": "success",
+  "setupExe": {
+    "filename": "HijamaManagement-Setup-2.0.1.exe",
+    "sizeBytes": 107043736,
+    "sha256": "212d8b64f2dfc36dc586bdb86db7e747ccb5f79cf28fc243371542880b6b9c79"
+  },
+  "asarVerified": {
+    "method": "7za extract NSIS + @electron/asar extract",
+    "lfNormalizedMatch": [
+      "electron/byte-progress-watchdog.js",
+      "electron/cloud-providers/google-drive-api.js",
+      "cloud/boot-flow-ui.js",
+      "cloud/bootstrap-failure-policy-contract.js"
+    ],
+    "markersPresent": [
+      "setupCommitGoogleConnection",
+      "createByteProgressWatchdog",
+      "raceAbort",
+      "فشل الاكتشاف",
+      "cloud_download_stalled",
+      "acceptLiveReconnect"
+    ]
+  },
+  "windowsInstalledSmoke": "PASS",
+  "realGoogleDrive": "UNVERIFIED",
+  "existingFreshProfilesx10": "UNVERIFIED",
+  "bug1RootCause": "pre-auth persistData(settings) hit RBAC without Owner session; reopen rediscovered via Main OAuth",
+  "bug2RootCause": "Main lacked abort ownership; lookup/token refresh ignored AbortSignal so hung past 45s"
+}

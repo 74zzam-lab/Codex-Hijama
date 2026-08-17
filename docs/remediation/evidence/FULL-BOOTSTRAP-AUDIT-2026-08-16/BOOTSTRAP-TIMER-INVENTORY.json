@@ -1,0 +1,100 @@
+{
+  "schema": "bootstrap-timer-inventory-v1",
+  "generatedAt": "2026-08-16T13:50:00.000Z",
+  "timers": [
+    {
+      "id": "oauth_loopback",
+      "durationMs": 300000,
+      "owner": "electron/cloud-providers/oauth-loopback.js",
+      "scope": "Google OAuth callback wait",
+      "conflicts": []
+    },
+    {
+      "id": "discovery_overall_renderer",
+      "durationMs": 180000,
+      "owner": "cloud/cloud-data-discovery.js DISCOVERY_TIMEOUT_MS",
+      "scope": "Renderer discovery gate",
+      "conflicts": []
+    },
+    {
+      "id": "discovery_overall_main",
+      "durationMs": 180000,
+      "owner": "electron/cloud-data-discovery.js DISCOVERY_OVERALL_MS",
+      "scope": "Main discovery steps",
+      "conflicts": []
+    },
+    {
+      "id": "discovery_per_request",
+      "durationMs": 15000,
+      "owner": "electron/cloud-data-discovery.js PER_REQUEST_MS",
+      "scope": "Per Drive API call in discovery",
+      "conflicts": []
+    },
+    {
+      "id": "restore_operation_timeout",
+      "durationMs": 600000,
+      "owner": "cloud/cloud-data-discovery.js RESTORE_OPERATION_TIMEOUT_MS",
+      "scope": "Entire v2SetupCloudRestore IPC including pre-download",
+      "conflicts": []
+    },
+    {
+      "id": "restore_no_progress_warning",
+      "durationMs": 30000,
+      "owner": "cloud/cloud-data-discovery.js NO_PROGRESS_WATCHDOG_MS",
+      "scope": "UI warning before terminal stall",
+      "conflicts": ["Previously overlapped with misleading background-download message — removed"]
+    },
+    {
+      "id": "restore_byte_stall_renderer",
+      "durationMs": 45000,
+      "owner": "cloud/cloud-data-discovery.js DOWNLOAD_ACTIVITY_STALL_MS",
+      "scope": "Renderer stallPromise from IPC entry (includes pre-download)",
+      "conflicts": ["Main watchdog arms later — renderer is authoritative for user-visible abort"]
+    },
+    {
+      "id": "restore_byte_stall_main",
+      "durationMs": 45000,
+      "owner": "electron/byte-progress-watchdog.js DEFAULT_STALL_MS",
+      "scope": "Main download stream only (armed before downloadCloudBackup)",
+      "conflicts": ["Complements renderer stall; both observe AbortSignal on network path"]
+    },
+    {
+      "id": "restore_heartbeat",
+      "durationMs": 2000,
+      "owner": "cloud/cloud-data-discovery.js RESTORE_HEARTBEAT_MS",
+      "scope": "Progress UI tick + stall poll interval",
+      "conflicts": []
+    },
+    {
+      "id": "bootstrap_auto_open_retry",
+      "durationMs": 120,
+      "owner": "cloud/boot-flow-ui.js tryOpen backoff",
+      "scope": "Wizard first-open retry (fixes multi-click open defect)",
+      "conflicts": []
+    },
+    {
+      "id": "license_vault_fetch",
+      "durationMs": 120000,
+      "owner": "cloud/license-vault-client.js",
+      "scope": "Vault HTTP abort",
+      "conflicts": []
+    },
+    {
+      "id": "sqlite_readonly_setup_capture",
+      "durationMs": 5000,
+      "owner": "electron/backup-v2-ipc.js",
+      "scope": "Setup restore state capture/apply",
+      "conflicts": []
+    }
+  ],
+  "finalOwnership": {
+    "googleOAuth": "oauth-loopback 5min",
+    "discovery": "180s overall; 15s per-request; renderer mirrors",
+    "restoreWholeOperation": "600s renderer IPC race",
+    "restoreStallTerminal": "45s byte-idle — renderer + Main watchdog; NO background continuation message",
+    "restorePreDownload": "Covered by renderer 600s op timeout + 45s byte stall from IPC entry via lastByteProgressAt init"
+  },
+  "removedOrForbidden": [
+    "قد يستمر التنزيل في الخلفية — removed from production cloud-data-discovery.js"
+  ]
+}

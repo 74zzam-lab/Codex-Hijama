@@ -1,0 +1,646 @@
+{
+  "schema": "bootstrap-ipc-auth-matrix-v1",
+  "generatedAt": "2026-08-16T13:55:31.562Z",
+  "channels": [
+    {
+      "channel": "database:status",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:hydrate",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:setupCommitActivation",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:setupCommitSignedActivation",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:setupCommitOrganizationDevice",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:setupCommitOwner",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:setupCommitGoogleConnection",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "database:bootstrapFromLocal",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cloudOAuth:getSettings",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cloudOAuth:saveSettings",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cloudOAuth:restoreDefaults",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cloudOAuth:testConnection",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:saveLocal",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:uploadCloud",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:uploadActivationArtifact",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:uploadSyncFile",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:downloadSyncFile",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:connectGoogle",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:registerCloudAccount",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:disconnectCloud",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:listCloudBackups",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:discoverCloudRestorePoints",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:downloadCloudBackup",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:deleteCloudBackup",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:verifyCloudBackup",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:startOAuth",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:getCloudStatus",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:listCloudProviders",
+      "policy": "PUBLIC",
+      "requiresSession": false,
+      "requiresSetupCapability": false,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:pickLocalFolder",
+      "policy": "PUBLIC",
+      "requiresSession": false,
+      "requiresSetupCapability": false,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:uploadDbBackup",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:listDbBackups",
+      "policy": "PUBLIC",
+      "requiresSession": false,
+      "requiresSetupCapability": false,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:restoreDbBackup",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:syncDbBackup",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:verifyDbBackup",
+      "policy": "PUBLIC",
+      "requiresSession": false,
+      "requiresSetupCapability": false,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:health",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:ensureSecret",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:rotateSecret",
+      "policy": "OWNER",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:create",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:verify",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:inspect",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:restore",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:setupLocalRestore",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:listLocal",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:pickLatest",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:restoreLatest",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:pickFile",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:gate",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:stageRemote",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:downloadAndRestore",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:setupCloudRestore",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:prune",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:formatPolicy",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:scheduleStatus",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "backup:v2:scheduleConfigure",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:writeBranchConfig",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:readBranchConfig",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:writeLicense",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:readLicense",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:writeVersions",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:readVersions",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "cache:getStatus",
+      "policy": "PUBLIC",
+      "requiresSession": false,
+      "requiresSetupCapability": false,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:readActivationBundle",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:vaultRequest",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:writeLicenseShard",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:writeActivationBundle",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:writeCustomPackage",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:updateLicenseIndex",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:appendPackageToRegistry",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:adminIssuerStatus",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:adminSelectSigningKey",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "license:adminIssueV6",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:authenticateUser",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:authenticateDeveloper",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:bindSession",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:clearSession",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:getSession",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:setWriteBranch",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "rbac:clearWriteBranch",
+      "policy": "AUTHENTICATED",
+      "requiresSession": true,
+      "requiresSetupCapability": false,
+      "safePreAuth": false,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "dialog:confirmSync",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    },
+    {
+      "channel": "dialog:promptSync",
+      "policy": "SETUP-CAPABILITY",
+      "requiresSession": false,
+      "requiresSetupCapability": true,
+      "safePreAuth": true,
+      "caller": "renderer-bootstrap"
+    }
+  ]
+}

@@ -1,0 +1,683 @@
+{
+  "schema": "final-clean-runtime-v1",
+  "buildId": "source-1786467306830",
+  "profileRoot": "D:\\Hijama-Clinic-Production\\.codex-validation\\final-clean-runtime\\installed-finalclean-37F3FDE0",
+  "mode": "installed-exe",
+  "executablePath": "D:\\Hijama-Clinic-Production\\.codex-validation\\installed\\FINALCLEAN-37F3FDE0\\Hijama Management System.exe",
+  "startedAt": "2026-08-11T16:55:06.830Z",
+  "checks": [
+    {
+      "name": "fixture_device_registry_typed_once",
+      "pass": true,
+      "boundary": "real-sqlite",
+      "detail": {
+        "schemaVersion": 1,
+        "registered": [
+          {
+            "deviceUuid": "b094c6c8-213c-45ad-8bea-352376204917",
+            "deviceName": "Final Clean Runtime Device",
+            "branchId": "BR-MAIN",
+            "registeredAt": "2026-08-11T16:55:08.213Z",
+            "lastSeenAt": "2026-08-11T16:55:08.213Z",
+            "status": "approved",
+            "active": true
+          }
+        ],
+        "updatedAt": "2026-08-11T16:55:08.213Z"
+      }
+    },
+    {
+      "name": "fixture_owner_credential_ready",
+      "pass": true,
+      "boundary": "real-sqlite",
+      "detail": [
+        {
+          "id": "final-owner",
+          "username": "final-owner",
+          "fullName": "Final Owner",
+          "role": "owner",
+          "active": true,
+          "branchScope": [
+            "*"
+          ],
+          "canSwitchBranch": true,
+          "mustChangePassword": false,
+          "seedDefaultPassword": false,
+          "credentialRevision": 1,
+          "hasUsableCredential": true,
+          "centerId": "CTR-PROD-TEST"
+        }
+      ]
+    },
+    {
+      "name": "repeated_setup_callbacks_are_idempotent",
+      "pass": true,
+      "boundary": "real-sqlite",
+      "detail": {
+        "ownerCount": 1,
+        "branchCount": 1,
+        "deviceCount": 1,
+        "setupCommandCount": 5
+      }
+    },
+    {
+      "name": "owner_requires_real_session",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "session": {
+          "ok": false,
+          "error": "no_session"
+        },
+        "ownerValid": false,
+        "passwordField": true,
+        "text": "\n              حساب المالك موجود بالفعل. أدخل كلمة المرور الحالية للمتابعة دون إنشاء الحساب أو تغييرها.\n              حساب المالكfinal-owner\n              كلمة مرور المالك الحالية"
+      }
+    },
+    {
+      "name": "owner_password_binds_main_session",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "final-owner",
+            "role": "owner",
+            "sessionEpoch": 0,
+            "centerId": "CTR-PROD-TEST",
+            "writeBranchId": "BR-MAIN",
+            "boundAt": "2026-08-11T16:55:13.797Z"
+          }
+        },
+        "ownerValid": true,
+        "text": "✅ تم التحقق من حساب المالك لهذه الجلسة. يمكنك المتابعة."
+      }
+    },
+    {
+      "name": "failed_activation_never_uses_stale_valid_license",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "text": "حدث خطأ — تعذّر إكمال العملية. انسخ رمز التشخيص إن استمر الخطأ. [TDW-ACT-forced_activation_failure-MSOWIHFA]",
+        "errorClass": true
+      }
+    },
+    {
+      "name": "backup_start_failure_propagates",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "ok": false,
+        "error": "injected_backup_start_failure",
+        "state": {
+          "googleConnected": true,
+          "licenseReady": true,
+          "branchBound": true,
+          "activationBound": true,
+          "cloudEnabled": true,
+          "cloudDbEnabled": true,
+          "cloudV2": false,
+          "syncRunning": true,
+          "googleEmail": ""
+        }
+      }
+    },
+    {
+      "name": "activation_upload_failure_leaves_no_local_consumption",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "result": {
+          "ok": false,
+          "error": "injected_activation_upload_failure",
+          "activation": {
+            "consumed": true,
+            "consumedAt": "2026-08-11T16:55:13.898Z",
+            "primaryDeviceFingerprint": "72E079A7",
+            "primaryDeviceUuid": "b094c6c8-213c-45ad-8bea-352376204917",
+            "productKeyHash": "RE-INJECTION"
+          },
+          "doc": {
+            "schemaVersion": 6,
+            "licenseId": "TDW-PROD-TEST-000001",
+            "customerId": "PROD-TEST",
+            "customerName": "Production Fixture",
+            "packageId": "PRO",
+            "issuedAt": "2026-01-01T00:00:00.000Z",
+            "expiresAt": "2035-01-01T00:00:00.000Z",
+            "deviceBinding": {
+              "mode": "any"
+            },
+            "features": [
+              "clients",
+              "appointments",
+              "payroll",
+              "reports",
+              "sync",
+              "backup",
+              "inventory",
+              "expenses",
+              "attendance"
+            ],
+            "limits": {
+              "branches": 2,
+              "users": 10
+            },
+            "nonce": "ca1e8735bee821fdfcc2f6aeacca557f",
+            "keyId": "prod-ed25519-2026-a7f929f51598",
+            "centerId": "CTR-PROD-TEST",
+            "centerName": "Production Fixture",
+            "branches": [
+              {
+                "id": "BR-MAIN",
+                "name": "Main Branch",
+                "code": "MAIN",
+                "active": true
+              }
+            ],
+            "signature": "r_j2TCSW0ermC0C5OEE8gdatjbaEHKSeGgDIl2rU9b40RHAH5jWMhCQ2kPJYvxY_fd8EBkc5yMmlfw3eNmhNAQ"
+          },
+          "identity": {
+            "fingerprint": "72E079A7",
+            "deviceUuid": "b094c6c8-213c-45ad-8bea-352376204917"
+          },
+          "drivePush": {
+            "ok": false,
+            "error": "injected_activation_upload_failure"
+          }
+        },
+        "stored": null
+      }
+    },
+    {
+      "name": "boot_completion_persistence_failure_blocks_ready",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "result": false,
+        "error": null,
+        "bootFlag": null
+      }
+    },
+    {
+      "name": "discovery_sync_resume_failure_is_reported",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "result": {
+          "ok": false,
+          "error": "injected_discovery_sync_resume_failure",
+          "syncResume": {
+            "ok": false,
+            "required": true,
+            "resumed": false,
+            "error": "injected_discovery_sync_resume_failure"
+          },
+          "discovery": {
+            "ok": true,
+            "opId": 1,
+            "identity": {
+              "lic": {
+                "schemaVersion": 6,
+                "licenseId": "TDW-PROD-TEST-000001",
+                "customerId": "PROD-TEST",
+                "customerName": "Production Fixture",
+                "packageId": "PRO",
+                "issuedAt": "2026-01-01T00:00:00.000Z",
+                "expiresAt": "2035-01-01T00:00:00.000Z",
+                "deviceBinding": {
+                  "mode": "any"
+                },
+                "features": [
+                  "clients",
+                  "appointments",
+                  "payroll",
+                  "reports",
+                  "sync",
+                  "backup",
+                  "inventory",
+                  "expenses",
+                  "attendance"
+                ],
+                "limits": {
+                  "branches": 2,
+                  "users": 10
+                },
+                "nonce": "ca1e8735bee821fdfcc2f6aeacca557f",
+                "keyId": "prod-ed25519-2026-a7f929f51598",
+                "centerId": "CTR-PROD-TEST",
+                "centerName": "Production Fixture",
+                "branches": [
+                  {
+                    "id": "BR-MAIN",
+                    "name": "Main Branch",
+                    "code": "MAIN",
+                    "active": true
+                  }
+                ],
+                "signature": "r_j2TCSW0ermC0C5OEE8gdatjbaEHKSeGgDIl2rU9b40RHAH5jWMhCQ2kPJYvxY_fd8EBkc5yMmlfw3eNmhNAQ"
+              },
+              "centerId": "CTR-PROD-TEST",
+              "branchId": "BR-MAIN",
+              "branchName": "Main Branch",
+              "centerName": "Production Fixture"
+            },
+            "durationMs": 4,
+            "cloud": {
+              "ok": true,
+              "mode": "fast_discovery",
+              "centerId": "CTR-PROD-TEST",
+              "branchId": "BR-MAIN",
+              "branchName": "Main Branch",
+              "centerName": "Production Fixture",
+              "googleConnected": false,
+              "restorePoints": [],
+              "newest": null,
+              "status": "token_expired",
+              "message": "انتهت صلاحية جلسة Google — أعد الربط ثم أعد المحاولة.",
+              "durationMs": 1,
+              "timedOut": false,
+              "partialScan": false,
+              "truncated": false,
+              "downloadedBytes": 0,
+              "downloadedFullBackup": false,
+              "syncEngineStarted": false,
+              "instrumentation": {
+                "op": "cloud_fast_discovery",
+                "startedAt": "2026-08-11T16:55:13.905Z",
+                "startedMs": 1786467313906,
+                "steps": [
+                  {
+                    "op": "oauth_status",
+                    "startedAt": "2026-08-11T16:55:13.906Z",
+                    "endedAt": "2026-08-11T16:55:13.907Z",
+                    "durationMs": 1,
+                    "requests": 1,
+                    "bytes": 0,
+                    "ok": false,
+                    "result": "needs_reauth",
+                    "detail": null
+                  }
+                ],
+                "endedAt": "2026-08-11T16:55:13.907Z",
+                "durationMs": 1
+              }
+            },
+            "localDb": {
+              "ok": true,
+              "available": true,
+              "status": "valid",
+              "path": "localStorage / SQLite",
+              "modifiedAt": null,
+              "durationMs": 0,
+              "message": "بيانات محلية موجودة"
+            },
+            "localBackup": {
+              "ok": true,
+              "available": false,
+              "status": "not_found",
+              "count": 0,
+              "newest": null,
+              "durationMs": 3,
+              "message": "لا توجد نسخ Backup V2 محلية"
+            },
+            "filePick": {
+              "available": true,
+              "status": "ready",
+              "message": "اختيار ملف Backup / Database"
+            },
+            "emptyStart": {
+              "available": true,
+              "status": "ready",
+              "message": "البدء بدون بيانات سابقة"
+            },
+            "syncEngineStarted": false,
+            "downloadedFullBackup": false,
+            "instrumentation": {
+              "op": "cloud_fast_discovery",
+              "startedAt": "2026-08-11T16:55:13.905Z",
+              "startedMs": 1786467313906,
+              "steps": [
+                {
+                  "op": "oauth_status",
+                  "startedAt": "2026-08-11T16:55:13.906Z",
+                  "endedAt": "2026-08-11T16:55:13.907Z",
+                  "durationMs": 1,
+                  "requests": 1,
+                  "bytes": 0,
+                  "ok": false,
+                  "result": "needs_reauth",
+                  "detail": null
+                }
+              ],
+              "endedAt": "2026-08-11T16:55:13.907Z",
+              "durationMs": 1
+            }
+          }
+        },
+        "running": false
+      }
+    },
+    {
+      "name": "discovery_sync_stop_failure_is_reported",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "ok": false,
+        "error": "injected_discovery_sync_stop_failure",
+        "pauseError": "injected_discovery_sync_stop_failure",
+        "syncResume": {
+          "ok": true,
+          "required": true,
+          "resumed": true
+        }
+      }
+    },
+    {
+      "name": "cloud_v2_initialization_failure_has_no_false_success_or_unhandled_rejection",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "result": {
+          "ok": false,
+          "error": "injected_cloud_v2_backup_start_failure",
+          "init": {
+            "ok": false,
+            "error": "injected_cloud_v2_backup_start_failure"
+          }
+        },
+        "unhandled": []
+      }
+    },
+    {
+      "name": "license_pull_local_commit_failure_is_reported",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "ok": false,
+        "error": "injected_license_pull_commit_failure",
+        "rolledBack": false,
+        "preservedLocal": true
+      }
+    },
+    {
+      "name": "intentional_developer_login_preserved",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "authenticated": {
+          "ok": true,
+          "proof": "y0oyhUTX0LERttngclkgD1WGO9QCLMe4NZflbv-CYpw",
+          "expiresAt": 1786467374051
+        },
+        "bound": {
+          "ok": true,
+          "session": {
+            "userId": "__dev__",
+            "role": "admin",
+            "sessionEpoch": 0,
+            "boundAt": "2026-08-11T16:55:14.052Z"
+          }
+        },
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "__dev__",
+            "role": "admin",
+            "sessionEpoch": 0,
+            "centerId": null,
+            "writeBranchId": null,
+            "boundAt": "2026-08-11T16:55:14.052Z"
+          }
+        }
+      }
+    },
+    {
+      "name": "v5_generator_double_click_persists_once",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "generated": {
+          "key": "TDWI2-P01AA-CY5AA-A98EC-VV8AG",
+          "body": "\n        ✅ تم توليد الترخيص بنجاح\n        TDWI2-P01AA-CY5AA-A98EC-VV8AG\n        \n          📋 نسخ المفتاح\n          📋 نسخ الملخص\n          📊 صف activations\n          📦 bundle للشيت\n          💾 JSON\n          📄 PDF\n        \n        للعميل: يكفي المفتاح فقط إذا رفعت الـ bundle في تبويب bundles بالشيت. بدون bundle في الشيت — سلّم ملف JSON أو انسخه يدوياً.\n        \n          📋 ملخص الترخيص\n          \n            المعرّفL000001\n            الباقةStarter\n            الانتهاء2027-08-11\n            الأجهزةغير محدود\n            الفروع1\n            الخصائص18\n          \n        \n        \n      👁️ معاينة الترخيص — V5\n      \n        الباقةبداية (01)\n        الانتهاء2027-08-11 (365 يوم)\n        الأجهزةغير محدود\n        الفروع1\n        الجهازأي جهاز\n        المعرّفL000001\n        \n      \n      الخصائص (18):\n        لوحة التحكمالسجل اليوميسجل العملاءإدارة الموظفينالباقات والأسعارالمستخدمينإعدادات النظامبوابة الموظفجدولة المواعيدتأكيد وإعادة الجدولةتتبع الغيابطباعة الفواتير\n        +6\n      \n      المفتاح مسجّل — جاهز للتفعيل\n    ",
+          "nextDisabled": false
+        },
+        "indexPath": "D:\\Hijama-Clinic-Production\\.codex-validation\\final-clean-runtime\\installed-finalclean-37F3FDE0\\Cupping Center\\LicenseAdmin\\data\\license-registry\\index.json",
+        "records": 1
+      }
+    },
+    {
+      "name": "v5_generator_output_is_v5",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "key": "TDWI2-P01AA-CY5AA-A98EC-VV8AG",
+        "body": "\n        ✅ تم توليد الترخيص بنجاح\n        TDWI2-P01AA-CY5AA-A98EC-VV8AG\n        \n          📋 نسخ المفتاح\n          📋 نسخ الملخص\n          📊 صف activations\n          📦 bundle للشيت\n          💾 JSON\n          📄 PDF\n        \n        للعميل: يكفي المفتاح فقط إذا رفعت الـ bundle في تبويب bundles بالشيت. بدون bundle في الشيت — سلّم ملف JSON أو انسخه يدوياً.\n        \n          📋 ملخص الترخيص\n          \n            المعرّفL000001\n            الباقةStarter\n            الانتهاء2027-08-11\n            الأجهزةغير محدود\n            الفروع1\n            الخصائص18\n          \n        \n        \n      👁️ معاينة الترخيص — V5\n      \n        الباقةبداية (01)\n        الانتهاء2027-08-11 (365 يوم)\n        الأجهزةغير محدود\n        الفروع1\n        الجهازأي جهاز\n        المعرّفL000001\n        \n      \n      الخصائص (18):\n        لوحة التحكمالسجل اليوميسجل العملاءإدارة الموظفينالباقات والأسعارالمستخدمينإعدادات النظامبوابة الموظفجدولة المواعيدتأكيد وإعادة الجدولةتتبع الغيابطباعة الفواتير\n        +6\n      \n      المفتاح مسجّل — جاهز للتفعيل\n    ",
+        "nextDisabled": false
+      }
+    },
+    {
+      "name": "activation_uses_one_publication_path_after_gate_commit",
+      "pass": true,
+      "boundary": "actual-renderer-controlled-failure",
+      "detail": {
+        "result": {
+          "handled": true,
+          "ok": true,
+          "lic": {
+            "type": "new",
+            "licType": "new",
+            "licenseId": "FINAL-SINGLE-PATH",
+            "productKey": "TDWI2-P01AA-CY5AA-A98EC-VV8AG",
+            "start": "2026-01-01",
+            "activationDate": "2026-01-01",
+            "expiry": "2035-01-01",
+            "fingerprint": "DEVICE_ANY",
+            "device": "DEVICE_ANY",
+            "deviceMode": "any",
+            "boundDevice": "",
+            "issued": "2026-01-01",
+            "v": 5,
+            "commercial": true,
+            "edition": "full"
+          },
+          "payload": {
+            "expiry": "2035-01-01",
+            "issue": "2026-01-01",
+            "issued": "2026-01-01",
+            "licenseId": "FINAL-SINGLE-PATH",
+            "device": "DEVICE_ANY",
+            "licType": "new",
+            "edition": "PRO",
+            "features": {},
+            "commercial": true,
+            "token": "V5-ACT-FINAL-SINGLE-PATH-1786467314366"
+          },
+          "validation": {
+            "ok": true,
+            "payload": {
+              "expiry": "2035-01-01",
+              "issue": "2026-01-01",
+              "issued": "2026-01-01",
+              "licenseId": "FINAL-SINGLE-PATH",
+              "device": "DEVICE_ANY",
+              "licType": "new",
+              "edition": "PRO",
+              "features": {},
+              "commercial": true,
+              "token": "V5-ACT-FINAL-SINGLE-PATH-1786467314366"
+            },
+            "record": {
+              "licenseId": "FINAL-SINGLE-PATH",
+              "licenseUuid": "FINAL-SINGLE-PATH",
+              "centerId": "CTR-PROD-TEST",
+              "deviceBinding": "DEVICE_ANY",
+              "branches": 2
+            },
+            "bundle": {
+              "ok": true
+            }
+          },
+          "activationCommit": {
+            "ok": true,
+            "drivePush": {
+              "ok": true
+            }
+          }
+        },
+        "afterCalls": 0,
+        "finalPushCalls": 0,
+        "notifications": [
+          {
+            "message": "☁️ تم رفع الترخيص إلى Google Drive",
+            "type": "success"
+          }
+        ]
+      }
+    },
+    {
+      "name": "restart_owner_requires_real_session",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "session": {
+          "ok": false,
+          "error": "no_session"
+        },
+        "ownerValid": false,
+        "passwordField": true,
+        "text": "\n              حساب المالك موجود بالفعل. أدخل كلمة المرور الحالية للمتابعة دون إنشاء الحساب أو تغييرها.\n              حساب المالكfinal-owner\n              كلمة مرور المالك الحالية"
+      }
+    },
+    {
+      "name": "restart_owner_password_binds_main_session",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": {
+        "session": {
+          "ok": true,
+          "session": {
+            "userId": "final-owner",
+            "role": "owner",
+            "sessionEpoch": 0,
+            "centerId": "CTR-PROD-TEST",
+            "writeBranchId": "BR-MAIN",
+            "boundAt": "2026-08-11T16:55:18.277Z"
+          }
+        },
+        "ownerValid": true,
+        "text": "✅ تم التحقق من حساب المالك لهذه الجلسة. يمكنك المتابعة."
+      }
+    },
+    {
+      "name": "restart_typed_setup_authority_survives",
+      "pass": true,
+      "boundary": "real-sqlite-restart",
+      "detail": {
+        "registry": {
+          "schemaVersion": 1,
+          "registered": [
+            {
+              "deviceUuid": "b094c6c8-213c-45ad-8bea-352376204917",
+              "deviceName": "Final Clean Runtime Device",
+              "branchId": "BR-MAIN",
+              "registeredAt": "2026-08-11T16:55:08.213Z",
+              "lastSeenAt": "2026-08-11T16:55:08.213Z",
+              "status": "approved",
+              "active": true
+            }
+          ],
+          "updatedAt": "2026-08-11T16:55:08.213Z"
+        },
+        "ownerSetup": {
+          "schemaVersion": 2,
+          "status": "complete",
+          "ownerUserId": "final-owner",
+          "credentialRevision": 1,
+          "completedAt": "2026-08-11T16:55:08.320Z"
+        }
+      }
+    },
+    {
+      "name": "restart_no_setup_kv_shadows",
+      "pass": true,
+      "boundary": "real-sqlite-restart",
+      "detail": {
+        "shadows": 0
+      }
+    },
+    {
+      "name": "restart_sqlite_integrity",
+      "pass": true,
+      "boundary": "real-sqlite-restart",
+      "detail": {
+        "ok": true,
+        "detail": {
+          "integrity_check": "ok"
+        }
+      }
+    },
+    {
+      "name": "first-launch_no_page_errors",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    },
+    {
+      "name": "first-launch_no_console_errors",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    },
+    {
+      "name": "first-launch_no_console_security_warnings",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    },
+    {
+      "name": "restart_no_page_errors",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    },
+    {
+      "name": "restart_no_console_errors",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    },
+    {
+      "name": "restart_no_console_security_warnings",
+      "pass": true,
+      "boundary": "actual-electron",
+      "detail": []
+    }
+  ],
+  "stages": [
+    {
+      "name": "first-launch",
+      "startedAt": "2026-08-11T16:55:11.516Z",
+      "console": [
+        {
+          "type": "warning",
+          "text": "LicenseActivationGate: pushToDrive failed {ok: false, error: injected_activation_upload_failure}"
+        },
+        {
+          "type": "warning",
+          "text": "startup CloudV2.init: Error: device_bootstrap_failed\n    at startup (file:///D:/Hijama-Clinic-Production/.codex-validation/installed/FINALCLEAN-37F3FDE0/resources/app.asar/index.html:28019:15)"
+        }
+      ],
+      "pageErrors": []
+    },
+    {
+      "name": "restart",
+      "startedAt": "2026-08-11T16:55:16.014Z",
+      "console": [],
+      "pageErrors": []
+    }
+  ],
+  "result": "PASS",
+  "finishedAt": "2026-08-11T16:55:18.510Z"
+}

@@ -1,0 +1,7 @@
+{
+  "incompleteClose": "returns to login shell; operational app remains locked",
+  "appQuit": "allowed",
+  "cancelDoesNotComplete": true,
+  "closeButtonLabelIncomplete": "إغلاق والعودة",
+  "resumeMessage": "سنكمل الإعداد من حيث توقفت."
+}

@@ -1,0 +1,19 @@
+{
+  "installedSmoke": {
+    "at": "2026-08-14T14:05:45.0351728+00:00",
+    "buildId": "ext-gha-3-1",
+    "installer": "D:\\a\\Codex-Hijama\\Codex-Hijama\\dist\\HijamaManagement-Setup-2.0.1.exe",
+    "installerSha256": "058626db3bdc1f632bef49fc0fa6862cc76fb34ded26293251501d022bd376c0",
+    "installerSizeBytes": 107025128,
+    "isolatedUserData": "C:\\Users\\runneradmin\\AppData\\Local\\uat-stage1-ext-gha-3-1",
+    "productionUserDataAvoided": true,
+    "installedExe": "C:\\Users\\runneradmin\\AppData\\Local\\Programs\\Hijama Management System\\Hijama Management System.exe",
+    "installedExeSha256": "859879d8397a52b4ff0e9c6ceaeb9bc27b43c7acf9b2187a08fd5a867d69d87c",
+    "installedExeSizeBytes": 225949696,
+    "smokeRunning": true,
+    "smokeExitCode": -1,
+    "ok": true
+  },
+  "successJourneyErrors": null,
+  "unhandledRejections": null
+}

@@ -1,0 +1,10 @@
+{
+  "buildId": "LEGACY-V5-FINAL-20260811-126OF128-7808AB2A",
+  "os": "Microsoft Windows 10 Pro 10.0.19045 x64",
+  "node": "v22.23.1",
+  "npm": "12.0.1",
+  "installMode": "NSIS silent isolated path",
+  "installPath": ".codex-validation/legacy-v5-installed-final-20260811",
+  "userData": ".codex-validation/legacy-v5-installed-final-userdata-20260811",
+  "productionProfileMutated": false
+}

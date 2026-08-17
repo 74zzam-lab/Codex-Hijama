@@ -1,0 +1,18 @@
+{
+  "steps": [
+    "language",
+    "google",
+    "discovery",
+    "license",
+    "organization",
+    "branch_select",
+    "device",
+    "restore",
+    "business_setup",
+    "owner",
+    "sync",
+    "ready"
+  ],
+  "businessSetupAfterRestore": true,
+  "businessSetupBeforeOwner": true
+}

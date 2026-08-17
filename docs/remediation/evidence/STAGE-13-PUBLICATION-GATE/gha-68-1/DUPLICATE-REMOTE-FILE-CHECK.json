@@ -1,0 +1,5 @@
+{
+  "policy": "uploadJson overwrite + candidate path resolution",
+  "doubleSubmit": "publicationInFlight guard",
+  "fiveRestarts": "verified record prevents republish"
+}

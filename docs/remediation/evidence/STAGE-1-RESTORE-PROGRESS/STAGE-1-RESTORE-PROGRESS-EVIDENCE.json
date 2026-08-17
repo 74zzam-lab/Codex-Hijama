@@ -1,0 +1,68 @@
+{
+  "stage": "STAGE-1",
+  "purpose": "Cloud Backup V2 restore download progress IPC + truthful activation error mapping",
+  "capturedAt": "2026-08-13T07:46:00.000Z",
+  "branch": "cursor/bootstrap-restore-fixes-beb8",
+  "commit": "d63677734ec5efa87dbc46b7cfe693e50b537147",
+  "scope": {
+    "inScope": [
+      "Streaming Drive download with byte progress",
+      "backup:downloadProgress IPC channel",
+      "Renderer restore progress wiring (attachDownloadProgress)",
+      "Watchdog preserves lastStageRatio (no percent regression)",
+      "ActivationErrors mapping for restore/cloud/download codes",
+      "BootFlow restore failure uses setStatusFromErr"
+    ],
+    "outOfScope": [
+      "boot ordering",
+      "owner/branch order",
+      "existing path",
+      "startup/login/rbac",
+      "owner seed",
+      "device approval"
+    ]
+  },
+  "filesChanged": [
+    "electron/cloud-providers/google-drive-api.js",
+    "electron/cloud-providers/google-drive.js",
+    "electron/cloud-providers/cloud-service.js",
+    "electron/backup.js",
+    "electron/backup-v2-ipc.js",
+    "electron/preload.js",
+    "cloud/cloud-data-discovery.js",
+    "cloud/activation-errors.js",
+    "cloud/boot-flow-ui.js",
+    "tests/baseline/test-v2-5-10-cloud-discovery-restore.js",
+    "tests/baseline/test-p0-c-restore-truth-and-boot-gate.js"
+  ],
+  "fixSummary": {
+    "symptom": "Restore stalled at ~18% (3/9 download_db) with 30s watchdog warning; TDW-ACT-unknown",
+    "rootCause": "Main download had no progress events; watchdog reset stageRatio to 0.2 lowering percent; restore errors unmapped in ActivationErrors",
+    "fix": "downloadFileWithProgress + backup:downloadProgress IPC; emit on renderer; maxPercent monotonic; cloud_download_failed and related codes"
+  },
+  "testResults": {
+    "npmTest": { "result": "PASS", "summary": "133/133" },
+    "e2e": { "result": "PASS", "summary": "17/17" },
+    "focused": [
+      { "name": "test-v2-5-10-cloud-discovery-restore", "result": "PASS" },
+      { "name": "test-p0-c-restore-truth-and-boot-gate", "result": "PASS", "summary": "12/12 including AUD-RST-007" },
+      { "name": "test-current-restore-license-login", "result": "PASS" },
+      { "name": "test-v2-5-8-auth-activation-ui", "result": "PASS" },
+      { "name": "test-current-setup-restore-runtime", "result": "PASS" }
+    ],
+    "logPath": "review-work/STAGE-1-restore-tests.log"
+  },
+  "uatBuildArtifact": {
+    "zip": "Hijama-Management-System-SOURCE-BUILD-2.0.1.zip",
+    "note": "Rebuild from review-work/current-extract after Stage 1 verification",
+    "sha256": "57e1de5460921daf7d8f30902651d01c3276b4320aff80e4f5fc4e0545588645"
+  },
+  "windowsUatRequired": {
+    "status": "PENDING",
+    "journey": "Backup V2 → Restore → verify SQLite counts → restart → verify counts/integrity → zero console/page/Main errors",
+    "gateBeforeStage2": true
+  },
+  "nodeVerdict": "PASS",
+  "installedVerdict": "UNVERIFIED",
+  "stopBeforeReadyStartup": true
+}

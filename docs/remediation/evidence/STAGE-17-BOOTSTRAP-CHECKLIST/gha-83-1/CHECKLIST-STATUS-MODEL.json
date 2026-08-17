@@ -1,0 +1,10 @@
+{
+  "statuses": {
+    "DONE": "DONE",
+    "REQUIRED": "REQUIRED",
+    "IN_PROGRESS": "IN_PROGRESS",
+    "ERROR": "ERROR",
+    "FUTURE": "FUTURE",
+    "SKIPPED": "SKIPPED"
+  }
+}

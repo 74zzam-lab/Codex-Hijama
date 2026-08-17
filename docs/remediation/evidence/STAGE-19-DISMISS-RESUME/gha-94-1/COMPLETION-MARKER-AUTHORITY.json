@@ -1,0 +1,50 @@
+{
+  "bootstrapCompletedAt": {
+    "authority": "evidence",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": false
+  },
+  "setupCompletedAt": {
+    "authority": "derived",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": false
+  },
+  "wizardCompletedSteps": {
+    "authority": "legacy_only",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": true
+  },
+  "wizardCurrentStep": {
+    "authority": "hint_only",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": false
+  },
+  "wizardSyncDone": {
+    "authority": "legacy_only",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": true
+  },
+  "bootDoneFlag": {
+    "authority": "cache",
+    "canInvalidateReady": true,
+    "cache": true,
+    "legacy": false
+  },
+  "firstRunWizardCompleted": {
+    "authority": "legacy_only",
+    "canInvalidateReady": false,
+    "cache": true,
+    "legacy": true
+  },
+  "initialSyncCompletion": {
+    "authority": "derived",
+    "canInvalidateReady": false,
+    "cache": false,
+    "legacy": false
+  }
+}

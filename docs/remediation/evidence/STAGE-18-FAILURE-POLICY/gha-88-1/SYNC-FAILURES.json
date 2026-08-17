@@ -1,0 +1,32 @@
+{
+  "initial_sync_failed": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-SYNC-FAIL"
+  },
+  "sync_not_ready": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-SYNC-NOT-READY"
+  },
+  "sync_plan_invalid": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-SYNC-PLAN"
+  },
+  "sync_post_restore_blocked": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-SYNC-EMPTY-PUSH"
+  },
+  "sync_push_blocked_pull_only": {
+    "outcome": "FATAL",
+    "fatal": true,
+    "code": "TDW-BOOT-SYNC-PULL-ONLY"
+  },
+  "sync_interrupted": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-SYNC-INTERRUPT"
+  }
+}

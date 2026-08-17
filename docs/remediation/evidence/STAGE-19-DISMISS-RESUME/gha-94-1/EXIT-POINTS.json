@@ -1,0 +1,26 @@
+[
+  {
+    "id": "close_button",
+    "policy": "dismissBootstrap → login shell, no operational app"
+  },
+  {
+    "id": "escape",
+    "policy": "same as close unless in-flight"
+  },
+  {
+    "id": "app_shutdown",
+    "policy": "allowed anytime"
+  },
+  {
+    "id": "successful_completion",
+    "policy": "READY evaluate → relaunch/login once"
+  },
+  {
+    "id": "cancel_step",
+    "policy": "CANCELLED outcome, gate stays unresolved"
+  },
+  {
+    "id": "logout",
+    "policy": "login only; READY device no bootstrap"
+  }
+]

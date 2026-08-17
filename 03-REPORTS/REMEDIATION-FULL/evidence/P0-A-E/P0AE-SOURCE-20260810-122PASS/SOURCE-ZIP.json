@@ -1,0 +1,12 @@
+{
+  "buildId": "P0AE-SOURCE-20260810-122PASS",
+  "artifact": "D:\\Hijama-Clinic-P0-A-to-P0-E-SOURCE-20260810.zip",
+  "sizeBytes": 10957648,
+  "entries": 1485,
+  "sha256": "d48bb72f2705302661d1c1032af4c9572b17b103eb39d2b7ecde762ca9c81b79",
+  "createdAfterArchive": true,
+  "includedInsideArchive": false,
+  "excluded": ["node_modules", "dist", ".codex-p0a", "existing ZIP files"],
+  "privateSigningKeyIncluded": false,
+  "setupExeIncluded": false
+}

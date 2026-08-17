@@ -1,0 +1,53 @@
+{
+  "schema": "FIVE-RESTARTS",
+  "at": "2026-08-15T01:14:53.552Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "runs": [
+    {
+      "run": 1,
+      "ok": true,
+      "licStatus": "valid",
+      "bootOpen": false,
+      "pageErrors": [],
+      "unhandledRejections": [],
+      "consoleErrors": []
+    },
+    {
+      "run": 2,
+      "ok": true,
+      "licStatus": "valid",
+      "bootOpen": false,
+      "pageErrors": [],
+      "unhandledRejections": [],
+      "consoleErrors": []
+    },
+    {
+      "run": 3,
+      "ok": true,
+      "licStatus": "valid",
+      "bootOpen": false,
+      "pageErrors": [],
+      "unhandledRejections": [],
+      "consoleErrors": []
+    },
+    {
+      "run": 4,
+      "ok": true,
+      "licStatus": "valid",
+      "bootOpen": false,
+      "pageErrors": [],
+      "unhandledRejections": [],
+      "consoleErrors": []
+    },
+    {
+      "run": 5,
+      "ok": true,
+      "licStatus": "valid",
+      "bootOpen": false,
+      "pageErrors": [],
+      "unhandledRejections": [],
+      "consoleErrors": []
+    }
+  ]
+}

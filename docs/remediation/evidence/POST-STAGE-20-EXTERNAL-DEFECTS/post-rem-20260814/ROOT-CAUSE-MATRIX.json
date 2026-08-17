@@ -1,0 +1,65 @@
+{
+  "matrix": [
+    {
+      "bugId": "BUG-EXT-009",
+      "rootCause": "syncCloudStatusFromElectron downgraded renderer connected=true whenever Main getCloudStatus returned connected=false on transient reads, clearing OAuth session mid-bootstrap.",
+      "authoritativeState": "Main OAuth token + DriveAdapter.isConnected",
+      "staleState": "Renderer settings.backup.providers.google.connected after failed status reconcile",
+      "divergence": "Google gate recomputed false → coordinator jumped backward to google step",
+      "minimalFix": "Only downgrade on authoritative auth loss (needsReauth/oauth false); preserve connected on reconcile errors.",
+      "regressionRisk": "LOW — explicit user disconnect path unchanged"
+    },
+    {
+      "bugId": "BUG-EXT-002",
+      "rootCause": "setStatusFromErr attached discovery/license errors to current wizard step (often google) despite hasGoogle() true.",
+      "minimalFix": "Route discovery-class errors to discovery checklist row when Google remains connected.",
+      "regressionRisk": "LOW"
+    },
+    {
+      "bugId": "BUG-EXT-004",
+      "rootCause": "branch_select populated dropdown from license.branches only; recovered license often contained placeholder BR-MAIN while discovery.branchCandidates held real branches.",
+      "minimalFix": "Merge discovery branchCandidates with license branches for bootstrap branch select.",
+      "regressionRisk": "LOW — branchId authority preserved"
+    },
+    {
+      "bugId": "BUG-EXT-006",
+      "rootCause": "owner step UI treated stale discovered OWNER_EXISTS as auth gate on NEW/start_new fresh path.",
+      "minimalFix": "Prefer owner creation UI when isNewFreshStartPath() && !ownerCredentialCommitted().",
+      "regressionRisk": "MEDIUM — guarded to NEW start_new only"
+    },
+    {
+      "bugId": "BUG-EXT-008",
+      "rootCause": "~21% equals download_db stageRatio 0.3 with no further IPC progress during long v2SetupCloudRestore/download.",
+      "minimalFix": "Heartbeat progress + operation timeout + explicit backup password prompt before native restore.",
+      "regressionRisk": "LOW — monotonic percent preserved"
+    },
+    {
+      "bugId": "BUG-EXT-005",
+      "rootCause": "Restore step 'إعادة فحص السحابة' button only called renderStepUI() without running discovery.",
+      "minimalFix": "Invoke runDiscovery(true) to bypass cached metadata.",
+      "regressionRisk": "LOW"
+    },
+    {
+      "bugId": "BUG-EXT-007",
+      "rootCause": "BootstrapCoordinator.effectiveStepIndex snapped forward over completed steps when user navigated back (stored < resume ignored).",
+      "minimalFix": "Return stored index when stored < resume.",
+      "regressionRisk": "LOW"
+    },
+    {
+      "bugId": "BUG-EXT-003",
+      "rootCause": "disconnectGoogleDuringSetup existed but UX label/obviousness insufficient; confirm added.",
+      "minimalFix": "Expose 'فصل / تغيير حساب Google' with confirm dialog (reuse disconnectGoogleDuringSetup).",
+      "regressionRisk": "LOW"
+    },
+    {
+      "bugId": "BUG-EXT-001",
+      "rootCause": "Fixed grid sidebar + overflow:hidden on overlay clipped RTL content on 1366×768 / 125–150% scaling.",
+      "minimalFix": "Responsive single-column checklist under 641px, calc(100vw) card width, overflow-x hidden on form host.",
+      "regressionRisk": "LOW"
+    }
+  ],
+  "sharedRootCauseHypothesis": {
+    "confirmed": "Partial — BUG-EXT-009 transient Google downgrade could cascade to discovery/branch/path symptoms.",
+    "rejectedAsSoleCause": "BR-MAIN and rescan no-op had independent UI bugs even when Google stayed connected."
+  }
+}

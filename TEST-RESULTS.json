@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-08-13T07:30:00Z",
+  "fixedArchive": {
+    "path": "02-CURRENT/CURRENT-FINAL-RESTORE-SOURCE-FIXED-20260813.zip",
+    "sha256": "4537212a5595be0033b3561ba8d9c430adc5a7f6d34833cc01d74dd695764432"
+  },
+  "environment": {
+    "node": "v22.14.0",
+    "npm": "10.9.7",
+    "os": "Linux 6.12.94+ x86_64"
+  },
+  "current": {
+    "lint": { "status": "PASS", "exitCode": 0 },
+    "fullSuite": { "total": 133, "passed": 133, "failed": 0, "exitCode": 0 },
+    "e2eSuite": { "total": 17, "passed": 17, "failed": 0, "exitCode": 0, "command": "npm run test:e2e" },
+    "v5Policy": "INTENTIONAL_RETAINED",
+    "oauthSource": "PLACEHOLDER_ONLY",
+    "failedGroups": []
+  },
+  "notes": [
+    "V5 LIC_SECRETS retained per product owner decision",
+    "Commercial risk documented in v5-signing-policy.js",
+    "Windows installed runtime remains UNVERIFIED"
+  ]
+}

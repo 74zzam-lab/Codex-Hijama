@@ -1,0 +1,37 @@
+{
+  "buildId": "FINAL-RESTORE-20260813",
+  "date": "2026-08-13",
+  "version": "2.0.1",
+  "artifactType": "source-handoff",
+  "artifact": "artifacts/Hijama-Clinic-FINAL-RESTORE-20260813-CURSOR-HANDOFF.zip",
+  "lint": {
+    "status": "PASS",
+    "exitCode": 0
+  },
+  "focusedRestoreTests": {
+    "status": "PASS",
+    "groups": 13
+  },
+  "fullTestSuite": {
+    "status": "FAIL",
+    "passed": 126,
+    "total": 132,
+    "failedGroups": [
+      "p0-e:licensing-production",
+      "v2-5.7:production-release",
+      "v2-5.7:scenarios",
+      "v2-5.7:windows-uat-runtime",
+      "v2-3.5:verify-uninstall-prep",
+      "license:test"
+    ]
+  },
+  "installedExeFromCurrentSource": "UNVERIFIED",
+  "commercialRelease": "NO-GO",
+  "openCritical": [
+    "AUD-LIC-002",
+    "Current-source installed EXE evidence",
+    "Historical V3 Drive restore requires the operator backup password"
+  ],
+  "primaryReport": "docs/remediation/FINAL-RESTORE-HANDOFF-20260813.md",
+  "traceability": "docs/remediation/AUDIT-TRACEABILITY.md"
+}

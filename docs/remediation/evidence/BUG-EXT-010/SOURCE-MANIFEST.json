@@ -1,0 +1,14 @@
+{
+  "schema": "branch-source-manifest-v1",
+  "defect": "BUG-EXT-010",
+  "branch": "cursor/post-stage-20-external-defects-beb8",
+  "branchHeadCommit": "61d75a0",
+  "buildSourceCommit": "61d75a0",
+  "branchHeadEqualsBuildSource": true,
+  "dirtyState": "clean",
+  "remediationBaseline": "edd5eb3f8e8cbdfd2382683757e8275bfcdffe55",
+  "stage20Baseline": "c389e92",
+  "repositorySourceTreeDirect": true,
+  "trackedZipsInBranch": 0,
+  "notes": "Manifest updated after BUG-EXT-010 surgical fix; HEAD/build commit recorded at generation time."
+}

@@ -1,0 +1,29 @@
+{
+  "schema": "BILLING-BLOCKER-CONFIRMED",
+  "at": "2026-08-15T03:52:00.000Z",
+  "status": "BLOCKED_BY_GITHUB_BILLING",
+  "runtimeSourceCommit": "9cdbfd359f7c9a7aef3e817507c83e16d2b8cc6e",
+  "currentHead": "7ff667f471b021c9097a8e3d59f6d6730504ba59",
+  "runtimeChangedAfter9cdbfd3": false,
+  "applicationCodeChanged": false,
+  "githubAnnotation": "The job was not started because recent account payments have failed or your spending limit needs to be increased. Please check the 'Billing & plans' section in your settings.",
+  "classification": {
+    "applicationFailure": false,
+    "workflowSyntaxFailure": false,
+    "windowsRunnerConfigurationFailure": false,
+    "billingOrSpendingLimitFailure": true
+  },
+  "agentActionsAttempted": {
+    "workflowDispatch": "HTTP 403 — not permitted from agent token",
+    "runRerun": "HTTP 403 — not permitted from agent token",
+    "billingSettingsAccess": "not available to agent — requires account owner at https://github.com/settings/billing"
+  },
+  "requiredOwnerAction": [
+    "GitHub Settings → Billing & plans → resolve failed payment or increase Actions spending limit",
+    "After Actions resume: re-run Stage 1 Windows Verification on branch cursor/post-stage-20-external-defects-beb8 (PR #22)",
+    "Build must come from runtime source 9cdbfd3 (current HEAD evidence-only commits do not change runtime)"
+  ],
+  "lastFailedRunBeforeBillingFix": "31862340647",
+  "actionsResumed": false,
+  "exactHeadWindowsProofExecuted": false
+}

@@ -1,0 +1,102 @@
+{
+  "protocolVersion": "1.0",
+  "runtimeHeadRequired": "013f37e58d4567ad07e1c00bc333094f7323f95b",
+  "branch": "cursor/external-existing-bootstrap-defects-beb8",
+  "manualExistingRetest": "PENDING",
+  "tester": "",
+  "machine": "",
+  "displayResolution": "",
+  "windowMode": "normal|maximized|both",
+  "testedAt": "",
+  "build": {
+    "sourceCommit": "013f37e58d4567ad07e1c00bc333094f7323f95b",
+    "setupExeFilename": "",
+    "setupExeSizeBytes": null,
+    "setupExeSha256": "",
+    "builtOn": ""
+  },
+  "journey": {
+    "path": "existing_customer",
+    "googleEmail": "",
+    "discoveryStatus": "",
+    "organizations": null,
+    "licenses": null,
+    "branches": null,
+    "backupsAtDiscovery": null
+  },
+  "bugExt011Modal": {
+    "clipping": null,
+    "leftSideVisible": null,
+    "horizontalOverflow": null,
+    "checklistSidebarComplete": null,
+    "allButtonsVisible": null,
+    "result": "PASS|FAIL|PENDING"
+  },
+  "bugExt012FalseRed": {
+    "redMessageAppeared": null,
+    "message": "",
+    "diagnostic": "",
+    "step": "",
+    "waitedForAutoClearSeconds": null,
+    "operationEventuallySucceeded": null,
+    "redCleared": null,
+    "result": "PASS|FAIL|PENDING"
+  },
+  "bugExt013Branch": {
+    "branchesDiscovered": null,
+    "branchMarkedDoneBeforeUserSelection": null,
+    "explicitSelectionShown": null,
+    "selectedBranch": "",
+    "doneOnlyAfterSelection": null,
+    "result": "PASS|FAIL|PENDING|N/A"
+  },
+  "bugExt014Google": {
+    "initialGoogleConnect": true,
+    "secondGoogleRequest": null,
+    "googleConnectCount": null,
+    "googleChecklistStayedDone": null,
+    "result": "PASS|FAIL|PENDING"
+  },
+  "device": {
+    "selectedBranch": "",
+    "deviceName": "",
+    "registrationOk": null,
+    "duplicateError": null,
+    "googleReconnectPrompt": null,
+    "result": "PASS|FAIL|PENDING"
+  },
+  "bugExt015Restore": {
+    "selectedBackup": "",
+    "sizeBytes": null,
+    "downloadStarted": null,
+    "initialProgress": "",
+    "progressHistory": [],
+    "stalled": null,
+    "stallDurationSeconds": null,
+    "diagnostic": "",
+    "retryableErrorAfterStall": null,
+    "downloadCompleted": null,
+    "advancedToNextStage": null,
+    "result": "PASS|FAIL|PENDING"
+  },
+  "redMessageAudit": {
+    "entries": [],
+    "totalRedMessages": 0,
+    "validRed": 0,
+    "falseRed": 0,
+    "staleRed": 0,
+    "wrongStepRed": 0
+  },
+  "observations": {
+    "pageErrors": [],
+    "unhandledErrors": [],
+    "screenshots": [],
+    "notes": ""
+  },
+  "finalBlockers": [],
+  "verdict": {
+    "manualExistingRetest": "PASS|FAIL|PENDING",
+    "externalUatResumeAllowed": false,
+    "summaryLine": "EXTERNAL EXISTING BOOTSTRAP DEFECTS REMAIN OPEN — MANUAL WINDOWS REPRODUCTION ATTACHED"
+  }
+}

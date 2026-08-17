@@ -1,0 +1,5 @@
+{
+  "wizardFlowVersion": 6,
+  "legacyStepMapping": "LEGACY_NEW_STEPS_PRE_STAGE6 index → step id → NEW_STEPS index",
+  "coordinator": "effectiveStepIndex advances past resolved steps"
+}

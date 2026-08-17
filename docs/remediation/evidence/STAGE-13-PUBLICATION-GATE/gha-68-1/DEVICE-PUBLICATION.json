@@ -1,0 +1,9 @@
+{
+  "via": "outbox device metadata",
+  "readBackFields": [
+    "deviceId",
+    "fingerprint",
+    "deviceName",
+    "branchId"
+  ]
+}

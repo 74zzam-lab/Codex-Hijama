@@ -1,0 +1,5 @@
+{
+  "falseBeforeGates": true,
+  "trueAfterGates": true,
+  "authority": "ReadyPureEvaluator"
+}

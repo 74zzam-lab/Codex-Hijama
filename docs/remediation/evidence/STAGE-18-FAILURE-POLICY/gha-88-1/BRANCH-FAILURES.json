@@ -1,0 +1,22 @@
+{
+  "branch_name_required": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-BRANCH-NAME"
+  },
+  "branch_code_duplicate": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-BRANCH-DUP"
+  },
+  "branch_duplicate_create": {
+    "outcome": "RETRYABLE",
+    "retryable": true,
+    "code": "TDW-BOOT-BRANCH-INFLIGHT"
+  },
+  "license_branch_limit": {
+    "outcome": "USER_ACTION_REQUIRED",
+    "userActionRequired": true,
+    "code": "TDW-BOOT-BRANCH-LIMIT"
+  }
+}

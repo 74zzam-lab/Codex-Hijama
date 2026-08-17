@@ -1,0 +1,104 @@
+{
+  "schema": "bootstrap-legacy-path-inventory-v1",
+  "generatedAt": "2026-08-16T13:50:00.000Z",
+  "paths": [
+    {
+      "id": "LEGACY_NEW_STEPS_PRE_STAGE6-13",
+      "location": "cloud/boot-flow-ui.js",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "wizardFlowVersion migration ladder",
+      "danger": "LOW — only runs when wizardFlowVersion < 16"
+    },
+    {
+      "id": "LEGACY_EXISTING_STEPS_PRE_STAGE16",
+      "location": "cloud/boot-flow-ui.js",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "Map old currentStep indices to new step ids",
+      "danger": "LOW"
+    },
+    {
+      "id": "completedSteps wizard KV",
+      "location": "cloud/boot-flow-ui.js, bootstrap-coordinator.js",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "Legacy progress; coordinator derives instead",
+      "danger": "MEDIUM — stale writes still occur; display uses deriveCompletedSteps"
+    },
+    {
+      "id": "completeCurrentStep naive increment",
+      "location": "cloud/boot-flow-ui.js:1629",
+      "classification": "DEAD",
+      "purpose": "Pre-step-model navigation",
+      "danger": "NONE — no callers"
+    },
+    {
+      "id": "existingGatesBeforeSyncSatisfied",
+      "location": "cloud/boot-flow-ui.js:900",
+      "classification": "DEAD",
+      "purpose": "Pre-Stage16 EXISTING hidden gates",
+      "danger": "NONE — never called"
+    },
+    {
+      "id": "legacy JSON restore",
+      "location": "electron/backup-v2-ipc.js fallback paths",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "Format error fallback to legacy downloadCloudBackup",
+      "danger": "MEDIUM — only on format error, not stall"
+    },
+    {
+      "id": "database:bootstrapFromLocal",
+      "location": "electron/main.js",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "Legacy snapshot bootstrap",
+      "danger": "LOW — setup public IPC"
+    },
+    {
+      "id": "cupping-first-run.js",
+      "location": "cupping-first-run.js",
+      "classification": "DEAD",
+      "purpose": "Pre-BootFlow first run",
+      "danger": "NONE — superseded by BootFlow auto-open"
+    },
+    {
+      "id": "oauthLockAt KV field",
+      "location": "wizard KV",
+      "classification": "DEAD",
+      "purpose": "Persisted OAuth lock",
+      "danger": "LOW — unused; oauthInFlight module var is actual guard"
+    },
+    {
+      "id": "wizard.syncDone",
+      "location": "wizard KV",
+      "classification": "DANGEROUS if authoritative",
+      "purpose": "Legacy sync marker",
+      "danger": "MITIGATED — marked NO_LONGER_AUTHORITATIVE; READY uses meta"
+    },
+    {
+      "id": "BOOT_DONE_KEY localStorage",
+      "location": "setup-state-service.js, boot-flow-ui.js",
+      "classification": "COMPATIBILITY ONLY",
+      "purpose": "Fast boot-complete check",
+      "danger": "MITIGATED — cleared when evaluateReady fails"
+    },
+    {
+      "id": "resolveActiveProviderKey pre-download",
+      "location": "electron/cloud-providers/cloud-service.js",
+      "classification": "DANGEROUS on restore path",
+      "purpose": "Provider resolution via getUserEmail",
+      "danger": "BYPASSED — skipProviderResolve:true on setup restore"
+    },
+    {
+      "id": "persistData settings for Google",
+      "location": "index.html (removed from setup path)",
+      "classification": "REMOVED",
+      "purpose": "Pre-auth Google state write",
+      "danger": "WAS DANGEROUS — caused RBAC red on discovery"
+    },
+    {
+      "id": "six parallel step arrays",
+      "location": "step-model, boot-flow-ui, coordinator, gates, checklist, existing-short-path",
+      "classification": "ACTIVE with delegation",
+      "purpose": "Historical duplication",
+      "danger": "MITIGATED — runtime stepsFor() delegates to BootstrapStepModel"
+    }
+  ]
+}

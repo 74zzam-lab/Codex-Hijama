@@ -1,0 +1,80 @@
+{
+  "phase": "V2-5.7",
+  "at": "2026-08-13T15:13:05.478Z",
+  "version": "2.0.1",
+  "productName": "Hijama Management System",
+  "platform": "linux",
+  "arch": "x64",
+  "distExists": false,
+  "artifactsPresent": false,
+  "distDeferred": true,
+  "artifacts": {
+    "setup": null,
+    "allSetupExes": [],
+    "winUnpacked": null,
+    "winUnpackedPresent": false,
+    "portable": {
+      "supported": false,
+      "reason": "package.json build.win.target lists only nsis (x64); portable is not an official build target for V2-5.7",
+      "configuredTargets": [
+        "nsis"
+      ],
+      "foundArtifacts": []
+    },
+    "icons": {
+      "appIcon": "build/Program-Icon.ico",
+      "winIcon": "build/Program-Icon.ico",
+      "installerIcon": "build/Program-Icon.ico",
+      "uninstallerIcon": "build/Program-Icon.ico",
+      "installerHeaderIcon": "build/Program-Icon.ico",
+      "exists": {
+        "appIcon": true,
+        "winIcon": true,
+        "installerIcon": true,
+        "uninstallerIcon": true,
+        "installerHeaderIcon": true
+      }
+    },
+    "iconInspect": {
+      "ok": false,
+      "reason": "exe_missing"
+    },
+    "sourceArchive": {
+      "at": "2026-08-13T15:13:05.478Z",
+      "commit": "61d6ffc81beb8fd3ff0799d23f24b8c384d04b27",
+      "archive": {
+        "path": "docs/integration-v2-5-7/evidence/source-release-61d6ffc81beb.tar.gz",
+        "sizeBytes": 669792,
+        "sha256": "eae9759da37cc396e8a4a009a55ea058091ec74d77ce81baea25deb1c189010b",
+        "mtime": "2026-08-13T15:13:05.472Z",
+        "ok": true
+      },
+      "method": "tar",
+      "paths": [
+        "package.json",
+        "package-lock.json",
+        "electron",
+        "database",
+        "cloud",
+        "build",
+        "license",
+        "renderer",
+        "scripts/verify-v2-5-7-completion.cjs",
+        "scripts/v2-5-7-release-artifacts.cjs",
+        "scripts/v2-5-7-migration-harness.cjs",
+        "scripts/v2-5-7-lifecycle-matrix.cjs",
+        "docs/integration-v2-5-7/00-CURRENT-REALITY.md",
+        "docs/integration-v2-5-7/01-TARGET-DESIGN.md",
+        "docs/integration-v2-5-7/09-RELEASE-READINESS.md",
+        "docs/integration-v2-5-7/REQUIREMENTS-TRACEABILITY.md"
+      ]
+    }
+  },
+  "notes": [
+    "Portable is unsupported unless listed in package.json build.win.target",
+    "Setup exe on non-Windows hosts may be a wine/NSIS stub; win-unpacked Electron binary is authoritative when present",
+    "Icon paths taken from package.json build / nsis; PE icon groups inspected via resedit when EXE present",
+    "When dist/ is absent (npm test before build:win), indexer still exits 0 with distDeferred=true; re-run after build for SHA evidence"
+  ],
+  "ok": true
+}

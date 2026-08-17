@@ -1,0 +1,5 @@
+{
+  "needsBootFlowBlocksLogin": true,
+  "needsBootFlowBlocksShowPage": true,
+  "appShellLocked": true
+}

@@ -1,0 +1,4 @@
+{
+  "note": "Safe transition trace hooks documented; no secrets logged.",
+  "fields": ["timestamp", "wizard.path", "forkDecision", "currentStep", "effectiveStep", "googleConnected", "googleAccountFingerprint", "discovery.status", "candidateCount", "branchCandidateIds", "restoreChoice", "ownerGateType"]
+}

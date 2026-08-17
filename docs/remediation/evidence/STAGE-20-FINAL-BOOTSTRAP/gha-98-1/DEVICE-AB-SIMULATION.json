@@ -1,0 +1,10 @@
+{
+  "status": "PASS",
+  "differentRecords": true,
+  "sameRecordConflict": true,
+  "aWriteDuringBBootstrap": "isolated profiles",
+  "bOfflineReconnect": true,
+  "duplicateDelivery": true,
+  "tombstone": true,
+  "restartBoth": true
+}

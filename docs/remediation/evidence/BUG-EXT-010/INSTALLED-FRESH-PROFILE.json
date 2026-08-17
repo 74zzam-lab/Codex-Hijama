@@ -1,0 +1,72 @@
+{
+  "schema": "INSTALLED-FRESH-PROFILE",
+  "at": "2026-08-15T01:14:04.452Z",
+  "buildCommit": "a0b699f7ab5ee472b1e7168d52058010c9afa582",
+  "ok": true,
+  "settled": {
+    "text": "يلزم تفعيل البرنامج — الدخول للموظفين فقط (قراءة)",
+    "pending": false,
+    "licStatus": "none",
+    "hasLicCheck": true,
+    "hasFinalize": true,
+    "loginHidden": false,
+    "bootOpen": false,
+    "ready": false,
+    "needsBoot": true,
+    "loginBtnDisabled": false,
+    "bfStatus": "",
+    "bfError": false
+  },
+  "samples": [
+    {
+      "ms": 21,
+      "text": "جارٍ التحقق من الترخيص...",
+      "pending": true,
+      "licStatus": "none",
+      "hasLicCheck": true,
+      "hasFinalize": true,
+      "loginHidden": false,
+      "ready": false,
+      "needsBoot": true,
+      "loginBtnDisabled": false,
+      "bfStatus": "",
+      "bfError": false
+    },
+    {
+      "ms": 524,
+      "text": "جارٍ التحقق من الترخيص...",
+      "pending": true,
+      "licStatus": "none",
+      "hasLicCheck": true,
+      "hasFinalize": true,
+      "loginHidden": false,
+      "ready": false,
+      "needsBoot": true,
+      "loginBtnDisabled": false,
+      "bfStatus": "",
+      "bfError": false
+    },
+    {
+      "ms": 1028,
+      "text": "يلزم تفعيل البرنامج — الدخول للموظفين فقط (قراءة)",
+      "pending": false,
+      "licStatus": "none",
+      "hasLicCheck": true,
+      "hasFinalize": true,
+      "loginHidden": false,
+      "bootOpen": false,
+      "ready": false,
+      "needsBoot": true,
+      "loginBtnDisabled": false,
+      "bfStatus": "",
+      "bfError": false
+    }
+  ],
+  "maxPendingMs": 524,
+  "trace": {
+    "pageErrors": [],
+    "unhandledRejections": [],
+    "consoleErrors": []
+  },
+  "profile": "fresh"
+}
