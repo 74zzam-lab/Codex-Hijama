@@ -17265,17 +17265,24 @@ function closePrinterPicker() {
 function selectPrinter(printerName) {
   if (_printerPickerTarget === 'a4') {
     const el = document.getElementById('set-printer-a4');
+    const fr = document.getElementById('fr-dev-a4');
     if (el) el.value = printerName;
+    if (fr) fr.value = printerName;
   } else {
     const el = document.getElementById('set-printer-thermal');
+    const fr = document.getElementById('fr-dev-thermal');
     if (el) el.value = printerName;
+    if (fr) fr.value = printerName;
     const linked = document.getElementById('set-drawer-linked');
     if (linked && (document.getElementById('set-drawer-connection')?.value || 'printer') === 'printer') {
       linked.value = printerName;
     }
   }
   closePrinterPicker();
-  notify('✅ تم اختيار: ' + printerName + ' — اضغط «حفظ إعدادات الأجهزة»');
+  const inFirstRunWizard = document.getElementById('setupWizardModal')?.classList.contains('open');
+  notify(inFirstRunWizard
+    ? ('✅ تم اختيار: ' + printerName)
+    : ('✅ تم اختيار: ' + printerName + ' — اضغط «حفظ إعدادات الأجهزة»'));
 }
 
 async function runAllHardwareTests() {

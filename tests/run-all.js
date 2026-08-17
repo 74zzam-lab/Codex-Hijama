@@ -74,6 +74,7 @@ const baseline = [
   ['tests/baseline/test-bootstrap-red-message-truthfulness.js', 'post-stage-20:bootstrap-red-message-truthfulness'],
   ['tests/baseline/test-bootstrap-navigation-model.js', 'bootstrap:navigation-model'],
   ['tests/baseline/test-bootstrap-production-path.js', 'bootstrap:production-path'],
+  ['tests/baseline/test-bootstrap-delta-closure.js', 'bootstrap:delta-closure'],
   ['tests/baseline/test-bootstrap-wizard-path-persistence.js', 'bootstrap:wizard-path-persistence'],
   ['tests/baseline/test-p0-c-owner-credential-merge.js', 'p0-c:owner-credential-merge'],
   ['tests/baseline/test-p0-c-credential-publication.js', 'p0-c:credential-publication'],

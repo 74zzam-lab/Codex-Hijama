@@ -475,7 +475,7 @@
     options = options || {};
     const w = getDisplayWizard(loadWizard());
     invalidateStaleChecklistErrors(w);
-    let step = options.stepId || stepsFor(w.path)[w.currentStep];
+    let step = options.stepId || currentStepId(w);
     const normalized = normalizeBootstrapFailure(err, code, step);
     if (!options.stepId && step === 'google' && hasGoogle()) {
       const discoveryCodes = ['discovery_failed', 'license_discovery_failed', 'data_discovery_failed', 'existing_license_recovery_failed', 'no_activation_on_drive'];
@@ -952,6 +952,31 @@
       reason: 'no_recoverable_owner',
       messageAr: 'لا يمكن البدء بقاعدة فارغة لعميل حالي: حساب المالك يُسترد من النسخة الاحتياطية أو من المزامنة السحابية ولا يُنشأ في هذا المسار. أكمل الاستعادة من السحابة، أو استخدم «تأكيد البيانات الحالية» إذا كانت بيانات هذا الجهاز صحيحة.',
     };
+  }
+
+  /** Authoritative restore-choice mutation — enforces empty-start policy at the boundary. */
+  function commitRestoreChoice(choice, msg, meta) {
+    meta = meta || {};
+    if (choice === 'empty') {
+      const policy = existingEmptyStartPolicy();
+      if (!policy.allowed) {
+        setStatusFromErr(
+          { message: policy.code },
+          policy.code,
+          { stepId: 'restore', message: policy.messageAr },
+        );
+        return { ok: false, error: policy.code, policy };
+      }
+    }
+    const w2 = loadWizard();
+    w2.restoreChoice = choice;
+    w2.restoreVerifiedDatabase = meta.verifiedDatabase === true;
+    w2.restoreMode = meta.mode || null;
+    w2.cloudDiscovery = global.CloudDataDiscovery?.getLastDiscovery?.() || w2.cloudDiscovery || null;
+    saveWizard(w2);
+    if (msg) setStatus(msg);
+    renderNavButtons(loadWizard());
+    return { ok: true, choice };
   }
 
   function existingGatesBeforeSyncSatisfied() {
@@ -1570,7 +1595,7 @@
     w.forkGoogleAccountKey = global.settings?.backup?.providers?.google?.email?.toLowerCase?.() || null;
     w.forkDiscoveryFingerprint = PG?.discoveryFingerprint?.(discovery) || null;
     w.path = PATHS.NEW;
-    const steps = NEW_STEPS;
+    const steps = stepsFor(PATHS.NEW);
     const forkIdx = steps.indexOf('path_decision');
     if (!w.completedSteps.includes('path_decision')) w.completedSteps.push('path_decision');
     if (forkIdx >= 0 && w.currentStep <= forkIdx) w.currentStep = forkIdx + 1;
@@ -1608,7 +1633,7 @@
       w.selectedCandidateId = chosen;
     }
     w.path = PATHS.EXISTING;
-    const exSteps = EXISTING_STEPS;
+    const exSteps = stepsFor(PATHS.EXISTING);
     const recoveryIdx = exSteps.indexOf('license_org_recovery');
     w.currentStep = recoveryIdx >= 0 ? recoveryIdx : 3;
     ['language', 'google', 'discovery', 'path_decision'].forEach((step) => {
@@ -2732,6 +2757,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   async function activateLicenseKey() {
+    const renderCtx = captureRenderContext('license');
     if (licenseActivateInFlight) {
       setStatus('⏳ التفعيل جارٍ — لا تضغط مجدداً');
       return { ok: false, error: 'activate_in_flight' };
@@ -2809,12 +2835,16 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     } finally {
       licenseActivateInFlight = false;
       try { global.OwnerManagement?.clearSystemBusy?.('license_refresh'); } catch { /* empty */ }
-      const w = loadWizard();
-      renderNavButtons(w);
+      guardedRender(renderCtx, () => {
+        const w = loadWizard();
+        renderNavButtons(w);
+        renderStepUI(w);
+      });
     }
   }
 
   async function createFirstBranchFromForm() {
+    const renderCtx = captureRenderContext('branch');
     if (branchCreateInFlight) {
       setStatusFromErr({ message: 'duplicate create' }, 'branch_duplicate_create');
       return { ok: false, error: 'in_flight' };
@@ -2874,7 +2904,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false };
     } finally {
       branchCreateInFlight = false;
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+        renderStepUI(loadWizard());
+      });
     }
   }
 
@@ -2914,6 +2947,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   async function registerDeviceFromForm() {
+    const renderCtx = captureRenderContext('device');
     if (deviceRegisterInFlight) {
       return { ok: false, error: 'device_registration_in_flight' };
     }
@@ -2961,7 +2995,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false };
     } finally {
       deviceRegisterInFlight = false;
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+        renderStepUI(loadWizard());
+      });
     }
   }
 
@@ -3033,6 +3070,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   async function commitPublicationFromWizard() {
+    const renderCtx = captureRenderContext('publication');
     if (publicationInFlight) {
       return { ok: false, error: 'publication_in_flight' };
     }
@@ -3058,7 +3096,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         return { ok: true, readbackVerification: verifyOnly.readbackVerification };
       } finally {
         publicationInFlight = false;
-        renderNavButtons(loadWizard());
+        guardedRender(renderCtx, () => {
+          renderNavButtons(loadWizard());
+          renderStepUI(loadWizard());
+        });
       }
     }
     publicationInFlight = true;
@@ -3089,7 +3130,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: e?.message || e?.code || 'publication_failed' };
     } finally {
       publicationInFlight = false;
-      renderNavButtons(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+        renderStepUI(loadWizard());
+      });
     }
   }
 
@@ -3101,6 +3145,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
   }
 
   async function authenticateExistingOwnerFromWizard() {
+    const renderCtx = captureRenderContext('owner_auth');
     if (ownerLoginInFlight) return { ok: false, error: 'owner_login_in_flight' };
     const owner = getUsableOwnerAccount();
     const password = String(document.getElementById('bf-owner-password')?.value || '');
@@ -3133,12 +3178,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       return { ok: false, error: error?.code || error?.message || 'setup_owner_authentication_failed' };
     } finally {
       ownerLoginInFlight = false;
-      renderNavButtons(loadWizard());
-      renderStepUI(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+        renderStepUI(loadWizard());
+      });
     }
   }
 
   async function createOwnerFromWizard() {
+    const renderCtx = captureRenderContext('owner');
     if (ownerCreateInFlight()) {
       setStatus('⏳ إنشاء المالك جارٍ — انتظر');
       return { ok: false, error: 'creation_in_progress' };
@@ -3189,8 +3237,10 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
       setStatusFromErr(e);
       return { ok: false };
     } finally {
-      renderNavButtons(loadWizard());
-      renderStepUI(loadWizard());
+      guardedRender(renderCtx, () => {
+        renderNavButtons(loadWizard());
+        renderStepUI(loadWizard());
+      });
     }
   }
 
@@ -3743,14 +3793,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
         const Discovery = global.CloudDataDiscovery;
 
         const markRestore = (choice, msg, meta = {}) => {
-          const w2 = loadWizard();
-          w2.restoreChoice = choice;
-          w2.restoreVerifiedDatabase = meta.verifiedDatabase === true;
-          w2.restoreMode = meta.mode || null;
-          w2.cloudDiscovery = Discovery?.getLastDiscovery?.() || w2.cloudDiscovery || null;
-          saveWizard(w2);
-          setStatus(msg);
-          renderNavButtons(loadWizard());
+          const committed = commitRestoreChoice(choice, msg, meta);
+          return committed?.ok === true;
         };
 
         const reconcileAndSelectLocal = async (choice, successMessage, meta = {}) => {
@@ -3854,6 +3898,15 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
               }
             });
             addBtn(choiceHost, '📭 البدء بدون قاعدة بيانات سابقة', 'btn-ghost', () => {
+              const policy = existingEmptyStartPolicy();
+              if (!policy.allowed) {
+                setStatusFromErr(
+                  { message: policy.code },
+                  policy.code,
+                  { stepId: 'restore', message: policy.messageAr },
+                );
+                return;
+              }
               markRestore('empty', '✅ بدء صريح بدون قاعدة سابقة');
             });
             return;
@@ -4520,6 +4573,8 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     renderAll,
     currentRenderGeneration,
     isRenderCurrent,
+    captureRenderContext,
+    guardedRender,
     branchStepResolved,
     isBranchExplicitlySelected,
     currentBranchSelection,
@@ -4532,6 +4587,7 @@ body.bf-active #ops-ux-restore-wizard{z-index:100050!important}
     authoritativeBootstrapBranches,
     branchGateDiagnostics,
     existingEmptyStartPolicy,
+    commitRestoreChoice,
     deviceStepResolved,
     businessSetupStepResolved,
     readBusinessSetupState,

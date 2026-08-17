@@ -301,6 +301,21 @@
     }
 
     if (restoreChoice === 'empty') {
+      // EXISTING / replacement devices must never PUSH an empty local DB over cloud.
+      if (path === 'existing' || isReplacementDevice({ path, wizard, restoreChoice })) {
+        const mode = MODES.NO_SYNC;
+        const binding = buildPlanBinding(bindingCtx, mode);
+        return planResult(mode, 'existing_empty_push_forbidden', {
+          sourceAuthority: SOURCE_AUTHORITY.REMOTE,
+          allowPush: false,
+          allowPull: false,
+          allowOutboxDrain: false,
+          emptyLocalPushBlocked: true,
+          requiresRestoreComplete: true,
+          binding,
+          bindingFingerprint: bindingFingerprint(binding),
+        });
+      }
       const mode = MODES.PUSH_ONLY;
       const binding = buildPlanBinding(bindingCtx, mode);
       return planResult(mode, 'new_start_new_local_authoritative', {
