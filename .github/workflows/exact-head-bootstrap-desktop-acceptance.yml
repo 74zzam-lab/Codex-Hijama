@@ -6,7 +6,7 @@ on:
       runtime_source_commit:
         description: 'Frozen runtime source commit (must match audited bootstrap)'
         required: true
-        default: 'cc799c9a287631674150d68c06439e0ad744f89e'
+        default: '4d489b7b3d525886f555379bf2896728293168f3'
   push:
     branches:
       - cursor/bootstrap-desktop-uat-beb8
@@ -19,7 +19,7 @@ permissions:
   contents: read
 
 env:
-  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || 'cc799c9a287631674150d68c06439e0ad744f89e' }}
+  RUNTIME_SOURCE_COMMIT: ${{ github.event.inputs.runtime_source_commit || '4d489b7b3d525886f555379bf2896728293168f3' }}
   EXACT_HEAD_BUILD_ID: exact-gha-${{ github.run_number }}-${{ github.run_attempt }}
 
 jobs:
