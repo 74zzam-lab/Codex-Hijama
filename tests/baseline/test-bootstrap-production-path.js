@@ -234,10 +234,27 @@ function staleAsyncGuardTests() {
     'current generation accepted for active step');
 }
 
+function reviewStepIndexLocalStorageAuthorityTest() {
+  console.log('\n-- reviewStepIndex honors loadWizard state when DB lags --');
+  const ctx = liveWizard();
+  const BC = ctx.BootstrapCoordinator;
+  const loaded = {
+    path: 'existing',
+    currentStep: 4,
+    reviewStepIndex: 4,
+    completedSteps: ['language', 'google', 'discovery', 'license_org_recovery', 'branch_select'],
+    branchSelection: { branchId: 'BR-2', provenance: 'user', organizationId: 'NJR-1', googleAccountKey: 'o@e.com' },
+    wizardFlowVersion: 16,
+  };
+  const eff = BC.effectiveStepIndex(loaded);
+  check(eff === 4, `effectiveStepIndex stays pinned at branch_select (${eff})`);
+}
+
 (async function main() {
   try {
     sourceWiringTests();
     staleAsyncGuardTests();
+    reviewStepIndexLocalStorageAuthorityTest();
     await existingJourneyTests();
   } catch (error) {
     failures.push(`harness crash: ${error && error.stack ? error.stack : error}`);

@@ -193,8 +193,11 @@
     const steps = stepsFor(path);
     if (stored >= steps.length) return resume;
     const rawWizard = safeWizardRaw();
-    if (Number.isFinite(rawWizard?.reviewStepIndex)
-        && stored === rawWizard.reviewStepIndex
+    const reviewIdx = Number.isFinite(w?.reviewStepIndex)
+      ? w.reviewStepIndex
+      : rawWizard?.reviewStepIndex;
+    if (Number.isFinite(reviewIdx)
+        && stored === reviewIdx
         && stored < resume) {
       return stored;
     }
